@@ -1,0 +1,1455 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Vicini di Strada Como - Mappa Interattiva Servizi</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Color+Emoji&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            900: '#0c4a6e',
+                        },
+                        warm: {
+                            50: '#fdf8f6',
+                            500: '#f97316',
+                            600: '#ea580c',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        [dir="rtl"] { text-align: right; }
+        [dir="rtl"] .rtl-flip { transform: scaleX(-1); }
+        .card-shadow { box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.08); }
+        .flag-emoji { font-family: 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen">
+    <div id="app" :dir="isRTL ? 'rtl' : 'ltr'" class="pb-24 max-w-7xl mx-auto px-2 sm:px-4 lg:px-8">
+        
+        <header class="bg-brand-900 text-white shadow-lg sticky top-0 z-50 rounded-b-2xl sm:rounded-b-3xl mx-0 sm:-mx-2 lg:-mx-4">
+            <div class="px-4 py-3 flex items-center justify-between gap-2 border-b border-brand-700/50">
+                <div class="flex items-center space-x-3" :class="{'space-x-reverse': isRTL}">
+                    <div class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center font-bold text-xl backdrop-blur-sm text-brand-100">
+                        <i class="fa-solid fa-hands-holding-circle"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-bold text-lg leading-tight tracking-wide">VICINI DI STRADA</h1>
+                        <p class="text-xs text-brand-200 font-medium">Coordinamento Servizi Como</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <button @click="openAdminModal = true" 
+                            class="flex items-center justify-center w-10 h-10 bg-brand-800 hover:bg-brand-700 rounded-xl text-brand-100 transition shadow-inner border border-brand-700"
+                            :class="{'bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-500 shadow-md shadow-emerald-500/20': user}"
+                            :title="user ? 'Area Operatori (Accesso Effettuato)' : 'Accesso Area Operatori'">
+                        <i class="fa-solid text-sm sm:text-base transition-transform active:scale-95" :class="user ? 'fa-user-shield' : 'fa-lock'"></i>
+                    </button>
+
+                    <div class="relative">
+                        <button @click="showLangMenu = !showLangMenu" 
+                                class="flex items-center gap-2 bg-brand-800 hover:bg-brand-700 px-3 py-2 rounded-xl text-sm font-medium transition shadow-inner border border-brand-700">
+                            <span class="text-lg flag-emoji">{{ currentLang.flag }}</span>
+                            <span class="hidden sm:inline">{{ currentLang.name }}</span>
+                            <i class="fa-solid fa-chevron-down text-xs ml-1 opacity-75 transition-transform duration-200" :class="{'rotate-180': showLangMenu}"></i>
+                        </button>
+
+                        <div v-if="showLangMenu" @click.self="showLangMenu = false"
+                             class="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-2xl border border-slate-100 py-2 z-50 max-h-80 overflow-y-auto no-scrollbar text-slate-800"
+                             :class="{'left-0 right-auto': isRTL}">
+                            <div class="px-3 py-1 text-xs font-semibold text-slate-400 uppercase tracking-wider">Seleziona Lingua / Language</div>
+                            <button v-for="(lang, code) in languages" :key="code"
+                                    @click="selectLanguage(code)"
+                                    class="w-full px-4 py-2.5 text-left flex items-center justify-between hover:bg-brand-50 transition"
+                                    :class="{'bg-brand-50/60 font-semibold text-brand-700': currentLangCode === code, 'flex-row-reverse': isRTL}">
+                                <div class="flex items-center gap-3">
+                                    <span class="text-xl flag-emoji">{{ lang.flag }}</span>
+                                    <span class="text-sm">{{ lang.name }}</span>
+                                </div>
+                                <span class="text-xs text-slate-400 font-light">{{ code.toUpperCase() }}</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex px-2 pt-2 bg-brand-900/90 gap-1 overflow-x-auto no-scrollbar">
+                <button @click="activeTab = 'services'" 
+                        class="flex-1 py-2.5 px-3 rounded-t-xl font-medium text-xs sm:text-sm flex items-center justify-center gap-2 whitespace-nowrap transition"
+                        :class="activeTab === 'services' ? 'bg-slate-50 text-brand-900 font-bold shadow' : 'text-brand-100 hover:bg-brand-800'">
+                    <i class="fa-solid fa-layer-group"></i>
+                    <span>{{ t('tab_services') }}</span>
+                </button>
+                <button @click="activeTab = 'news'" 
+                        class="flex-1 py-2.5 px-3 rounded-t-xl font-medium text-xs sm:text-sm flex items-center justify-center gap-2 whitespace-nowrap transition relative"
+                        :class="activeTab === 'news' ? 'bg-slate-50 text-brand-900 font-bold shadow' : 'text-brand-100 hover:bg-brand-800'">
+                    <i class="fa-solid fa-bell"></i>
+                    <span>{{ t('tab_news') }}</span>
+                    <span class="w-2 h-2 rounded-full bg-warm-500 animate-pulse"></span>
+                </button>
+                <button @click="activeTab = 'emergency'" 
+                        class="flex-1 py-2.5 px-3 rounded-t-xl font-medium text-xs sm:text-sm flex items-center justify-center gap-2 whitespace-nowrap transition"
+                        :class="activeTab === 'emergency' ? 'bg-slate-50 text-brand-900 font-bold shadow' : 'text-brand-100 hover:bg-brand-800'">
+                    <i class="fa-solid fa-triangle-exclamation text-warm-500"></i>
+                    <span>{{ t('tab_emergency') }}</span>
+                </button>
+                <button v-if="user" @click="activeTab = 'admin_dashboard'; cancelEditing()" 
+                        class="flex-1 py-2.5 px-3 rounded-t-xl font-medium text-xs sm:text-sm flex items-center justify-center gap-2 whitespace-nowrap transition bg-emerald-600/30 text-emerald-200 hover:bg-emerald-600/50"
+                        :class="activeTab === 'admin_dashboard' ? '!bg-emerald-600 !text-white font-bold shadow' : ''">
+                    <i class="fa-solid fa-list-check"></i>
+                    <span class="hidden md:inline">Gestione</span>
+                </button>
+            </div>
+        </header>
+
+        <div v-if="showLangMenu" @click="showLangMenu = false" class="fixed inset-0 z-40 bg-black/10 backdrop-blur-[1px]"></div>
+
+        <main v-if="activeTab === 'services'" class="p-4 sm:p-6 space-y-6 animate-fadeIn">
+            <div class="bg-gradient-to-r from-brand-700 to-brand-900 rounded-3xl p-6 sm:p-8 text-white shadow-md relative overflow-hidden">
+                <div class="relative z-10 max-w-2xl">
+                    <h2 class="text-2xl sm:text-3xl font-bold mb-2">{{ t('welcome_title') }}</h2>
+                    <p class="text-brand-100 text-sm sm:text-base mb-6">{{ t('welcome_sub') }}</p>
+                    <div class="relative">
+                        <input v-model="searchQuery" type="text" :placeholder="t('search_placeholder')"
+                               class="w-full bg-white/95 text-slate-800 placeholder-slate-400 pl-11 pr-10 py-3.5 rounded-2xl text-sm sm:text-base focus:outline-none focus:ring-4 focus:ring-white/30 shadow-inner">
+                        <i class="fa-solid fa-magnifying-glass absolute top-4 left-4 text-slate-400 text-lg" :class="{'right-4 left-auto': isRTL}"></i>
+                        <button v-if="searchQuery" @click="searchQuery = ''" class="absolute top-3.5 right-3.5 text-slate-400 hover:text-slate-600 p-1" :class="{'left-3.5 right-auto': isRTL}">
+                            <i class="fa-solid fa-circle-xmark text-lg"></i>
+                        </button>
+                    </div>
+                </div>
+                <i class="fa-solid fa-map-location-dot absolute -bottom-6 -right-6 text-9xl text-white/10 pointer-events-none"></i>
+            </div>
+
+            <div>
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="font-bold text-slate-700 text-sm uppercase tracking-wider">{{ t('categories_title') }}</h3>
+                    <button v-if="selectedCategory !== 'all'" @click="selectedCategory = 'all'" class="text-xs font-semibold text-brand-600 hover:underline">
+                        {{ t('show_all') }}
+                    </button>
+                </div>
+                
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+                    <button @click="selectedCategory = 'all'"
+                            class="p-3.5 rounded-2xl border transition text-center flex flex-col items-center justify-center gap-1.5 min-h-[85px]"
+                            :class="selectedCategory === 'all' ? 'bg-brand-600 border-brand-600 text-white font-bold shadow-md scale-[1.02]' : 'bg-white border-slate-200 text-slate-600 hover:border-brand-300 hover:bg-brand-50/50'">
+                        <span class="text-2xl">🌍</span>
+                        <span class="text-xs leading-tight">{{ t('cat_all') }}</span>
+                    </button>
+
+                    <button v-for="cat in categories" :key="cat.id" @click="selectedCategory = cat.id"
+                            class="p-3.5 rounded-2xl border transition text-center flex flex-col items-center justify-center gap-1.5 min-h-[85px] relative overflow-hidden"
+                            :class="selectedCategory === cat.id ? 'bg-brand-600 border-brand-600 text-white font-bold shadow-md scale-[1.02]' : 'bg-white border-slate-200 text-slate-600 hover:border-brand-300 hover:bg-brand-50/50'">
+                        <span class="text-2xl">{{ cat.icon }}</span>
+                        <span class="text-xs leading-tight">{{ t(cat.labelKey) }}</span>
+                        <span v-if="getServiceCount(cat.id) > 0" 
+                              class="absolute top-2 right-2 w-5 h-5 rounded-full text-[10px] font-bold flex items-center justify-center"
+                              :class="selectedCategory === cat.id ? 'bg-white text-brand-700' : 'bg-slate-100 text-slate-500'">
+                            {{ getServiceCount(cat.id) }}
+                        </span>
+                    </button>
+                </div>
+            </div>
+
+            <div v-if="isLoading" class="text-center py-16">
+                <i class="fa-solid fa-circle-notch fa-spin text-4xl text-brand-600 mb-4 inline-block"></i>
+                <p class="text-sm text-slate-500 font-medium">Caricamento servizi di Como in corso...</p>
+            </div>
+
+            <div v-else class="space-y-4 pt-2">
+                <div class="flex justify-between items-center text-xs font-semibold text-slate-400 px-1">
+                    <span>{{ filteredServices.length }} {{ t('services_found') }}</span>
+                    <span v-if="selectedCategory !== 'all'" class="bg-brand-100 text-brand-800 px-2.5 py-1 rounded-full font-bold">
+                        {{ t(categories.find(c => c.id === selectedCategory)?.labelKey) }}
+                    </span>
+                </div>
+
+                <div v-if="filteredServices.length === 0" class="text-center py-16 bg-white rounded-3xl border border-slate-200 p-6 shadow-sm">
+                    <span class="text-6xl block mb-4">🔍</span>
+                    <h4 class="font-bold text-slate-700 text-lg mb-1">{{ t('no_results_title') }}</h4>
+                    <p class="text-sm text-slate-500 max-w-sm mx-auto mb-6">{{ t('no_results_sub') }}</p>
+                    <button @click="selectedCategory = 'all'; searchQuery = ''" class="bg-brand-600 text-white px-6 py-3 rounded-xl text-sm font-semibold shadow hover:bg-brand-700 transition">
+                        {{ t('reset_filters') }}
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div v-for="service in filteredServices" :key="service.id"
+                         class="bg-white rounded-3xl border border-slate-200/90 overflow-hidden card-shadow hover:shadow-xl transition-all duration-300 flex flex-col justify-between">
+                        
+                        <div>
+                            <div class="relative h-48 w-full bg-slate-100 overflow-hidden">
+                                <img :src="service.image" :alt="service.name" class="w-full h-full object-cover">
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+                                
+                                <div class="absolute top-3 left-3 bg-white/90 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold text-slate-800 shadow flex items-center gap-1.5"
+                                     :class="{'right-3 left-auto': isRTL}">
+                                    <span>{{ getCategoryIcon(service.category) }}</span>
+                                    <span>{{ t(getCategoryLabelKey(service.category)) }}</span>
+                                </div>
+
+                                <div class="absolute top-3 right-3 px-2.5 py-1 rounded-full text-[11px] font-bold shadow flex items-center gap-1.5 backdrop-blur-md"
+                                     :class="[
+                                         service.status === 'active' ? 'bg-emerald-500 text-white' : 
+                                         service.status === 'notice' ? 'bg-amber-500 text-white' : 
+                                         'bg-red-600 text-white',
+                                         {'left-3 right-auto': isRTL}
+                                     ]">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-white" :class="service.status === 'suspended' ? '' : 'animate-ping'"></span>
+                                    <span>{{ service.status === 'active' ? t('status_active') : (service.status === 'notice' ? t('status_notice') : t('status_suspended')) }}</span>
+                                </div>
+
+                                <div class="absolute bottom-3 left-3 right-3 text-white">
+                                    <span class="text-[11px] uppercase tracking-wider font-semibold text-brand-200 block drop-shadow">{{ service.organization }}</span>
+                                    <h4 class="text-lg font-bold leading-tight drop-shadow-md mt-0.5">{{ translateField(service, 'name') }}</h4>
+                                </div>
+                            </div>
+
+                            <div class="p-5 space-y-4">
+                                <div class="flex items-start gap-2.5 text-slate-800 text-sm bg-brand-50/70 p-3 rounded-xl border border-brand-100">
+                                    <i class="fa-solid fa-location-dot text-brand-600 mt-0.5 text-base shrink-0"></i>
+                                    <span class="font-bold tracking-wide text-brand-900">{{ service.address }}, Como</span>
+                                </div>
+
+                                <p class="text-slate-600 text-sm leading-relaxed line-clamp-3">
+                                    {{ translateField(service, 'description') }}
+                                </p>
+
+                                <div class="bg-slate-50 rounded-2xl p-3 border border-slate-100 text-xs text-slate-600 flex items-center gap-3">
+                                    <i class="fa-regular fa-clock text-slate-400 text-base"></i>
+                                    <div>
+                                        <span class="font-bold text-slate-700 block">{{ t('hours_label') }}:</span>
+                                        <span>{{ translateField(service, 'hours') }}</span>
+                                    </div>
+                                </div>
+
+                                <div v-if="service.latestUpdate" class="rounded-2xl p-3.5 border text-xs flex items-start gap-2.5 transition"
+                                     :class="service.status === 'suspended' ? 'bg-red-50 border-red-200 text-red-900' : 'bg-amber-50 border-amber-200/80 text-amber-900'">
+                                    <i class="mt-0.5 text-sm shrink-0" 
+                                       :class="service.status === 'suspended' ? 'fa-solid fa-circle-exclamation text-red-600' : 'fa-solid fa-circle-info text-amber-600'"></i>
+                                    <div>
+                                        <span class="font-bold block text-[11px] uppercase tracking-wider"
+                                              :class="service.status === 'suspended' ? 'text-red-700' : 'text-amber-700'">
+                                            {{ service.status === 'suspended' ? t('service_suspended_label') : t('service_update_label') }}:
+                                        </span>
+                                        <p class="font-medium mt-1 leading-relaxed">{{ translateField(service.latestUpdate, 'text') }}</p>
+                                        <span class="text-[10px] block mt-1.5 font-medium"
+                                              :class="service.status === 'suspended' ? 'text-red-600/80' : 'text-amber-600/80'">
+                                            <i class="fa-regular fa-calendar text-[9px]"></i> {{ service.latestUpdate.date }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="p-5 pt-0 grid grid-cols-2 gap-3">
+                            <button @click="openContactModal(service)"
+                                    class="w-full bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold py-3 px-4 rounded-2xl text-xs sm:text-sm flex items-center justify-center gap-2 transition active:scale-95 border border-slate-200/80">
+                                <i class="fa-solid fa-phone text-brand-600"></i>
+                                <span>{{ t('btn_contact') }}</span>
+                            </button>
+
+                            <a :href="getNavigationUrl(service.address)" target="_blank" rel="noopener noreferrer"
+                               class="w-full bg-brand-600 hover:bg-brand-700 text-white font-semibold py-3 px-4 rounded-2xl text-xs sm:text-sm flex items-center justify-center gap-2 transition active:scale-95 shadow-md shadow-brand-500/20">
+                                <i class="fa-solid fa-diamond-turn-right"></i>
+                                <span>{{ t('btn_directions') }}</span>
+                            </a>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <main v-if="activeTab === 'news'" class="p-4 sm:p-6 space-y-6 animate-fadeIn max-w-4xl mx-auto">
+            <div class="bg-gradient-to-r from-amber-500 to-warm-600 rounded-3xl p-6 sm:p-8 text-white shadow-md">
+                <div class="flex items-center gap-3 mb-2">
+                    <span class="text-3xl">📢</span>
+                    <h2 class="text-2xl sm:text-3xl font-bold">{{ t('news_page_title') }}</h2>
+                </div>
+                <p class="text-white/90 text-sm sm:text-base max-w-xl">{{ t('news_page_sub') }}</p>
+            </div>
+
+            <div class="space-y-4">
+                <div v-for="news in globalNews" :key="news.id" 
+                     class="bg-white rounded-3xl border border-slate-200 p-6 card-shadow relative overflow-hidden">
+                    <div class="flex items-start justify-between gap-4 mb-3">
+                        <div class="flex items-center gap-2.5">
+                            <span class="px-3 py-1 rounded-full text-xs font-bold"
+                                  :class="news.priority === 'high' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'">
+                                {{ news.priority === 'high' ? t('priority_urgent') : t('priority_info') }}
+                            </span>
+                            <span class="text-xs font-bold text-slate-400">{{ news.association }}</span>
+                        </div>
+                        <span class="text-xs text-slate-400 font-medium flex items-center gap-1">
+                            <i class="fa-regular fa-clock text-[10px]"></i>
+                            {{ news.date }}
+                        </span>
+                    </div>
+
+                    <h4 class="font-bold text-slate-800 text-lg mb-2">{{ translateField(news, 'title') }}</h4>
+                    <p class="text-sm text-slate-600 leading-relaxed">{{ translateField(news, 'content') }}</p>
+
+                    <div v-if="news.relatedServiceId" class="mt-5 pt-4 border-t border-slate-100 flex items-center justify-between">
+                        <span class="text-xs text-slate-500 font-medium">{{ t('related_service') }}: <strong class="text-slate-700">{{ getServiceName(news.relatedServiceId) }}</strong></span>
+                        <button @click="goToService(news.relatedServiceId)" class="text-xs font-bold text-brand-600 hover:underline flex items-center gap-1.5">
+                            <span>{{ t('go_to_card') }}</span>
+                            <i class="fa-solid fa-arrow-right text-[10px]" :class="{'rtl-flip': isRTL}"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <main v-if="activeTab === 'emergency'" class="p-4 sm:p-6 space-y-6 animate-fadeIn max-w-4xl mx-auto">
+            <div class="bg-red-600 text-white rounded-3xl p-6 sm:p-8 shadow-md">
+                <h2 class="text-2xl sm:text-3xl font-bold flex items-center gap-3 mb-2">
+                    <i class="fa-solid fa-phone-volume animate-bounce"></i>
+                    <span>{{ t('emergency_title') }}</span>
+                </h2>
+                <p class="text-red-100 text-sm sm:text-base">{{ t('emergency_sub') }}</p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <a href="tel:112" class="bg-white p-6 rounded-3xl border-2 border-red-500/30 hover:border-red-500 card-shadow flex items-center justify-between group transition">
+                    <div class="flex items-center gap-4">
+                        <div class="w-16 h-16 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center text-3xl font-bold group-hover:scale-110 transition">
+                            112
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-slate-800 text-lg">{{ t('em_112_title') }}</h4>
+                            <p class="text-xs sm:text-sm text-slate-500 mt-0.5">{{ t('em_112_desc') }}</p>
+                        </div>
+                    </div>
+                    <div class="w-12 h-12 rounded-full bg-red-500 text-white flex items-center justify-center shadow-md text-lg">
+                        <i class="fa-solid fa-phone"></i>
+                    </div>
+                </a>
+
+                <a href="tel:118" class="bg-white p-6 rounded-3xl border border-slate-200 hover:border-slate-300 card-shadow flex items-center justify-between group transition">
+                    <div class="flex items-center gap-4">
+                        <div class="w-16 h-16 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-3xl font-bold group-hover:scale-110 transition">
+                            118
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-slate-800 text-lg">{{ t('em_118_title') }}</h4>
+                            <p class="text-xs sm:text-sm text-slate-500 mt-0.5">{{ t('em_118_desc') }}</p>
+                        </div>
+                    </div>
+                    <div class="w-12 h-12 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-md text-lg">
+                        <i class="fa-solid fa-truck-medical"></i>
+                    </div>
+                </a>
+            </div>
+
+            <div class="bg-white rounded-3xl p-6 border border-slate-200 space-y-4 shadow-sm">
+                <h3 class="font-bold text-slate-800 text-base uppercase tracking-wider text-brand-700">{{ t('em_street_unit_title') }}</h3>
+                <p class="text-sm text-slate-600 leading-relaxed">{{ t('em_street_unit_desc') }}</p>
+                <div class="pt-2 flex flex-wrap gap-3">
+                    <a href="tel:+390310000000" class="bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold px-5 py-3 rounded-xl text-sm flex items-center gap-2.5 transition">
+                        <i class="fa-solid fa-phone text-brand-600 text-base"></i>
+                        <span>{{ t('call_coordination') }}</span>
+                    </a>
+                </div>
+            </div>
+        </main>
+
+        <main v-if="activeTab === 'admin_dashboard' && user" class="p-4 sm:p-6 space-y-6 animate-fadeIn max-w-4xl mx-auto">
+            
+            <div v-if="!editingService" class="space-y-6">
+                <div class="bg-gradient-to-r from-emerald-600 to-teal-800 rounded-3xl p-6 sm:p-8 text-white shadow-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div>
+                        <span class="bg-white/20 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-2 inline-block">Pannello Operatori</span>
+                        <h2 class="text-2xl sm:text-3xl font-bold leading-tight">Gestione Servizi Como</h2>
+                        <p class="text-emerald-100 text-sm mt-1">Seleziona un servizio dalla lista per modificarlo o creane uno nuovo.</p>
+                    </div>
+                    <div class="flex flex-wrap gap-2 shrink-0 w-full sm:w-auto justify-end">
+                        <button @click="startCreating()" class="bg-emerald-500 hover:bg-emerald-400 text-white font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm shadow flex items-center gap-2 transition active:scale-95 border border-emerald-400">
+                            <i class="fa-solid fa-plus"></i>
+                            <span>Aggiungi Servizio</span>
+                        </button>
+                        <button @click="activeTab = 'services'" class="bg-white text-emerald-800 hover:bg-emerald-50 font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm shadow flex items-center gap-2 shrink-0 transition active:scale-95">
+                            <i class="fa-solid fa-eye"></i>
+                            <span>Vedi Mappa Pubblica</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-3xl border border-slate-200 overflow-hidden card-shadow divide-y divide-slate-100">
+                    <div class="p-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between text-xs font-bold text-slate-500 uppercase tracking-wider">
+                        <span>Seleziona per modificare ({{ services.length }})</span>
+                        <span>Stato Attuale</span>
+                    </div>
+
+                    <div v-for="service in services" :key="service.id"
+                         @click="startEditing(service)"
+                         class="p-4 sm:p-5 hover:bg-brand-50/60 transition cursor-pointer flex items-center justify-between gap-4 group active:bg-brand-100/50">
+                        
+                        <div class="flex items-center gap-3.5 overflow-hidden">
+                            <div class="w-12 h-12 rounded-2xl bg-slate-100 group-hover:bg-brand-100 text-slate-700 group-hover:text-brand-700 flex items-center justify-center text-2xl shrink-0 transition shadow-sm">
+                                <span>{{ getCategoryIcon(service.category) }}</span>
+                            </div>
+                            <div class="overflow-hidden">
+                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block truncate">{{ service.organization }}</span>
+                                <h4 class="font-bold text-slate-800 text-sm sm:text-base group-hover:text-brand-700 transition truncate">{{ service.name.it || service.name }}</h4>
+                                <p class="text-xs text-slate-500 truncate mt-0.5"><i class="fa-solid fa-location-dot text-slate-400 mr-1"></i>{{ service.address }}</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-3 shrink-0">
+                            <span class="px-2.5 py-1 rounded-full text-[11px] font-bold shadow-sm flex items-center gap-1.5"
+                                  :class="[
+                                      service.status === 'active' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 
+                                      service.status === 'notice' ? 'bg-amber-100 text-amber-800 border border-amber-300' : 
+                                      'bg-red-100 text-red-800 border border-red-300'
+                                  ]">
+                                <span class="w-1.5 h-1.5 rounded-full" :class="service.status === 'active' ? 'bg-emerald-500' : (service.status === 'notice' ? 'bg-amber-500' : 'bg-red-500')"></span>
+                                <span class="hidden sm:inline">{{ service.status === 'active' ? 'Regolare' : (service.status === 'notice' ? 'Variazione' : 'Sospeso') }}</span>
+                            </span>
+
+                            <div class="w-8 h-8 rounded-full bg-slate-100 group-hover:bg-brand-600 text-slate-400 group-hover:text-white flex items-center justify-center text-xs transition">
+                                <i class="fa-solid fa-chevron-right" :class="{'rtl-flip': isRTL}"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div v-else class="space-y-6 animate-fadeIn">
+                <div class="flex items-center justify-between bg-white p-4 rounded-2xl border border-slate-200 card-shadow sticky top-20 z-30">
+                    <button @click="cancelEditing()" 
+                            class="flex items-center gap-2 text-slate-600 hover:text-brand-600 font-bold text-xs sm:text-sm bg-slate-100 hover:bg-brand-50 px-3.5 py-2 rounded-xl transition active:scale-95">
+                        <i class="fa-solid fa-arrow-left" :class="{'rtl-flip': isRTL}"></i>
+                        <span>Torna alla lista servizi</span>
+                    </button>
+
+                    <div class="text-right overflow-hidden pr-2">
+                        <span class="text-[10px] uppercase font-bold text-brand-600 tracking-wider block truncate">Stato Operazione:</span>
+                        <span class="font-bold text-slate-800 text-xs sm:text-sm truncate block">{{ editForm.id ? 'Modifica: ' + editForm.name_it : 'Nuovo Inserimento' }}</span>
+                    </div>
+                </div>
+
+                <!-- Il pannello "Stato Apertura & Allerte Rapide" è visibile SOLO in modifica (editForm.id valorizzato).
+                     In creazione resta nascosto e lo status viene salvato automaticamente come 'active' (Regolare). -->
+                <div v-if="editForm.id" class="bg-white rounded-3xl border-2 border-brand-500/20 p-5 sm:p-6 card-shadow space-y-5">
+                    <div class="flex items-center gap-3 border-b border-slate-100 pb-3">
+                        <div class="w-8 h-8 rounded-xl bg-warm-500 text-white flex items-center justify-center text-sm shadow-sm">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-slate-800 text-base">Stato Apertura & Allerte Rapide</h3>
+                            <p class="text-xs text-slate-500">Gestisci chiusure per maltempo o avvisi straordinari per la strada.</p>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Stato Accessibilità:</label>
+                        <div class="grid grid-cols-3 gap-2">
+                            <button @click="editForm.status = 'active'"
+                                    type="button"
+                                    class="py-3 px-2 rounded-xl text-xs font-bold border flex flex-col sm:flex-row items-center justify-center gap-1.5 transition active:scale-95"
+                                    :class="editForm.status === 'active' ? 'bg-emerald-500 border-emerald-600 text-white shadow-md' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'">
+                                <span class="w-2.5 h-2.5 rounded-full" :class="editForm.status === 'active' ? 'bg-white' : 'bg-emerald-500'"></span>
+                                <span>Regolare</span>
+                            </button>
+
+                            <button @click="editForm.status = 'notice'"
+                                    type="button"
+                                    class="py-3 px-2 rounded-xl text-xs font-bold border flex flex-col sm:flex-row items-center justify-center gap-1.5 transition active:scale-95"
+                                    :class="editForm.status === 'notice' ? 'bg-amber-500 border-amber-600 text-white shadow-md' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'">
+                                <span class="w-2.5 h-2.5 rounded-full" :class="editForm.status === 'notice' ? 'bg-white' : 'bg-amber-500'"></span>
+                                <span>Variazione</span>
+                            </button>
+
+                            <button @click="editForm.status = 'suspended'"
+                                    type="button"
+                                    class="py-3 px-2 rounded-xl text-xs font-bold border flex flex-col sm:flex-row items-center justify-center gap-1.5 transition active:scale-95"
+                                    :class="editForm.status === 'suspended' ? 'bg-red-600 border-red-700 text-white shadow-md' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'">
+                                <span class="w-2.5 h-2.5 rounded-full" :class="editForm.status === 'suspended' ? 'bg-white' : 'bg-red-600'"></span>
+                                <span>Sospeso</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="flex items-center justify-between mb-1.5">
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500">Avviso Cittadini / Motivo:</label>
+                            <span class="text-[10px] bg-brand-50 text-brand-700 px-2 py-0.5 rounded-full font-bold border border-brand-200">✨ Traduzione AI in arrivo al Passo 2</span>
+                        </div>
+                        <textarea v-model="editForm.adminTempNotice" 
+                                  rows="2" 
+                                  placeholder="Es. Chiuso per maltempo stanotte / Apertura straordinaria ore 20:00..."
+                                  class="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3.5 text-slate-800 text-xs sm:text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500 transition shadow-inner"></textarea>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-3xl border border-slate-200 p-5 sm:p-6 card-shadow space-y-5">
+                    <div class="flex items-center gap-3 border-b border-slate-100 pb-3">
+                        <div class="w-8 h-8 rounded-xl bg-brand-600 text-white flex items-center justify-center text-sm shadow-sm">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-slate-800 text-base">Informazioni Anagrafiche</h3>
+                            <p class="text-xs text-slate-500">Modifica o inserisci i dati di base del servizio visualizzati sulle schede.</p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Ente / Associazione Gestore</label>
+                                <input v-model="editForm.organization" type="text" required placeholder="Es. Caritas, Como Accoglie, ecc."
+                                       class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-800 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500 transition">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Categoria Filtro</label>
+                                <select v-model="editForm.category" required
+                                        class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-800 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500 transition">
+                                    <option v-for="cat in categories" :key="cat.id" :value="cat.id">
+                                        {{ cat.icon }} {{ t(cat.labelKey) }}
+                                    </option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- SEZIONE IMMAGINE: anteprima + link URL + upload diretto da dispositivo -->
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">Immagine Copertina</label>
+
+                            <div class="flex items-start gap-4">
+                                <div class="w-24 h-24 rounded-2xl bg-slate-100 border border-slate-200 overflow-hidden shrink-0 flex items-center justify-center">
+                                    <img v-if="editForm.image" :src="editForm.image" alt="Anteprima immagine" class="w-full h-full object-cover">
+                                    <i v-else class="fa-solid fa-image text-slate-300 text-2xl"></i>
+                                </div>
+
+                                <div class="flex-1 space-y-2 min-w-0">
+                                    <input v-model="editForm.image" type="url" placeholder="Incolla un link immagine oppure caricane una qui sotto"
+                                           class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-800 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500 transition">
+
+                                    <div class="flex items-center gap-2">
+                                        <label class="flex-1 cursor-pointer bg-brand-50 hover:bg-brand-100 border border-brand-200 text-brand-700 font-semibold text-xs py-2.5 px-3 rounded-xl flex items-center justify-center gap-2 transition"
+                                               :class="{'opacity-60 pointer-events-none': uploadingImage}">
+                                            <i v-if="uploadingImage" class="fa-solid fa-circle-notch fa-spin"></i>
+                                            <i v-else class="fa-solid fa-upload"></i>
+                                            <span>{{ uploadingImage ? 'Caricamento in corso...' : 'Carica immagine dal dispositivo' }}</span>
+                                            <input type="file" accept="image/*" class="hidden" @change="handleImageUpload" :disabled="uploadingImage">
+                                        </label>
+                                        <button v-if="editForm.image" @click="editForm.image = ''" type="button"
+                                                title="Rimuovi immagine"
+                                                class="bg-slate-100 hover:bg-red-50 text-slate-500 hover:text-red-600 w-9 h-9 rounded-xl flex items-center justify-center transition shrink-0">
+                                            <i class="fa-solid fa-trash text-xs"></i>
+                                        </button>
+                                    </div>
+                                    <p v-if="imageUploadError" class="text-[11px] text-red-600 font-medium">{{ imageUploadError }}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Nome Servizio (in Italiano)</label>
+                            <input v-model="editForm.name_it" type="text" required
+                                   class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-800 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500 transition">
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Indirizzo (senza 'Como')</label>
+                                <div class="relative">
+                                    <input v-model="editForm.address" type="text" required placeholder="Es. Via Gallio 8"
+                                           class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-3.5 py-2.5 text-slate-800 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500 transition">
+                                    <i class="fa-solid fa-location-dot absolute top-3 left-3.5 text-slate-400 text-xs"></i>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Orari / Accessibilità</label>
+                                <div class="relative">
+                                    <input v-model="editForm.hours_it" type="text" required placeholder="Es. Lun-Ven 18:00 - 20:00"
+                                           class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-3.5 py-2.5 text-slate-800 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500 transition">
+                                    <i class="fa-regular fa-clock absolute top-3 left-3.5 text-slate-400 text-xs"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Telefono</label>
+                                <div class="relative">
+                                    <input v-model="editForm.phone" type="tel" placeholder="Es. +39 031 123456"
+                                           class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-3.5 py-2.5 text-slate-800 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500 transition">
+                                    <i class="fa-solid fa-phone absolute top-3 left-3.5 text-slate-400 text-xs"></i>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Email Contatto</label>
+                                <div class="relative">
+                                    <input v-model="editForm.email" type="email" placeholder="Es. info@associazione.it"
+                                           class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-3.5 py-2.5 text-slate-800 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500 transition">
+                                    <i class="fa-solid fa-envelope absolute top-3 left-3.5 text-slate-400 text-xs"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Descrizione Completa (in Italiano)</label>
+                            <textarea v-model="editForm.description_it" rows="4" required
+                                      class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-slate-800 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500 transition leading-relaxed"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-slate-900 text-white p-4 rounded-3xl shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-cloud text-brand-400 text-lg"></i>
+                        <span class="text-xs sm:text-sm font-medium">Modifiche pronte per il cloud Supabase</span>
+                    </div>
+
+                    <div class="flex items-center gap-3 w-full sm:w-auto">
+                        <button @click="cancelEditing()" 
+                                type="button"
+                                class="flex-1 sm:flex-initial py-3 px-5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs sm:text-sm transition">
+                            Annulla
+                        </button>
+
+                        <button @click="saveServiceChanges()" 
+                                :disabled="savingServiceId"
+                                type="button"
+                                class="flex-1 sm:flex-initial bg-brand-500 hover:bg-brand-600 active:scale-95 disabled:opacity-50 text-white font-bold py-3 px-6 rounded-2xl text-xs sm:text-sm shadow-lg shadow-brand-500/30 transition flex items-center justify-center gap-2">
+                            <i v-if="savingServiceId" class="fa-solid fa-circle-notch fa-spin"></i>
+                            <i v-else class="fa-solid fa-check"></i>
+                            <span>{{ savingServiceId ? 'Salvataggio...' : (editForm.id ? 'Salva Modifiche Online' : 'Pubblica Servizio Online') }}</span>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+        </main>
+
+        <div v-if="activeModalService" @click.self="activeModalService = null" 
+             class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fadeIn">
+            <div class="bg-white w-full max-w-lg rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl space-y-5 transform transition-transform"
+                 :class="{'text-right': isRTL}">
+                
+                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <div>
+                        <span class="text-xs font-bold text-brand-600 uppercase tracking-wider block">{{ activeModalService.organization }}</span>
+                        <h3 class="text-lg font-bold text-slate-800 mt-0.5">{{ translateField(activeModalService, 'name') }}</h3>
+                    </div>
+                    <button @click="activeModalService = null" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center shrink-0">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+
+                <div class="space-y-3">
+                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">{{ t('choose_contact_method') }}</p>
+                    
+                    <a v-if="activeModalService.phone" :href="'tel:' + activeModalService.phone"
+                       class="flex items-center justify-between p-4 rounded-2xl bg-brand-50 hover:bg-brand-100 border border-brand-200 text-brand-900 font-semibold transition group">
+                        <div class="flex items-center gap-3.5">
+                            <div class="w-10 h-10 rounded-xl bg-brand-600 text-white flex items-center justify-center text-lg shadow-sm">
+                                <i class="fa-solid fa-phone"></i>
+                            </div>
+                            <div>
+                                <span class="text-xs text-brand-700 block font-normal">{{ t('call_now') }}</span>
+                                <span class="text-base font-bold">{{ activeModalService.phone }}</span>
+                            </div>
+                        </div>
+                        <i class="fa-solid fa-chevron-right text-brand-400 group-hover:translate-x-1 transition-transform" :class="{'rtl-flip': isRTL}"></i>
+                    </a>
+
+                    <a v-if="activeModalService.email" :href="'mailto:' + activeModalService.email"
+                       class="flex items-center justify-between p-4 rounded-2xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-800 font-semibold transition group">
+                        <div class="flex items-center gap-3.5">
+                            <div class="w-10 h-10 rounded-xl bg-slate-700 text-white flex items-center justify-center text-lg shadow-sm">
+                                <i class="fa-solid fa-envelope"></i>
+                            </div>
+                            <div>
+                                <span class="text-xs text-slate-500 block font-normal">{{ t('send_email') }}</span>
+                                <span class="text-sm font-bold truncate max-w-[200px] sm:max-w-xs">{{ activeModalService.email }}</span>
+                            </div>
+                        </div>
+                        <i class="fa-solid fa-chevron-right text-slate-400 group-hover:translate-x-1 transition-transform" :class="{'rtl-flip': isRTL}"></i>
+                    </a>
+
+                    <a :href="getNavigationUrl(activeModalService.address)" target="_blank" rel="noopener noreferrer"
+                       class="flex items-center justify-between p-4 rounded-2xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-900 font-semibold transition group">
+                        <div class="flex items-center gap-3.5">
+                            <div class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center text-lg shadow-sm">
+                                <i class="fa-solid fa-map-location-dot"></i>
+                            </div>
+                            <div>
+                                <span class="text-xs text-emerald-700 block font-normal">{{ t('open_maps') }}</span>
+                                <span class="text-sm font-bold">{{ activeModalService.address }}</span>
+                            </div>
+                        </div>
+                        <i class="fa-solid fa-arrow-up-right-from-square text-emerald-500"></i>
+                    </a>
+                </div>
+
+                <button @click="activeModalService = null" class="w-full py-3 text-center text-xs font-bold text-slate-400 hover:text-slate-600">
+                    {{ t('close') }}
+                </button>
+            </div>
+        </div>
+
+        <div v-if="openAdminModal" @click.self="openAdminModal = false" 
+             class="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fadeIn">
+            
+            <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl space-y-6 transform transition-transform text-left"
+                 :class="{'text-right': isRTL}">
+                
+                <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-brand-100 text-brand-700 flex items-center justify-center text-lg font-bold">
+                            <i class="fa-solid fa-shield-halved"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-slate-800 text-lg leading-tight">Area Operatori</h3>
+                            <p class="text-xs text-slate-400 font-medium">Gestione servizi Vicini di Strada</p>
+                        </div>
+                    </div>
+                    <button @click="openAdminModal = false" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+
+                <form v-if="!user" @submit.prevent="handleLogin" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Email Operatore</label>
+                        <div class="relative">
+                            <input v-model="authForm.email" type="email" required placeholder="operatore@vicinidistrada.it"
+                                   class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-slate-800 text-sm sm:text-base focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500 transition">
+                            <i class="fa-regular fa-envelope absolute top-4 right-4 text-slate-400"></i>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Password</label>
+                        <div class="relative">
+                            <input v-model="authForm.password" type="password" required placeholder="••••••••"
+                                   class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-slate-800 text-sm sm:text-base focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500 transition">
+                            <i class="fa-solid fa-key absolute top-4 right-4 text-slate-400"></i>
+                        </div>
+                    </div>
+
+                    <div v-if="authError" class="p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs flex items-center gap-2 font-medium">
+                        <i class="fa-solid fa-circle-exclamation text-red-500 text-base shrink-0"></i>
+                        <span>{{ authError }}</span>
+                    </div>
+
+                    <button type="submit" :disabled="authLoading"
+                            class="w-full bg-brand-600 hover:bg-brand-700 active:scale-[0.98] disabled:opacity-50 text-white font-bold py-4 px-6 rounded-2xl text-sm sm:text-base shadow-lg shadow-brand-500/25 transition flex items-center justify-center gap-2">
+                        <i v-if="authLoading" class="fa-solid fa-circle-notch fa-spin"></i>
+                        <i v-else class="fa-solid fa-right-to-bracket"></i>
+                        <span>{{ authLoading ? 'Verifica in corso...' : 'Accedi al Pannello' }}</span>
+                    </button>
+                </form>
+
+                <div v-else class="space-y-5 py-2">
+                    <div class="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center gap-3.5">
+                        <div class="w-12 h-12 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xl shrink-0 shadow-md">
+                            <i class="fa-solid fa-check"></i>
+                        </div>
+                        <div class="overflow-hidden">
+                            <span class="text-[10px] uppercase font-bold text-emerald-700 tracking-wider block">Sessione Attiva</span>
+                            <h4 class="font-bold text-slate-800 truncate text-sm sm:text-base">{{ user.email }}</h4>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-3">
+                        <button @click="activeTab = 'admin_dashboard'; openAdminModal = false; cancelEditing()" 
+                                class="w-full bg-brand-600 hover:bg-brand-700 text-white font-bold py-4 px-4 rounded-2xl text-sm flex items-center justify-center gap-2 shadow-md transition active:scale-[0.99]">
+                            <i class="fa-solid fa-list-check"></i>
+                            <span>Apri Gestione Servizi & Allerte</span>
+                        </button>
+                        
+                        <button @click="handleLogout" 
+                                class="w-full bg-slate-100 hover:bg-red-50 text-slate-600 hover:text-red-600 font-semibold py-3.5 px-4 rounded-xl text-xs flex items-center justify-center gap-2 transition border border-slate-200 active:scale-[0.99]">
+                            <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                            <span>Disconnetti da questo dispositivo</span>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const { createApp, ref, computed, onMounted } = Vue;
+
+        createApp({
+            setup() {
+                // Inizializzazione sicura e incapsulata di Supabase
+                const supabaseUrl = 'https://roqfxmdnjgwoezkwaqmu.supabase.co';
+                const supabaseKey = 'sb_publishable_v7QcdhlmY2T8yrxXgg8gWA_MIdOv1J4'; 
+                const supabase = window.supabase ? window.supabase.createClient(supabaseUrl, supabaseKey) : null;
+
+                // Nome del bucket Supabase Storage usato per le immagini caricate dal pannello operatori.
+                // Deve essere creato manualmente su Supabase (Storage > New bucket), impostato come "Public".
+                const IMAGE_BUCKET = 'service-images';
+
+                const activeTab = ref('services');
+                const selectedCategory = ref('all');
+                const searchQuery = ref('');
+                const showLangMenu = ref(false);
+                const activeModalService = ref(null);
+                const currentLangCode = ref('it');
+
+                // Variabili di Stato per l'Autenticazione Operatori
+                const openAdminModal = ref(false);
+                const user = ref(null);
+                const authLoading = ref(false);
+                const authError = ref('');
+                const authForm = ref({ email: '', password: '' });
+
+                // Variabili per l'interfaccia MASTER-DETAIL (Modifica e Creazione Servizi)
+                const editingService = ref(null);
+                const editForm = ref({
+                    id: null,
+                    name_it: '',
+                    address: '',
+                    phone: '',
+                    email: '',
+                    hours_it: '',
+                    description_it: '',
+                    status: 'active',
+                    adminTempNotice: '',
+                    organization: '',
+                    category: 'showers',
+                    image: ''
+                });
+                const savingServiceId = ref(null);
+
+                // Stato upload immagine
+                const uploadingImage = ref(false);
+                const imageUploadError = ref('');
+
+                const services = ref([]); 
+                const isLoading = ref(true);
+
+                const languages = {
+                    it: { name: 'Italiano', flag: '🇮🇹', rtl: false },
+                    en: { name: 'English', flag: '🇬🇧', rtl: false },
+                    fr: { name: 'Français', flag: '🇫🇷', rtl: false },
+                    es: { name: 'Español', flag: '🇪🇸', rtl: false },
+                    ar: { name: 'العربية (Arabo)', flag: '🇸🇦', rtl: true },
+                    ur: { name: 'اردو (Urdu)', flag: '🇵🇰', rtl: true },
+                    hi: { name: 'हिन्दी (Indiano)', flag: '🇮🇳', rtl: false },
+                    sw: { name: 'Kiswahili', flag: '🇰🇪', rtl: false },
+                    tr: { name: 'Türkçe', flag: '🇹🇷', rtl: false }
+                };
+
+                const currentLang = computed(() => languages[currentLangCode.value]);
+                const isRTL = computed(() => currentLang.value.rtl);
+
+                const selectLanguage = (code) => {
+                    currentLangCode.value = code;
+                    showLangMenu.value = false;
+                };
+
+                const i18n = {
+                    it: {
+                        tab_services: 'Esplora Servizi', tab_news: 'Notizie & Allerta', tab_emergency: 'Emergenze',
+                        welcome_title: 'Mappa dell\'Accoglienza', welcome_sub: 'Trova docce, mense, dormitori e sportelli di assistenza sul territorio di Como in tempo reale.',
+                        search_placeholder: 'Cerca per nome, servizio, via o quartiere...',
+                        categories_title: 'Categorie Servizi', show_all: 'Mostra tutti', cat_all: 'Tutti i servizi',
+                        cat_showers: 'Docce & Igiene', cat_food: 'Mense & Cibo', cat_shelter: 'Dormitori', cat_health: 'Medici & Salute', cat_legal: 'Legale & Doc.', cat_clothes: 'Vestiario',
+                        services_found: 'servizi disponibili', no_results_title: 'Nessun servizio trovato', no_results_sub: 'Prova a cercare con altre parole o azzera i filtri della categoria.', reset_filters: 'Azzera filtri',
+                        status_active: 'Regolare', status_notice: 'Variazione', status_suspended: 'Sospeso', hours_label: 'Orari / Accesso', service_update_label: 'Avviso in tempo reale', service_suspended_label: 'Servizio Sospeso / Avviso',
+                        btn_contact: 'Contatta', btn_directions: 'Direzioni GPS',
+                        news_page_title: 'Aggiornamenti dalle Unità di Strada', news_page_sub: 'Avvisi in tempo reale su cambi di orario, aperture straordinarie per freddo o urgenze dalle associazioni di Como.',
+                        priority_urgent: 'Importante', priority_info: 'Informazione', related_service: 'Scheda collegata', go_to_card: 'Vedi scheda servizio',
+                        emergency_title: 'Numeri di Emergenza', emergency_sub: 'Chiamate gratuite e attive 24 ore su 24 per qualsiasi emergenza di salute o sicurezza.',
+                        em_112_title: '112 - Numero Unico Emergenze', em_112_desc: 'Carabinieri, Polizia, Vigili del Fuoco, Emergenze gravi.',
+                        em_118_title: '118 - Soccorso Sanitario', em_118_desc: 'Ambulanza e urgenze mediche immediate.',
+                        em_street_unit_title: 'Coordinamento Unità di Strada e Marginalità', em_street_unit_desc: 'Se incontri una persona in grave difficoltà in strada a Como durante la notte, segnalala ai volontari.',
+                        call_coordination: 'Segnala a Vicini di Strada',
+                        choose_contact_method: 'Scegli come contattare il servizio', call_now: 'Chiama il numero', send_email: 'Invia una mail', open_maps: 'Apri navigatore GPS', close: 'Chiudi finestra'
+                    },
+                    en: {
+                        tab_services: 'Explore Services', tab_news: 'News & Alerts', tab_emergency: 'Emergency',
+                        welcome_title: 'Hospitality Map', welcome_sub: 'Find showers, soup kitchens, shelters, and assistance desks in Como in real time.',
+                        search_placeholder: 'Search by name, service, street or neighborhood...',
+                        categories_title: 'Service Categories', show_all: 'Show all', cat_all: 'All services',
+                        cat_showers: 'Showers & Hygiene', cat_food: 'Food & Kitchens', cat_shelter: 'Shelters', cat_health: 'Medical Care', cat_legal: 'Legal & Docs', cat_clothes: 'Clothing',
+                        services_found: 'services available', no_results_title: 'No services found', no_results_sub: 'Try searching with different words or reset the category filters.', reset_filters: 'Reset filters',
+                        status_active: 'Active', status_notice: 'Notice', status_suspended: 'Suspended', hours_label: 'Hours / Access', service_update_label: 'Real-time alert', service_suspended_label: 'Service Suspended / Notice',
+                        btn_contact: 'Contact', btn_directions: 'GPS Directions',
+                        news_page_title: 'Street Outreach Updates', news_page_sub: 'Real-time alerts on schedule changes, emergency winter shelters, or notices from Como associations.',
+                        priority_urgent: 'Urgent', priority_info: 'Info', related_service: 'Related service', go_to_card: 'View service card',
+                        emergency_title: 'Emergency Numbers', emergency_sub: 'Toll-free numbers active 24/7 for any health or safety emergency.',
+                        em_112_title: '112 - General Emergency', em_112_desc: 'Police, Firefighters, Severe emergencies.',
+                        em_118_title: '118 - Medical Emergency', em_118_desc: 'Ambulance and immediate medical help.',
+                        em_street_unit_title: 'Street Outreach Coordination', em_street_unit_desc: 'If you see someone in severe distress on the streets of Como at night, report it to volunteers.',
+                        call_coordination: 'Report to Vicini di Strada',
+                        choose_contact_method: 'Choose how to contact the service', call_now: 'Call phone number', send_email: 'Send an email', open_maps: 'Open GPS navigation', close: 'Close window'
+                    },
+                    fr: {
+                        tab_services: 'Services', tab_news: 'Actualités', tab_emergency: 'Urgences',
+                        welcome_title: 'Carte d\'Accueil', welcome_sub: 'Trouvez douches, repas, hébergements et aide juridique à Côme en temps réel.',
+                        search_placeholder: 'Rechercher par nom, service, rue ou quartier...',
+                        categories_title: 'Catégories', show_all: 'Tout voir', cat_all: 'Tous les services',
+                        cat_showers: 'Douches & Hygiène', cat_food: 'Repas & Alimentation', cat_shelter: 'Hébergement', cat_health: 'Santé & Médecins', cat_legal: 'Juridique & Doc.', cat_clothes: 'Vêtements',
+                        services_found: 'services disponibles', no_results_title: 'Aucun service trouvé', no_results_sub: 'Essayez d\'autres mots ou réinitialisez les filtres.', reset_filters: 'Réinitialiser',
+                        status_active: 'Ouvert', status_notice: 'Changement', status_suspended: 'Suspendu', hours_label: 'Horaires / Accès', service_update_label: 'Alerte en temps réel', service_suspended_label: 'Service Suspendu / Avis',
+                        btn_contact: 'Contacter', btn_directions: 'Itinéraire GPS',
+                        news_page_title: 'Actualités des Maraudes', news_page_sub: 'Alertes en temps réel sur les horaires, hébergements d\'urgence ou avis des associations de Côme.',
+                        priority_urgent: 'Urgent', priority_info: 'Info', related_service: 'Service lié', go_to_card: 'Voir la fiche',
+                        emergency_title: 'Numéros d\'Urgence', emergency_sub: 'Numéros gratuits et actifs 24h/24 et 7j/7 pour toute urgence.',
+                        em_112_title: '112 - Urgence Générale', em_112_desc: 'Police, Pompiers, Urgences graves.',
+                        em_118_title: '118 - Urgence Médicale', em_118_desc: 'Ambulance et soins immédiats.',
+                        em_street_unit_title: 'Coordination des Maraudes', em_street_unit_desc: 'Si vous voyez une personne en détresse dans la rue à Côme la nuit, signalez-la aux bénévoles.',
+                        call_coordination: 'Signaler à Vicini di Strada',
+                        choose_contact_method: 'Choisissez comment contacter', call_now: 'Appeler le numéro', send_email: 'Envoyer un e-mail', open_maps: 'Ouvrir le GPS', close: 'Fermer'
+                    },
+                    ar: {
+                        tab_services: 'استكشف الخدمات', tab_news: 'الأخبار والتنبيهات', tab_emergency: 'طوارئ',
+                        welcome_title: 'خريطة الاستقبال والمساعدة', welcome_sub: 'ابحث عن الحمامات، المطاعم المجانية، الملاجئ، ومكاتب المساعدة في كومو في الوقت الفعلي.',
+                        search_placeholder: 'ابحث بالاسم، الخدمة، الشارع أو الحي...',
+                        categories_title: 'فئات الخدمات', show_all: 'عرض الكل', cat_all: 'جميع الخدمات',
+                        cat_showers: 'استحمام ونظافة', cat_food: 'وجبات وطعام', cat_shelter: 'مبيت وملاجئ', cat_health: 'رعاية صحية', cat_legal: 'قانوني ووثائق', cat_clothes: 'ملابس',
+                        services_found: 'خدمات متاحة', no_results_title: 'لم يتم العثور على خدمات', no_results_sub: 'حاول البحث بكلمات مختلفة أو قم بإعادة تعيين عوامل تصفية الفئة.', reset_filters: 'إعادة تعيين',
+                        status_active: 'مفتوح', status_notice: 'تنبيه', status_suspended: 'متوقف مؤقتاً', hours_label: 'ساعات العمل / الوصول', service_update_label: 'تحديث مباشر', service_suspended_label: 'الخدمة متوقفة مؤقتاً / تنبيه',
+                        btn_contact: 'اتصل', btn_directions: 'اتجاهات GPS',
+                        news_page_title: 'تحديثات من فرق الشارع', news_page_sub: 'تنبيهات فورية بشأن تغييرات المواعيد أو ملاجئ الطوارئ الشتوية من جمعيات كومو.',
+                        priority_urgent: 'هام جداً', priority_info: 'معلومة', related_service: 'الخدمة المرتبطة', go_to_card: 'عرض تفاصيل الخدمة',
+                        emergency_title: 'أرقام الطوارئ', emergency_sub: 'أرقام مجانية تعمل على مدار 24 ساعة لأي حالة طوارئ صحية أو أمنية.',
+                        em_112_title: '112 - رقم الطوارئ العام', em_112_desc: 'الشرطة، الإطفاء، حالات الطوارئ الخطيرة.',
+                        em_118_title: '118 - الإسعاف الطبي', em_118_desc: 'سيارة إسعاف ومساعدة طبية فورية.',
+                        em_street_unit_title: 'تنسيق فرق المساعدة في الشوارع', em_street_unit_desc: 'إذا رأيت شخصاً في أزمة شديدة في شوارع كومو ليلاً، أبلغ المتطوعين.',
+                        call_coordination: 'إبلاغ Vicini di Strada',
+                        choose_contact_method: 'اختر طريقة الاتصال بالخدمة', call_now: 'اتصل برقم الهاتف', send_email: 'إرسال بريد إلكتروني', open_maps: 'فتح تطبيق الخرائط', close: 'إغلاق النافذة'
+                    },
+                    ur: {
+                        tab_services: 'خدمات تلاش کریں', tab_news: 'خبریں اور الرٹس', tab_emergency: 'ایمرجنسی',
+                        welcome_title: 'رہنمائی اور مدد کا نقشہ', welcome_sub: 'کومو میں غسل خانے، مفت کھانے، پناہ گاہیں اور امدادی دفاتر ریئل ٹائم میں تلاش کریں۔',
+                        search_placeholder: 'نام، سروس، سڑک یا محلے کے لحاظ سے تلاش کریں...',
+                        categories_title: 'خدمات کے زمرے', show_all: 'سب دکھائیں', cat_all: 'تمام خدمات',
+                        cat_showers: 'نہانا اور صفائی', cat_food: 'کھانا اور کچن', cat_shelter: 'پناہ گاہیں', cat_health: 'طبی امداد', cat_legal: 'قانونی اور کاغذات', cat_clothes: 'لباس',
+                        services_found: 'خدمات دستیاب ہیں', no_results_title: 'کوئی سروس نہیں ملی', no_results_sub: 'مختلف الفاظ کے ساتھ تلاش کرنے کی کوشش کریں یا فلٹرز کو ری سیٹ کریں۔', reset_filters: 'فلٹرز ری سیٹ کریں',
+                        status_active: 'فعال / کھلا', status_notice: 'تبدیلی', status_suspended: 'معطل / بند', hours_label: 'اوقات / رسائی', service_update_label: 'فوری اطلاع', service_suspended_label: 'سروس عارضی طور پر بند / اطلاع',
+                        btn_contact: 'رابطہ کریں', btn_directions: 'GPS راستہ',
+                        news_page_title: 'اسٹریٹ آؤٹ ریچ کی تازہ ترین خبریں', news_page_sub: 'اوقات میں تبدیلی، سردیوں کی ہنگامی پناہ گاہوں یا کومو کی تنظیموں کی طرف سے فوری اطلاعات۔',
+                        priority_urgent: 'اہم', priority_info: 'معلومات', related_service: 'متعلقہ سروس', go_to_card: 'سروس کارڈ دیکھیں',
+                        emergency_title: 'ایمرجنسی نمبرز', emergency_sub: 'کسی بھی طبی یا حفاظتی ہنگامی صورتحال کے لیے 24 گھنٹے مفت کال نمبرز۔',
+                        em_112_title: '112 - جنرل ایمرجنسی', em_112_desc: 'پولیس، فائر بریگیڈ، شدید ہنگامی حالات۔',
+                        em_118_title: '118 - طبی امداد (ایمبولینس)', em_118_desc: 'ایمبولینس اور فوری طبی مدد۔',
+                        em_street_unit_title: 'اسٹریٹ آؤٹ ریچ کوآرڈینیشن', em_street_unit_desc: 'اگر آپ رات کو کومو کی سڑکوں پر کسی کو شدید پریشانی میں دیکھیں تو رضاکاروں کو مطلع کریں۔',
+                        call_coordination: 'Vicini di Strada کو اطلاع دیں',
+                        choose_contact_method: 'رابطے کا طریقہ منتخب کریں', call_now: 'فون نمبر پر کال کریں', send_email: 'ای میل بھیجیں', open_maps: 'GPS نقشہ کھولیں', close: 'بند کریں'
+                    },
+                    hi: {
+                        tab_services: 'सेवाएं खोजें', tab_news: 'समाचार और अलर्ट', tab_emergency: 'आपातकालीन',
+                        welcome_title: 'सहायता और स्वागत मानचित्र', welcome_sub: 'कोमो में सार्वजनिक स्नानघर, भोजन, आश्रय स्थल और सहायता डेस्क वास्तविक समय में खोजें।',
+                        search_placeholder: 'नाम, सेवा, सड़क या मोहल्ले से खोजें...',
+                        categories_title: 'सेवा श्रेणियां', show_all: 'सभी दिखाएं', cat_all: 'सभी सेवाएं',
+                        cat_showers: 'स्नान और स्वच्छता', cat_food: 'भोजन और रसोई', cat_shelter: 'आश्रय / रैन बसेरा', cat_health: 'चिकित्सा देखभाल', cat_legal: 'कानूनी और दस्तावेज़', cat_clothes: 'कपड़े',
+                        services_found: 'सेवाएं उपलब्ध हैं', no_results_title: 'कोई सेवा नहीं मिली', no_results_sub: 'अलग शब्दों से खोजने का प्रयास करें या श्रेणी फ़िल्टर रीसेट करें।', reset_filters: 'फ़िल्टर रीसेट करें',
+                        status_active: 'सक्रिय / खुला', status_notice: 'सूचना / बदलाव', status_suspended: 'निलंबित / बंद', hours_label: 'समय / पहुँच', service_update_label: 'ताज़ा अपडेट', service_suspended_label: 'सेवा निलंबित / महत्वपूर्ण सूचना',
+                        btn_contact: 'संपर्क करें', btn_directions: 'जीपीएस दिशा-निर्देश',
+                        news_page_title: 'स्ट्रीट आउटरीच अपडेट', news_page_sub: 'समय में बदलाव, शीतकालीन आपातकालीन आश्रयों या कोमो संघों से वास्तविक समय की सूचनाएं।',
+                        priority_urgent: 'ज़रूरी', priority_info: 'जानकारी', related_service: 'संबंधित सेवा', go_to_card: 'सेवा कार्ड देखें',
+                        emergency_title: 'आपातकालीन नंबर', emergency_sub: 'किसी भी स्वास्थ्य या सुरक्षा आपात स्थिति के लिए 24/7 निःशुल्क टोल-फ्री नंबर।',
+                        em_112_title: '112 - सामान्य आपातकाल', em_112_desc: 'पुलिस, दमकल, गंभीर आपात स्थिति।',
+                        em_118_title: '118 - चिकित्सा आपातकाल', em_118_desc: 'एम्बुलेंस Ext और तत्काल चिकित्सा सहायता।',
+                        em_street_unit_title: 'स्ट्रीट आउटरीच समन्वय', em_street_unit_desc: 'यदि आप रात में कोमो की सड़कों पर किसी को गंभीर परेशानी में देखते हैं, तो स्वयंसेवकों को सूचित करें।',
+                        call_coordination: 'Vicini di Strada को सूचित करें',
+                        choose_contact_method: 'संपर्क का तरीका चुनें', call_now: 'फ़ोन नंबर पर कॉल करें', send_email: 'ईमेल भेजें', open_maps: 'जीपीएस नेविगेशन खोलें', close: 'बंद करें'
+                    },
+                    sw: {
+                        tab_services: 'Gundua Huduma', tab_news: 'Habari & Taarifa', tab_emergency: 'Dharura',
+                        welcome_title: 'Ramani ya Ukarimu', welcome_sub: 'Pata bafu za umma, chakula, makazi na msaada wa kisheria jijini Como moja kwa moja.',
+                        search_placeholder: 'Tafuta kwa jina, huduma, mtaa au eneo...',
+                        categories_title: 'Aina za Huduma', show_all: 'Onyesha zote', cat_all: 'Huduma zote',
+                        cat_showers: 'Bafu & Usafi', cat_food: 'Chakula & Jikoni', cat_shelter: 'Makazi ya Kulala', cat_health: 'Afya & Madaktari', cat_legal: 'Sheria & Nyaraka', cat_clothes: 'Mavazi',
+                        services_found: 'huduma zinazopatikana', no_results_title: 'Hakuna huduma iliyopatikana', no_results_sub: 'Jaribu kutafuta kwa maneno mengine au weka upya vichujio.', reset_filters: 'Weka upya vichujio',
+                        status_active: 'Wazi', status_notice: 'Taarifa', status_suspended: 'Imesitishwa', hours_label: 'Saa / Upatikanaji', service_update_label: 'Taarifa ya papo hapo', service_suspended_label: 'Huduma Imesitishwa / Taarifa',
+                        btn_contact: 'Wasiliana', btn_directions: 'Maelekezo ya GPS',
+                        news_page_title: 'Taarifa za Mtaani', news_page_sub: 'Taarifa za papo hapo kuhusu mabadiliko ya ratiba, makazi ya dharura au matangazo kutoka kwa vyama vya Como.',
+                        priority_urgent: 'Muhimu Sana', priority_info: 'Maelezo', related_service: 'Huduma inayohusika', go_to_card: 'Tazama kadi ya huduma',
+                        emergency_title: 'Nambari za Dharura', emergency_sub: 'Nambari za bure zinazofanya kazi saa 24/7 kwa dharura yoyote ya afya au usalama.',
+                        em_112_title: '112 - Dharura ya Jumla', em_112_desc: 'Polisi, Zimamoto, Dharura kubwa.',
+                        em_118_title: '118 - Dharura ya Tiba', em_118_desc: 'Ambulance na msaada wa haraka wa matibabu.',
+                        em_street_unit_title: 'Uratibu wa Wafanyakazi wa Mtaani', em_street_unit_desc: 'Ukiona mtu yuko kwenye shida kubwa mitaani mwa Como usiku, mjulishe wa kujitolea.',
+                        call_coordination: 'Taarifu Vicini di Strada',
+                        choose_contact_method: 'Chagua jinsi ya kuwasiliana', call_now: 'Piga simu sasa', send_email: 'Tuma barua pepe', open_maps: 'Fungua ramani ya GPS', close: 'Funga dirisha'
+                    },
+                    tr: {
+                        tab_services: 'Hizmetleri Keşfet', tab_news: 'Haberler & Duyurular', tab_emergency: 'Acil Durum',
+                        welcome_title: 'Yardım ve Karşılama Haritası', welcome_sub: 'Como\'daki halka açık duşları, aşevlerini, yatakhaneleri ve danışma masalarını anlık bulun.',
+                        search_placeholder: 'İsim, hizmet, sokak veya mahalleye göre ara...',
+                        categories_title: 'Hizmet Kategorileri', show_all: 'Tümünü göster', cat_all: 'Tüm hizmetler',
+                        cat_showers: 'Duş & Hijyen', cat_food: 'Yemek & Aşevleri', cat_shelter: 'Yatakhaneler', cat_health: 'Sağlık & Tıbbi', cat_legal: 'Yasal & Evrak', cat_clothes: 'Giyim Yardımı',
+                        services_found: 'hizmet mevcut', no_results_title: 'Hizmet bulunamadı', no_results_sub: 'Farklı kelimelerle aramayı deneyin veya kategori filtrelerini sıfırlayın.', reset_filters: 'Filtreleri sıfırla',
+                        status_active: 'Açık / Aktif', status_notice: 'Değişiklik', status_suspended: 'Askıya Alındı', hours_label: 'Saatler / Erişim', service_update_label: 'Anlık Duyuru', service_suspended_label: 'Hizmet Askıya Alındı / Duyuru',
+                        btn_contact: 'İletişim', btn_directions: 'GPS Yol Tarifi',
+                        news_page_title: 'Saha Ekipleri Güncellemeleri', news_page_sub: 'Saat değişiklikleri, kış acil barınakları veya Como derneklerinden anlık uyarılar.',
+                        priority_urgent: 'Acil', priority_info: 'Bilgi', related_service: 'İlgili hizmet', go_to_card: 'Hizmet kartına git',
+                        emergency_title: 'Acil Numaralar', emergency_sub: 'Her türlü sağlık veya güvenlik acil durumu için 7/24 ücretsiz numaralar.',
+                        em_112_title: '112 - Genel Acil Durum', em_112_desc: 'Polisi, İtfaiye, Ciddi acil durumlar.',
+                        em_118_title: '118 - Tıbbi Acil (Ambulans)', em_118_desc: 'Ambulance ve anlık tıbbi müdahale.',
+                        em_street_unit_title: 'Saha Ekipleri Koordinasyonu', em_street_unit_desc: 'Como sokaklarında gece saatlerinde acil yardıma muhtaç birini görürseniz gönüllülere bildirin.',
+                        call_coordination: 'Vicini di Strada\'ya Bildir',
+                        choose_contact_method: 'İletişim yöntemini seçin', call_now: 'Telefonu ara', send_email: 'E-posta gönder', open_maps: 'GPS Haritasını aç', close: 'Pencereyi kapat'
+                    },
+                    es: {
+                        tab_services: 'Servicios', tab_news: 'Noticias y Alertas', tab_emergency: 'Emergencias',
+                        welcome_title: 'Mapa de Acogida', welcome_sub: 'Encuentra duchas, comedores, albergues y asistencia legal en Como en tiempo real.',
+                        search_placeholder: 'Buscar por nombre, servicio, calle o barrio...',
+                        categories_title: 'Categorías', show_all: 'Ver todos', cat_all: 'Todos los servicios',
+                        cat_showers: 'Duchas e Higiene', cat_food: 'Comedores y Comida', cat_shelter: 'Albergues / Dormitorios', cat_health: 'Atención Médica', cat_legal: 'Asesoría Legal', cat_clothes: 'Ropa y Vestuario',
+                        services_found: 'servicios disponibles', no_results_title: 'No se encontraron servicios', no_results_sub: 'Intenta buscar con otras palabras o restablece los filtros.', reset_filters: 'Restablecer filtros',
+                        status_active: 'Abierto', status_notice: 'Aviso', status_suspended: 'Suspendido', hours_label: 'Horarios / Acceso', service_update_label: 'Aviso en tiempo real', service_suspended_label: 'Servicio Suspendido / Aviso',
+                        btn_contact: 'Contactar', btn_directions: 'Cómo llegar',
+                        news_page_title: 'Novedades de Unidades de Calle', news_page_sub: 'Alertas en tiempo real sobre horarios, aperturas de emergencia por frío o avisos de las asociaciones de Como.',
+                        priority_urgent: 'Urgente', priority_info: 'Información', related_service: 'Servicio relacionado', go_to_card: 'Ver ficha del servicio',
+                        emergency_title: 'Números de Emergencia', emergency_sub: 'Llamadas gratuítas y activas las 24 horas para emergencias médicas o de seguridad.',
+                        em_112_title: '112 - Emergencias Generales', em_112_desc: 'Policía, Bomberos, Emergencias graves.',
+                        em_118_title: '118 - Emergencia Médica', em_118_desc: 'Ambulance y atención médica inmediata.',
+                        em_street_unit_title: 'Coordinación Unidades de Calle', em_street_unit_desc: 'Si encuentras a una persona en situación de grave vulnerabilidad en la calle por la noche, avisa a los voluntarios.',
+                        call_coordination: 'Avisar a Vicini di Strada',
+                        choose_contact_method: 'Elige cómo contactar', call_now: 'Llamar al teléfono', send_email: 'Enviar un correo', open_maps: 'Abrir navegación GPS', close: 'Cerrar ventana'
+                    }
+                };
+
+                const t = (key) => {
+                    const langDict = i18n[currentLangCode.value] || i18n['it'];
+                    return langDict[key] || i18n['it'][key] || key;
+                };
+
+                const translateField = (obj, fieldName) => {
+                    if (!obj || !obj[fieldName]) return '';
+                    return obj[fieldName][currentLangCode.value] || obj[fieldName]['it'] || obj[fieldName]['en'] || '';
+                };
+
+                const categories = [
+                    { id: 'showers', icon: '🚿', labelKey: 'cat_showers' },
+                    { id: 'food', icon: '🍲', labelKey: 'cat_food' },
+                    { id: 'shelter', icon: '🛏️', labelKey: 'cat_shelter' },
+                    { id: 'health', icon: '🩺', labelKey: 'cat_health' },
+                    { id: 'legal', icon: '⚖️', labelKey: 'cat_legal' },
+                    { id: 'clothes', icon: '👕', labelKey: 'cat_clothes' }
+                ];
+
+                const getCategoryIcon = (catId) => categories.find(c => c.id === catId)?.icon || '📍';
+                const getCategoryLabelKey = (catId) => categories.find(c => c.id === catId)?.labelKey || 'cat_all';
+
+                // Estrae sempre una stringa sicura da un campo multilingua (oggetto {it, en, ...} o stringa semplice).
+                // Evita che editForm venga popolato con un oggetto anziché con del testo, causando errori tipo ".trim is not a function".
+                const extractText = (field) => {
+                    if (!field) return '';
+                    if (typeof field === 'string') return field;
+                    if (typeof field === 'object') return field.it || field.en || '';
+                    return '';
+                };
+
+                // CONTROLLO SESSIONE AUTENTICAZIONE OPERATORE
+                const checkAuthSession = async () => {
+                    if (!supabase) return;
+                    const { data: { session } } = await supabase.auth.getSession();
+                    user.value = session ? session.user : null;
+
+                    supabase.auth.onAuthStateChange((_, session) => {
+                        user.value = session ? session.user : null;
+                        if (!session && activeTab.value === 'admin_dashboard') {
+                            activeTab.value = 'services';
+                            cancelEditing();
+                        }
+                    });
+                };
+
+                // ESECUZIONE LOGIN CON SUPABASE AUTH
+                const handleLogin = async () => {
+                    if (!supabase) return;
+                    authLoading.value = true;
+                    authError.value = '';
+                    
+                    try {
+                        const { data, error } = await supabase.auth.signInWithPassword({
+                            email: authForm.value.email.trim(),
+                            password: authForm.value.password
+                        });
+                        
+                        if (error) throw error;
+                        
+                        user.value = data.user;
+                        authForm.value = { email: '', password: '' };
+                        openAdminModal.value = false;
+                        activeTab.value = 'admin_dashboard';
+                    } catch (err) {
+                        authError.value = "Credenziali non valide. Riprova o contatta l'amministratore.";
+                        console.error("Errore Auth:", err.message);
+                    } finally {
+                        authLoading.value = false;
+                    }
+                };
+
+                // ESECUZIONE LOGOUT
+                const handleLogout = async () => {
+                    if (!supabase) return;
+                    await supabase.auth.signOut();
+                    user.value = null;
+                    openAdminModal.value = false;
+                    activeTab.value = 'services';
+                    cancelEditing();
+                };
+
+                // SCARICAMENTO DATI DAL CLOUD
+                const fetchServices = async () => {
+                    if (!supabase) {
+                        console.error("Supabase non inizializzato correttamente.");
+                        isLoading.value = false;
+                        return;
+                    }
+                    isLoading.value = true;
+                    try {
+                        const { data, error } = await supabase
+                            .from('services')
+                            .select('*')
+                            .order('category', { ascending: true });
+
+                        if (error) throw error;
+                        
+                        if (data && data.length > 0) {
+                            services.value = data; 
+                        }
+                    } catch (error) {
+                        console.error("Errore nel caricamento dei servizi da Supabase:", error.message);
+                    } finally {
+                        isLoading.value = false;
+                    }
+                };
+
+                // CARICAMENTO IMMAGINE SU SUPABASE STORAGE
+                const handleImageUpload = async (event) => {
+                    const file = event.target.files && event.target.files[0];
+                    if (!file) return;
+                    if (!supabase) {
+                        imageUploadError.value = 'Connessione al cloud non disponibile.';
+                        return;
+                    }
+
+                    // Validazione base: solo immagini, max 5MB
+                    if (!file.type.startsWith('image/')) {
+                        imageUploadError.value = 'Il file selezionato non è un\'immagine valida.';
+                        event.target.value = '';
+                        return;
+                    }
+                    if (file.size > 15 * 1024 * 1024) {
+                        imageUploadError.value = 'L\'immagine supera i 15MB. Scegline una più leggera.';
+                        event.target.value = '';
+                        return;
+                    }
+
+                    uploadingImage.value = true;
+                    imageUploadError.value = '';
+
+                    try {
+                        const fileExt = (file.name.split('.').pop() || 'jpg').toLowerCase();
+                        const uniqueName = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}.${fileExt}`;
+
+                        const { error: uploadError } = await supabase.storage
+                            .from(IMAGE_BUCKET)
+                            .upload(uniqueName, file, {
+                                cacheControl: '3600',
+                                upsert: false
+                            });
+
+                        if (uploadError) throw uploadError;
+
+                        const { data: publicUrlData } = supabase.storage
+                            .from(IMAGE_BUCKET)
+                            .getPublicUrl(uniqueName);
+
+                        if (!publicUrlData || !publicUrlData.publicUrl) {
+                            throw new Error('Impossibile ottenere il link pubblico dell\'immagine.');
+                        }
+
+                        editForm.value.image = publicUrlData.publicUrl;
+                    } catch (err) {
+                        console.error('Errore upload immagine:', err.message);
+                        imageUploadError.value = 'Caricamento non riuscito: ' + err.message;
+                    } finally {
+                        uploadingImage.value = false;
+                        event.target.value = '';
+                    }
+                };
+
+                // AVVIA LA MODIFICA DI UN SERVIZIO (PASSA A VISTA DETTAGLIO)
+                const startEditing = (service) => {
+                    editingService.value = service;
+                    editForm.value = {
+                        id: service.id,
+                        name_it: extractText(service.name),
+                        address: service.address || '',
+                        phone: service.phone || '',
+                        email: service.email || '',
+                        hours_it: extractText(service.hours),
+                        description_it: extractText(service.description),
+                        status: service.status || 'active',
+                        adminTempNotice: service.latestUpdate ? extractText(service.latestUpdate.text) : '',
+                        organization: service.organization || '',
+                        category: service.category || 'showers',
+                        image: service.image || ''
+                    };
+                    imageUploadError.value = '';
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                };
+
+                // AVVIA LA CREAZIONE DI UN NUOVO SERVIZIO
+                const startCreating = () => {
+                    editingService.value = { id: null };
+                    editForm.value = {
+                        id: null,
+                        name_it: '',
+                        address: '',
+                        phone: '',
+                        email: '',
+                        hours_it: '',
+                        description_it: '',
+                        status: 'active', // Status predefinito "Regolare" per i nuovi servizi (pannello nascosto in creazione)
+                        adminTempNotice: '',
+                        organization: '',
+                        category: 'showers',
+                        image: 'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=600&auto=format&fit=crop&q=80'
+                    };
+                    imageUploadError.value = '';
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                };
+
+                // ANNULLA O CHIUDE LA MODIFICA DI UN SERVIZIO
+                const cancelEditing = () => {
+                    editingService.value = null;
+                    editForm.value = { id: null };
+                    imageUploadError.value = '';
+                };
+
+                // SALVATAGGIO COMPLETO SU SUPABASE (CREAZIONE O MODIFICA)
+                const saveServiceChanges = async () => {
+                    if (!supabase || !editingService.value) return;
+                    const targetService = editingService.value;
+                    savingServiceId.value = editForm.value.id || 'new_record';
+
+                    try {
+                        // 1. Gestione avviso temporaneo
+                        let updatedLatestUpdate = null;
+                        if (editForm.value.adminTempNotice && editForm.value.adminTempNotice.trim() !== '') {
+                            const todayStr = new Date().toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                            updatedLatestUpdate = {
+                                text: { it: editForm.value.adminTempNotice.trim() },
+                                date: todayStr
+                            };
+                        }
+
+                        // 2. Aggiornamento campi JSONB preservando le altre lingue se esistenti
+                        const updatedName = editForm.value.id && typeof targetService.name === 'object' 
+                            ? { ...targetService.name, it: String(editForm.value.name_it || '').trim() }
+                            : { it: String(editForm.value.name_it || '').trim() };
+
+                        const updatedHours = editForm.value.id && typeof targetService.hours === 'object' 
+                            ? { ...targetService.hours, it: String(editForm.value.hours_it || '').trim() }
+                            : { it: String(editForm.value.hours_it || '').trim() };
+
+                        const updatedDescription = editForm.value.id && typeof targetService.description === 'object' 
+                            ? { ...targetService.description, it: String(editForm.value.description_it || '').trim() }
+                            : { it: String(editForm.value.description_it || '').trim() };
+
+                        const servicePayload = {
+                            status: editForm.value.status,
+                            address: String(editForm.value.address || '').trim(),
+                            phone: String(editForm.value.phone || '').trim(),
+                            email: String(editForm.value.email || '').trim(),
+                            name: updatedName,
+                            hours: updatedHours,
+                            description: updatedDescription,
+                            latestUpdate: updatedLatestUpdate,
+                            organization: String(editForm.value.organization || '').trim(),
+                            category: editForm.value.category,
+                            image: String(editForm.value.image || '').trim() || 'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=600&auto=format&fit=crop&q=80'
+                        };
+
+                        if (editForm.value.id) {
+                            // --- AGGIORNAMENTO SERVIZIO ESISTENTE ---
+                            const { data, error } = await supabase
+                                .from('services')
+                                .update(servicePayload)
+                                .eq('id', editForm.value.id)
+                                .select();
+
+                            if (error) throw error;
+                            if (!data || data.length === 0) throw new Error("Errore: Nessun record modificato. Controlla le policy RLS.");
+
+                            Object.assign(targetService, servicePayload);
+                            alert("✅ Modifiche salvate con successo online!");
+                        } else {
+                            // --- INSERIMENTO NUOVO SERVIZIO ---
+                            const { data, error } = await supabase
+                                .from('services')
+                                .insert([servicePayload])
+                                .select();
+
+                            if (error) throw error;
+                            if (!data || data.length === 0) throw new Error("Errore: Record non inserito. Controlla le policy RLS di INSERT.");
+
+                            services.value.push(data[0]);
+                            alert("✨ Nuovo servizio registrato e pubblicato sulla mappa!");
+                        }
+
+                        cancelEditing();
+
+                    } catch (err) {
+                        console.error("Errore salvataggio:", err.message);
+                        alert("❌ Operazione non riuscita.\n\nDettaglio errore: " + err.message);
+                    } finally {
+                        savingServiceId.value = null;
+                    }
+                };
+
+                onMounted(() => {
+                    fetchServices();
+                    checkAuthSession();
+                });
+
+                const globalNews = ref([
+                    {
+                        id: 101,
+                        priority: 'high',
+                        association: 'Coordinamento Unità di Strada Como',
+                        date: 'Ieri / Yesterday',
+                        relatedServiceId: 'docce-caritas',
+                        title: {
+                            it: 'Emergenza Caldo: Distribuzione Borracce e Sali Minerali',
+                            en: 'Heat Emergency: Distribution of Water Bottles and Electrolytes',
+                            fr: 'Urgence Canicule : Distribution de Gourdes et Électrolytes',
+                            ar: 'طوارئ الحر: توزيع عبوات المياه والأملاح المعدنية',
+                            ur: 'شدید گرمی کی صورتحال: پانی کی بوتلیں اور نمکیات کی تقسیم',
+                            hi: 'गर्मी आपातकाल: पानी की बोतलें और इलेक्ट्रोलाइट्स का वितरण',
+                            sw: 'Dharura ya Joto: Ugawaji wa Chupa za Maji na Madini',
+                            tr: 'Sıcak Hava Acil Durumu: Su Matarası ve Mineral Dağıtımı',
+                            es: 'Alerta por Calor: Reparto de Botellas de Agua y Sales Minerales'
+                        },
+                        content: {
+                            it: 'Durante i giri serali delle 4 unità di strada (dalle ore 21:00) e presso le docce di Via Gallio, verranno distribuite borracce termiche e bustine di integratori per combattere la disidratazione.',
+                            en: 'During evening street rounds (from 9 PM) and at the Gallio Street showers, thermal bottles and supplement supplements will be distributed to combat dehydration.',
+                            fr: 'Lors des maraudes du soir (dès 21h00) et aux douches de Via Gallio, distribution de gourdes et compléments pour éviter la déshydratation.',
+                            ar: 'خلال الجولات المسائية لفرق الشارع الأربعة (بدءاً من الساعة 9 مساءً) وفي حمامات شارع غاليو، سيتم توزيع عبوات مياه حرارية ومكملات غذائية لمكافحة الجفاف.',
+                            ur: 'شام کے گشت کے دوران (رات 9 بجے سے) اور ویا گالیو کے غسل خانوں میں، پانی کی کمی سے بچنے کے لیے تھرمل بوتلیں اور نمکیات تقسیم کیے جائیں گے۔',
+                            hi: 'शाम के गश्त के दौरान (रात 9 बजे से) और वाया गालियो के स्नानघरों में, पानी की कमी से बचने के लिए पानी की बोतलें और सप्लीमेंट्स वितरित किए जाएंगे।',
+                            sw: 'Wakati wa mizunguko ya jioni (kuanzia saa 3 usiku) na kwenye bafu za Via Gallio, chupa za maji na virutubisho vitatolewa.',
+                            tr: 'Akşam saha turu sırasında (saat 21:00\'den itibaren) ve Via Gallio duşlarında, susuzlukla mücadele için termal su matara ve mineral takviyeleri dağıtılacaktır.',
+                            es: 'Durante las rutas nocturnas (desde las 21:00) y en las duchas di Via Gallio se entregarán botellas térmicas y sales para combatir la deshidratación.'
+                        }
+                    },
+                    {
+                        id: 102,
+                        priority: 'normal',
+                        association: 'Caritas Como',
+                        date: '2 giorni fa / 2 days ago',
+                        relatedServiceId: 'mensa-solidarieta',
+                        title: {
+                            it: 'Modifica temporanea modalità Mensa dal fine settimana',
+                            en: 'Temporary change in Soup Kitchen operations starting this weekend',
+                            fr: 'Modification temporaire du fonctionnement de la Cantine ce week-end',
+                            ar: 'تعديل مؤقت في نظام عمل المطعم التكافلي اعتباراً من عطلة نهاية الأسبوع',
+                            ur: 'اس ہفتے کے آخر سے سولیڈیریٹی کچن کے نظام میں عارضی تبدیلی',
+                            hi: 'इस सप्ताह के अंत से सॉलिडेरिटी किचन के संचालन में अस्थायी बदलाव',
+                            sw: 'Mabadiliko ya muda katika mfumo wa chakula kuanzia wikiendi',
+                            tr: 'Bu hafta sonundan itibaren Aşevi hizmet şeklinde geçici değişiklik',
+                            es: 'Cambio temporal en el servicio de Comedor desde el fin de semana'
+                        },
+                        content: {
+                            it: 'A causa del rifacimento della pavimentazione interna, la sala pranzo rimarrà chiusa per 4 giorni. I pasti caldi verranno regolarmente serviti in modalità cestino da asporto all\'ingresso di Via Gallio 8.',
+                            en: 'Due to indoor flooring renovations, the dining hall will be closed for 4 days. Hot meals will be served regularly as takeaway bags at the entrance of Via Gallio 8.',
+                            fr: 'En raison de travaux de sol, la salle à manger sera fermée 4 jours. Les repas seront servis à emporter à l\'entrée.',
+                            ar: 'بسبب أعمال تجديد الأرضية الداخلية، ستغلق قاعة الطعام لمدة 4 أيام. سيتم تقديم الوجبات الساخنة كالمعتاد بنظام العبوة السفري عند مدخل شارع غاليو 8.',
+                            ur: 'اندرونی فرش کی مرمت کی وجہ سے ڈائننگ ہال 4 دن بند رہے گا۔ گرم کھانا معمول کے مطابق ویا گالیو 8 کے دروازے پر پارسل کی صورت میں دیا جائے گا۔',
+                            hi: 'अंदरूनी फर्श की मरम्मत के कारण डाइनिंग हॉल 4 दिनों के लिए बंद रहेगा। गर्म भोजन नियमित रूप से वाया गालियो 8 के प्रवेश द्वार पर टेकअवे बैग के रूप में दिया जाएगा।',
+                            sw: 'Kutokana na ukarabati wa sakafu, ukumbi utafungwa siku 4. Chakula kitatolewa mlangoni kama kawaida.',
+                            tr: 'İç zemin yenileme çalışmaları nedeniyle yemek salonu 4 gün kapalı kalacaktır. Sıcak yemekler Via Gallio 8 girişinde paket olarak dağıtılmaya devam edecektir.',
+                            es: 'Por obras en el suelo, el comedor cerrará 4 días. La comida caliente se entregará puntualmente en bolsas para llevar en la entrada de Via Gallio 8.'
+                        }
+                    }
+                ]);
+
+                const filteredServices = computed(() => {
+                    return services.value.filter(s => {
+                        const matchesCategory = selectedCategory.value === 'all' || s.category === selectedCategory.value;
+                        if (!searchQuery.value.trim()) return matchesCategory;
+
+                        const q = searchQuery.value.toLowerCase().trim();
+                        const nameStr = Object.values(s.name || {}).join(' ').toLowerCase();
+                        const descStr = Object.values(s.description || {}).join(' ').toLowerCase();
+                        const orgStr = (s.organization || '').toLowerCase();
+                        const addrStr = (s.address || '').toLowerCase();
+
+                        return matchesCategory && (nameStr.includes(q) || descStr.includes(q) || orgStr.includes(q) || addrStr.includes(q));
+                    });
+                });
+
+                const getServiceCount = (catId) => services.value.filter(s => s.category === catId).length;
+                
+                const getServiceName = (serviceId) => {
+                    const s = services.value.find(item => item.id === serviceId);
+                    return s ? translateField(s, 'name') : '';
+                };
+
+                const goToService = (serviceId) => {
+                    const s = services.value.find(item => item.id === serviceId);
+                    if (s) {
+                        selectedCategory.value = s.category;
+                        activeTab.value = 'services';
+                        setTimeout(() => openContactModal(s), 200);
+                    }
+                };
+
+                const openContactModal = (service) => {
+                    activeModalService.value = service;
+                };
+
+                const getNavigationUrl = (address) => {
+                    const query = encodeURIComponent(`${address}, Como, Italy`);
+                    return `https://www.google.com/maps/search/?api=1&query=${query}`;
+                };
+
+                return {
+                    activeTab, selectedCategory, searchQuery, showLangMenu, activeModalService,
+                    currentLangCode, languages, currentLang, isRTL,
+                    t, translateField, categories, getCategoryIcon, getCategoryLabelKey,
+                    services, globalNews, filteredServices, getServiceCount, getServiceName,
+                    selectLanguage, goToService, openContactModal, getNavigationUrl,
+                    isLoading,
+                    openAdminModal, user, authLoading, authError, authForm,
+                    handleLogin, handleLogout, 
+                    editingService, editForm, startEditing, startCreating, cancelEditing, saveServiceChanges, savingServiceId,
+                    uploadingImage, imageUploadError, handleImageUpload
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
