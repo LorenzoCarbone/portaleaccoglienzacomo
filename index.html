@@ -232,9 +232,17 @@
                                     <span class="font-bold tracking-wide text-brand-900">{{ service.address }}, Como</span>
                                 </div>
 
-                                <p class="text-slate-600 text-sm leading-relaxed line-clamp-3">
-                                    {{ translateField(service, 'description') }}
-                                </p>
+                                <div>
+                                    <p class="text-slate-600 text-sm leading-relaxed transition-all"
+                                       :class="isServiceExpanded(service.id) ? '' : 'line-clamp-3'">
+                                        {{ translateField(service, 'description') }}
+                                    </p>
+                                    <button @click="toggleServiceExpanded(service.id)" type="button"
+                                            class="mt-1.5 text-xs font-bold text-brand-600 hover:text-brand-700 flex items-center gap-1 transition">
+                                        <span>{{ isServiceExpanded(service.id) ? t('show_less') : t('show_more') }}</span>
+                                        <i class="fa-solid fa-chevron-down text-[10px] transition-transform" :class="{'rotate-180': isServiceExpanded(service.id)}"></i>
+                                    </button>
+                                </div>
 
                                 <div class="bg-slate-50 rounded-2xl p-3 border border-slate-100 text-xs text-slate-600 flex items-center gap-3">
                                     <i class="fa-regular fa-clock text-slate-400 text-base"></i>
@@ -291,29 +299,46 @@
                 <p class="text-white/90 text-sm sm:text-base max-w-xl">{{ t('news_page_sub') }}</p>
             </div>
 
-            <div class="space-y-4">
+            <div v-if="isLoadingNews" class="text-center py-16">
+                <i class="fa-solid fa-circle-notch fa-spin text-4xl text-amber-500 mb-4 inline-block"></i>
+                <p class="text-sm text-slate-500 font-medium">Caricamento notizie in corso...</p>
+            </div>
+
+            <div v-else-if="globalNews.length === 0" class="text-center py-16 bg-white rounded-3xl border border-slate-200 p-6 shadow-sm">
+                <span class="text-6xl block mb-4">📭</span>
+                <h4 class="font-bold text-slate-700 text-lg mb-1">Nessuna notizia al momento</h4>
+                <p class="text-sm text-slate-500 max-w-sm mx-auto">Gli aggiornamenti dalle unità di strada e dalle associazioni compariranno qui.</p>
+            </div>
+
+            <div v-else class="space-y-4">
                 <div v-for="news in globalNews" :key="news.id" 
-                     class="bg-white rounded-3xl border border-slate-200 p-6 card-shadow relative overflow-hidden">
+                     class="bg-white rounded-3xl border border-slate-200 p-6 card-shadow relative overflow-hidden"
+                     :class="{'border-red-200 ring-1 ring-red-100': news.type === 'emergency'}">
+
                     <div class="flex items-start justify-between gap-4 mb-3">
-                        <div class="flex items-center gap-2.5">
+                        <div class="flex items-center flex-wrap gap-2">
+                            <span class="w-9 h-9 rounded-xl flex items-center justify-center text-base shrink-0"
+                                  :class="getNewsTypeStyle(news.type).badgeClass">
+                                <i :class="getNewsTypeStyle(news.type).icon"></i>
+                            </span>
                             <span class="px-3 py-1 rounded-full text-xs font-bold"
                                   :class="news.priority === 'high' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'">
                                 {{ news.priority === 'high' ? t('priority_urgent') : t('priority_info') }}
                             </span>
                             <span class="text-xs font-bold text-slate-400">{{ news.association }}</span>
                         </div>
-                        <span class="text-xs text-slate-400 font-medium flex items-center gap-1">
+                        <span class="text-xs text-slate-400 font-medium flex items-center gap-1 shrink-0">
                             <i class="fa-regular fa-clock text-[10px]"></i>
-                            {{ news.date }}
+                            {{ formatNewsDate(news.created_at) }}
                         </span>
                     </div>
 
                     <h4 class="font-bold text-slate-800 text-lg mb-2">{{ translateField(news, 'title') }}</h4>
                     <p class="text-sm text-slate-600 leading-relaxed">{{ translateField(news, 'content') }}</p>
 
-                    <div v-if="news.relatedServiceId" class="mt-5 pt-4 border-t border-slate-100 flex items-center justify-between">
-                        <span class="text-xs text-slate-500 font-medium">{{ t('related_service') }}: <strong class="text-slate-700">{{ getServiceName(news.relatedServiceId) }}</strong></span>
-                        <button @click="goToService(news.relatedServiceId)" class="text-xs font-bold text-brand-600 hover:underline flex items-center gap-1.5">
+                    <div v-if="news.related_service_id" class="mt-5 pt-4 border-t border-slate-100 flex items-center justify-between flex-wrap gap-2">
+                        <span class="text-xs text-slate-500 font-medium">{{ t('related_service') }}: <strong class="text-slate-700">{{ getServiceName(news.related_service_id) }}</strong></span>
+                        <button @click="goToService(news.related_service_id)" class="text-xs font-bold text-brand-600 hover:underline flex items-center gap-1.5">
                             <span>{{ t('go_to_card') }}</span>
                             <i class="fa-solid fa-arrow-right text-[10px]" :class="{'rtl-flip': isRTL}"></i>
                         </button>
@@ -376,7 +401,23 @@
         </main>
 
         <main v-if="activeTab === 'admin_dashboard' && user" class="p-4 sm:p-6 space-y-6 animate-fadeIn max-w-4xl mx-auto">
-            
+
+            <div class="flex gap-1.5 bg-white p-1.5 rounded-2xl border border-slate-200 shadow-sm w-fit">
+                <button @click="adminSection = 'services'; cancelEditing()"
+                        class="px-4 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition"
+                        :class="adminSection === 'services' ? 'bg-emerald-600 text-white shadow' : 'text-slate-500 hover:bg-slate-100'">
+                    <i class="fa-solid fa-layer-group"></i>
+                    <span>Servizi</span>
+                </button>
+                <button @click="adminSection = 'news'; cancelEditingNews()"
+                        class="px-4 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition"
+                        :class="adminSection === 'news' ? 'bg-amber-500 text-white shadow' : 'text-slate-500 hover:bg-slate-100'">
+                    <i class="fa-solid fa-bell"></i>
+                    <span>Notizie & Allerta</span>
+                </button>
+            </div>
+
+            <template v-if="adminSection === 'services'">
             <div v-if="!editingService" class="space-y-6">
                 <div class="bg-gradient-to-r from-emerald-600 to-teal-800 rounded-3xl p-6 sm:p-8 text-white shadow-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div>
@@ -495,7 +536,7 @@
                     <div>
                         <div class="flex items-center justify-between mb-1.5">
                             <label class="block text-xs font-bold uppercase tracking-wider text-slate-500">Avviso Cittadini / Motivo:</label>
-                            <span class="text-[10px] bg-brand-50 text-brand-700 px-2 py-0.5 rounded-full font-bold border border-brand-200">✨ Traduzione AI in arrivo al Passo 2</span>
+                            <span class="text-[10px] bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full font-bold border border-emerald-200">🌍 Tradotto automaticamente al salvataggio</span>
                         </div>
                         <textarea v-model="editForm.adminTempNotice" 
                                   rows="2" 
@@ -623,28 +664,229 @@
                 <div class="bg-slate-900 text-white p-4 rounded-3xl shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div class="flex items-center gap-2">
                         <i class="fa-solid fa-cloud text-brand-400 text-lg"></i>
-                        <span class="text-xs sm:text-sm font-medium">Modifiche pronte per il cloud Supabase</span>
+                        <span class="text-xs sm:text-sm font-medium">
+                            {{ translatingContent ? '🌍 Traduzione automatica in tutte le lingue in corso...' : 'Modifiche pronte per il cloud Supabase' }}
+                        </span>
                     </div>
 
                     <div class="flex items-center gap-3 w-full sm:w-auto">
                         <button @click="cancelEditing()" 
                                 type="button"
-                                class="flex-1 sm:flex-initial py-3 px-5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs sm:text-sm transition">
+                                :disabled="translatingContent || savingServiceId"
+                                class="flex-1 sm:flex-initial py-3 px-5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs sm:text-sm transition disabled:opacity-50">
                             Annulla
                         </button>
 
                         <button @click="saveServiceChanges()" 
-                                :disabled="savingServiceId"
+                                :disabled="savingServiceId || translatingContent"
                                 type="button"
                                 class="flex-1 sm:flex-initial bg-brand-500 hover:bg-brand-600 active:scale-95 disabled:opacity-50 text-white font-bold py-3 px-6 rounded-2xl text-xs sm:text-sm shadow-lg shadow-brand-500/30 transition flex items-center justify-center gap-2">
-                            <i v-if="savingServiceId" class="fa-solid fa-circle-notch fa-spin"></i>
+                            <i v-if="translatingContent" class="fa-solid fa-language fa-spin"></i>
+                            <i v-else-if="savingServiceId" class="fa-solid fa-circle-notch fa-spin"></i>
                             <i v-else class="fa-solid fa-check"></i>
-                            <span>{{ savingServiceId ? 'Salvataggio...' : (editForm.id ? 'Salva Modifiche Online' : 'Pubblica Servizio Online') }}</span>
+                            <span>{{ translatingContent ? 'Traduzione in corso...' : (savingServiceId ? 'Salvataggio...' : (editForm.id ? 'Salva Modifiche Online' : 'Pubblica Servizio Online')) }}</span>
                         </button>
                     </div>
                 </div>
 
+                <div v-if="translationError" class="bg-amber-50 border border-amber-200 text-amber-800 text-xs font-medium rounded-2xl p-3.5 flex items-start gap-2.5">
+                    <i class="fa-solid fa-triangle-exclamation text-amber-600 mt-0.5 shrink-0"></i>
+                    <span>{{ translationError }}</span>
+                </div>
+
             </div>
+            </template>
+
+            <template v-if="adminSection === 'news'">
+            <div v-if="!editingNews" class="space-y-6">
+                <div class="bg-gradient-to-r from-amber-500 to-warm-600 rounded-3xl p-6 sm:p-8 text-white shadow-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div>
+                        <span class="bg-white/20 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-2 inline-block">Pannello Operatori</span>
+                        <h2 class="text-2xl sm:text-3xl font-bold leading-tight">Gestione Notizie & Allerta</h2>
+                        <p class="text-white/90 text-sm mt-1">Pubblica aggiornamenti, variazioni di servizio o allerte di emergenza visibili a tutti sulla mappa.</p>
+                    </div>
+                    <div class="flex flex-wrap gap-2 shrink-0 w-full sm:w-auto justify-end">
+                        <button @click="startCreatingNews()" class="bg-white text-amber-700 hover:bg-amber-50 font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm shadow flex items-center gap-2 transition active:scale-95">
+                            <i class="fa-solid fa-plus"></i>
+                            <span>Nuova Notizia/Allerta</span>
+                        </button>
+                        <button @click="activeTab = 'news'" class="bg-amber-700/40 hover:bg-amber-700/60 text-white font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm shadow flex items-center gap-2 shrink-0 transition active:scale-95 border border-white/20">
+                            <i class="fa-solid fa-eye"></i>
+                            <span>Vedi Pagina Pubblica</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div v-if="isLoadingNews" class="text-center py-16">
+                    <i class="fa-solid fa-circle-notch fa-spin text-4xl text-amber-500 mb-4 inline-block"></i>
+                </div>
+
+                <div v-else-if="globalNews.length === 0" class="text-center py-16 bg-white rounded-3xl border border-slate-200 p-6 shadow-sm">
+                    <span class="text-6xl block mb-4">📭</span>
+                    <h4 class="font-bold text-slate-700 text-lg mb-1">Nessuna notizia pubblicata</h4>
+                    <p class="text-sm text-slate-500 max-w-sm mx-auto">Crea la prima notizia o allerta con il pulsante qui sopra.</p>
+                </div>
+
+                <div v-else class="bg-white rounded-3xl border border-slate-200 overflow-hidden card-shadow divide-y divide-slate-100">
+                    <div class="p-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between text-xs font-bold text-slate-500 uppercase tracking-wider">
+                        <span>Notizie pubblicate ({{ globalNews.length }})</span>
+                        <span>Tipo</span>
+                    </div>
+
+                    <div v-for="news in globalNews" :key="news.id"
+                         class="p-4 sm:p-5 hover:bg-amber-50/50 transition flex items-center justify-between gap-4 group">
+
+                        <div @click="startEditingNews(news)" class="flex items-center gap-3.5 overflow-hidden cursor-pointer flex-1">
+                            <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-xl shrink-0 shadow-sm"
+                                 :class="getNewsTypeStyle(news.type).badgeClass">
+                                <i :class="getNewsTypeStyle(news.type).icon"></i>
+                            </div>
+                            <div class="overflow-hidden">
+                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block truncate">{{ news.association || 'Coordinamento' }} · {{ formatNewsDate(news.created_at) }}</span>
+                                <h4 class="font-bold text-slate-800 text-sm sm:text-base group-hover:text-amber-700 transition truncate">{{ news.title.it || '(senza titolo)' }}</h4>
+                                <p class="text-xs text-slate-500 truncate mt-0.5">{{ news.content.it }}</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-2 shrink-0">
+                            <span class="px-2.5 py-1 rounded-full text-[11px] font-bold shadow-sm"
+                                  :class="news.priority === 'high' ? 'bg-red-100 text-red-800 border border-red-300' : 'bg-blue-100 text-blue-800 border border-blue-300'">
+                                {{ news.priority === 'high' ? 'Urgente' : 'Info' }}
+                            </span>
+                            <button @click="startEditingNews(news)" title="Modifica"
+                                    class="w-8 h-8 rounded-full bg-slate-100 hover:bg-brand-600 text-slate-400 hover:text-white flex items-center justify-center text-xs transition">
+                                <i class="fa-solid fa-pen"></i>
+                            </button>
+                            <button @click="deleteNewsItem(news)" title="Elimina"
+                                    class="w-8 h-8 rounded-full bg-slate-100 hover:bg-red-600 text-slate-400 hover:text-white flex items-center justify-center text-xs transition">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div v-else class="space-y-6 animate-fadeIn">
+                <div class="flex items-center justify-between bg-white p-4 rounded-2xl border border-slate-200 card-shadow sticky top-20 z-30">
+                    <button @click="cancelEditingNews()" 
+                            class="flex items-center gap-2 text-slate-600 hover:text-amber-600 font-bold text-xs sm:text-sm bg-slate-100 hover:bg-amber-50 px-3.5 py-2 rounded-xl transition active:scale-95">
+                        <i class="fa-solid fa-arrow-left" :class="{'rtl-flip': isRTL}"></i>
+                        <span>Torna alla lista notizie</span>
+                    </button>
+                    <div class="text-right overflow-hidden pr-2">
+                        <span class="text-[10px] uppercase font-bold text-amber-600 tracking-wider block truncate">Stato Operazione:</span>
+                        <span class="font-bold text-slate-800 text-xs sm:text-sm truncate block">{{ newsForm.id ? 'Modifica notizia' : 'Nuova notizia/allerta' }}</span>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-3xl border border-slate-200 p-5 sm:p-6 card-shadow space-y-5">
+                    <div class="flex items-center gap-3 border-b border-slate-100 pb-3">
+                        <div class="w-8 h-8 rounded-xl bg-amber-500 text-white flex items-center justify-center text-sm shadow-sm">
+                            <i class="fa-solid fa-bullhorn"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-slate-800 text-base">Contenuto della Notizia</h3>
+                            <p class="text-xs text-slate-500">Scegli tipologia e priorità, poi scrivi il messaggio per il pubblico.</p>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Tipologia Allerta:</label>
+                        <div class="grid grid-cols-3 gap-2">
+                            <button @click="selectNewsType('general')" type="button"
+                                    class="py-3 px-2 rounded-xl text-xs font-bold border flex flex-col items-center justify-center gap-1.5 transition active:scale-95"
+                                    :class="newsForm.type === 'general' ? 'bg-blue-500 border-blue-600 text-white shadow-md' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'">
+                                <i class="fa-solid fa-circle-info"></i>
+                                <span>Informazione</span>
+                            </button>
+                            <button @click="selectNewsType('service_update')" type="button"
+                                    class="py-3 px-2 rounded-xl text-xs font-bold border flex flex-col items-center justify-center gap-1.5 transition active:scale-95"
+                                    :class="newsForm.type === 'service_update' ? 'bg-amber-500 border-amber-600 text-white shadow-md' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'">
+                                <i class="fa-solid fa-arrows-rotate"></i>
+                                <span>Variazione Servizio</span>
+                            </button>
+                            <button @click="selectNewsType('emergency')" type="button"
+                                    class="py-3 px-2 rounded-xl text-xs font-bold border flex flex-col items-center justify-center gap-1.5 transition active:scale-95"
+                                    :class="newsForm.type === 'emergency' ? 'bg-red-600 border-red-700 text-white shadow-md' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'">
+                                <i class="fa-solid fa-triangle-exclamation"></i>
+                                <span>Emergenza</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Priorità:</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button @click="newsForm.priority = 'normal'" type="button"
+                                    class="py-2.5 px-2 rounded-xl text-xs font-bold border flex items-center justify-center gap-1.5 transition active:scale-95"
+                                    :class="newsForm.priority === 'normal' ? 'bg-blue-500 border-blue-600 text-white shadow-md' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'">
+                                <span>Informativa</span>
+                            </button>
+                            <button @click="newsForm.priority = 'high'" type="button"
+                                    class="py-2.5 px-2 rounded-xl text-xs font-bold border flex items-center justify-center gap-1.5 transition active:scale-95"
+                                    :class="newsForm.priority === 'high' ? 'bg-red-600 border-red-700 text-white shadow-md' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'">
+                                <span>Urgente</span>
+                            </button>
+                        </div>
+                        <p class="text-[11px] text-slate-400 mt-1.5">Selezionando "Emergenza" come tipologia, la priorità viene impostata automaticamente su Urgente.</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Associazione / Ente</label>
+                            <input v-model="newsForm.association" type="text" placeholder="Es. Caritas Como, Coordinamento Unità di Strada..."
+                                   class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-800 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 transition">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Servizio Collegato (opzionale)</label>
+                            <select v-model="newsForm.related_service_id"
+                                    class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-800 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 transition">
+                                <option :value="null">Nessuno / non collegata a un servizio</option>
+                                <option v-for="s in services" :key="s.id" :value="s.id">{{ getCategoryIcon(s.category) }} {{ s.name.it || s.name }}</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Titolo (in Italiano)</label>
+                        <input v-model="newsForm.title_it" type="text" required placeholder="Es. Emergenza Freddo: Apertura Straordinaria Dormitori"
+                               class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-800 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 transition">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Messaggio Completo (in Italiano)</label>
+                        <textarea v-model="newsForm.content_it" rows="5" required
+                                  placeholder="Descrivi con chiarezza cosa sta succedendo, cosa cambia e cosa devono fare le persone..."
+                                  class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-slate-800 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 transition leading-relaxed"></textarea>
+                    </div>
+                </div>
+
+                <div class="bg-slate-900 text-white p-4 rounded-3xl shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-cloud text-amber-400 text-lg"></i>
+                        <span class="text-xs sm:text-sm font-medium">Notizia pronta per la pubblicazione</span>
+                    </div>
+
+                    <div class="flex items-center gap-3 w-full sm:w-auto">
+                        <button @click="cancelEditingNews()" 
+                                type="button"
+                                :disabled="savingNewsId"
+                                class="flex-1 sm:flex-initial py-3 px-5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs sm:text-sm transition disabled:opacity-50">
+                            Annulla
+                        </button>
+
+                        <button @click="saveNewsChanges()" 
+                                :disabled="savingNewsId"
+                                type="button"
+                                class="flex-1 sm:flex-initial bg-amber-500 hover:bg-amber-600 active:scale-95 disabled:opacity-50 text-white font-bold py-3 px-6 rounded-2xl text-xs sm:text-sm shadow-lg shadow-amber-500/30 transition flex items-center justify-center gap-2">
+                            <i v-if="savingNewsId" class="fa-solid fa-circle-notch fa-spin"></i>
+                            <i v-else class="fa-solid fa-check"></i>
+                            <span>{{ savingNewsId ? 'Pubblicazione...' : (newsForm.id ? 'Salva Modifiche' : 'Pubblica Notizia') }}</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            </template>
 
         </main>
 
@@ -820,6 +1062,19 @@
                 const activeModalService = ref(null);
                 const currentLangCode = ref('it');
 
+                // Traccia quali schede servizio sono "espanse" (descrizione completa visibile) nella vista pubblica
+                const expandedServiceIds = ref(new Set());
+                const isServiceExpanded = (serviceId) => expandedServiceIds.value.has(serviceId);
+                const toggleServiceExpanded = (serviceId) => {
+                    const next = new Set(expandedServiceIds.value);
+                    if (next.has(serviceId)) {
+                        next.delete(serviceId);
+                    } else {
+                        next.add(serviceId);
+                    }
+                    expandedServiceIds.value = next;
+                };
+
                 // Variabili di Stato per l'Autenticazione Operatori
                 const openAdminModal = ref(false);
                 const user = ref(null);
@@ -849,7 +1104,28 @@
                 const uploadingImage = ref(false);
                 const imageUploadError = ref('');
 
-                const services = ref([]); 
+                // Stato traduzione automatica al salvataggio
+                const translatingContent = ref(false);
+                const translationError = ref('');
+
+                // Sezione attiva nel pannello operatori: 'services' oppure 'news'
+                const adminSection = ref('services');
+
+                // Variabili per l'interfaccia MASTER-DETAIL della gestione Notizie & Allerta
+                const editingNews = ref(null);
+                const newsForm = ref({
+                    id: null,
+                    type: 'general',
+                    priority: 'normal',
+                    association: '',
+                    related_service_id: null,
+                    title_it: '',
+                    content_it: ''
+                });
+                const savingNewsId = ref(null);
+                const isLoadingNews = ref(true);
+
+                const services = ref([]);
                 const isLoading = ref(true);
 
                 const languages = {
@@ -881,7 +1157,7 @@
                         cat_showers: 'Docce & Igiene', cat_food: 'Mense & Cibo', cat_shelter: 'Dormitori', cat_health: 'Medici & Salute', cat_legal: 'Legale & Doc.', cat_clothes: 'Vestiario',
                         services_found: 'servizi disponibili', no_results_title: 'Nessun servizio trovato', no_results_sub: 'Prova a cercare con altre parole o azzera i filtri della categoria.', reset_filters: 'Azzera filtri',
                         status_active: 'Regolare', status_notice: 'Variazione', status_suspended: 'Sospeso', hours_label: 'Orari / Accesso', service_update_label: 'Avviso in tempo reale', service_suspended_label: 'Servizio Sospeso / Avviso',
-                        btn_contact: 'Contatta', btn_directions: 'Direzioni GPS',
+                        btn_contact: 'Contatta', btn_directions: 'Direzioni GPS', show_more: 'Mostra di più', show_less: 'Mostra di meno',
                         news_page_title: 'Aggiornamenti dalle Unità di Strada', news_page_sub: 'Avvisi in tempo reale su cambi di orario, aperture straordinarie per freddo o urgenze dalle associazioni di Como.',
                         priority_urgent: 'Importante', priority_info: 'Informazione', related_service: 'Scheda collegata', go_to_card: 'Vedi scheda servizio',
                         emergency_title: 'Numeri di Emergenza', emergency_sub: 'Chiamate gratuite e attive 24 ore su 24 per qualsiasi emergenza di salute o sicurezza.',
@@ -899,7 +1175,7 @@
                         cat_showers: 'Showers & Hygiene', cat_food: 'Food & Kitchens', cat_shelter: 'Shelters', cat_health: 'Medical Care', cat_legal: 'Legal & Docs', cat_clothes: 'Clothing',
                         services_found: 'services available', no_results_title: 'No services found', no_results_sub: 'Try searching with different words or reset the category filters.', reset_filters: 'Reset filters',
                         status_active: 'Active', status_notice: 'Notice', status_suspended: 'Suspended', hours_label: 'Hours / Access', service_update_label: 'Real-time alert', service_suspended_label: 'Service Suspended / Notice',
-                        btn_contact: 'Contact', btn_directions: 'GPS Directions',
+                        btn_contact: 'Contact', btn_directions: 'GPS Directions', show_more: 'Show more', show_less: 'Show less',
                         news_page_title: 'Street Outreach Updates', news_page_sub: 'Real-time alerts on schedule changes, emergency winter shelters, or notices from Como associations.',
                         priority_urgent: 'Urgent', priority_info: 'Info', related_service: 'Related service', go_to_card: 'View service card',
                         emergency_title: 'Emergency Numbers', emergency_sub: 'Toll-free numbers active 24/7 for any health or safety emergency.',
@@ -1066,6 +1342,29 @@
                     if (typeof field === 'string') return field;
                     if (typeof field === 'object') return field.it || field.en || '';
                     return '';
+                };
+
+                // Lista delle lingue verso cui tradurre: tutte tranne l'italiano (lingua sorgente).
+                // Si aggiorna automaticamente se in futuro si aggiungono nuove lingue all'oggetto "languages" più sopra.
+                const TARGET_LANGS = computed(() => Object.keys(languages).filter(code => code !== 'it'));
+
+                // Chiama la Supabase Edge Function "translate-text" per tradurre un testo italiano
+                // in tutte le lingue disponibili. Ritorna un oggetto { en: '...', fr: '...', ... }.
+                // In caso di errore lo propaga, così saveServiceChanges può avvisare l'operatore.
+                const translateText = async (text) => {
+                    const cleanText = String(text || '').trim();
+                    if (!cleanText || !supabase) return {};
+
+                    const { data, error } = await supabase.functions.invoke('translate-text', {
+                        body: {
+                            text: cleanText,
+                            sourceLang: 'it',
+                            targetLangs: TARGET_LANGS.value
+                        }
+                    });
+
+                    if (error) throw error;
+                    return (data && data.translations) || {};
                 };
 
                 // CONTROLLO SESSIONE AUTENTICAZIONE OPERATORE
@@ -1247,37 +1546,51 @@
                     editingService.value = null;
                     editForm.value = { id: null };
                     imageUploadError.value = '';
+                    translationError.value = '';
                 };
 
-                // SALVATAGGIO COMPLETO SU SUPABASE (CREAZIONE O MODIFICA)
+                // SALVATAGGIO COMPLETO SU SUPABASE (CREAZIONE O MODIFICA), CON TRADUZIONE AUTOMATICA
                 const saveServiceChanges = async () => {
                     if (!supabase || !editingService.value) return;
                     const targetService = editingService.value;
                     savingServiceId.value = editForm.value.id || 'new_record';
+                    translationError.value = '';
 
                     try {
-                        // 1. Gestione avviso temporaneo
+                        // 1. Traduzione automatica in tutte le lingue (in parallelo) dei testi in italiano.
+                        //    Se un campo è vuoto, translateText ritorna semplicemente {} senza fare chiamate inutili.
+                        translatingContent.value = true;
+                        let nameTranslations = {}, hoursTranslations = {}, descriptionTranslations = {}, noticeTranslations = {};
+
+                        try {
+                            [nameTranslations, hoursTranslations, descriptionTranslations, noticeTranslations] = await Promise.all([
+                                translateText(editForm.value.name_it),
+                                translateText(editForm.value.hours_it),
+                                translateText(editForm.value.description_it),
+                                translateText(editForm.value.adminTempNotice)
+                            ]);
+                        } catch (transErr) {
+                            console.error('Errore traduzione automatica:', transErr.message);
+                            translationError.value = 'La traduzione automatica non è riuscita: il servizio verrà salvato solo in italiano. Riprova più tardi per completare le altre lingue.';
+                        } finally {
+                            translatingContent.value = false;
+                        }
+
+                        // 2. Composizione campi multilingua: italiano (sorgente) + traduzioni ottenute.
+                        //    In caso di modifica, si sovrascrivono le lingue con le nuove traduzioni fresche.
+                        const updatedName = { it: String(editForm.value.name_it || '').trim(), ...nameTranslations };
+                        const updatedHours = { it: String(editForm.value.hours_it || '').trim(), ...hoursTranslations };
+                        const updatedDescription = { it: String(editForm.value.description_it || '').trim(), ...descriptionTranslations };
+
+                        // 3. Gestione avviso temporaneo (anch'esso tradotto automaticamente)
                         let updatedLatestUpdate = null;
                         if (editForm.value.adminTempNotice && editForm.value.adminTempNotice.trim() !== '') {
                             const todayStr = new Date().toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' });
                             updatedLatestUpdate = {
-                                text: { it: editForm.value.adminTempNotice.trim() },
+                                text: { it: editForm.value.adminTempNotice.trim(), ...noticeTranslations },
                                 date: todayStr
                             };
                         }
-
-                        // 2. Aggiornamento campi JSONB preservando le altre lingue se esistenti
-                        const updatedName = editForm.value.id && typeof targetService.name === 'object' 
-                            ? { ...targetService.name, it: String(editForm.value.name_it || '').trim() }
-                            : { it: String(editForm.value.name_it || '').trim() };
-
-                        const updatedHours = editForm.value.id && typeof targetService.hours === 'object' 
-                            ? { ...targetService.hours, it: String(editForm.value.hours_it || '').trim() }
-                            : { it: String(editForm.value.hours_it || '').trim() };
-
-                        const updatedDescription = editForm.value.id && typeof targetService.description === 'object' 
-                            ? { ...targetService.description, it: String(editForm.value.description_it || '').trim() }
-                            : { it: String(editForm.value.description_it || '').trim() };
 
                         const servicePayload = {
                             status: editForm.value.status,
@@ -1305,7 +1618,7 @@
                             if (!data || data.length === 0) throw new Error("Errore: Nessun record modificato. Controlla le policy RLS.");
 
                             Object.assign(targetService, servicePayload);
-                            alert("✅ Modifiche salvate con successo online!");
+                            alert("✅ Modifiche salvate e tradotte automaticamente con successo online!");
                         } else {
                             // --- INSERIMENTO NUOVO SERVIZIO ---
                             const { data, error } = await supabase
@@ -1317,7 +1630,7 @@
                             if (!data || data.length === 0) throw new Error("Errore: Record non inserito. Controlla le policy RLS di INSERT.");
 
                             services.value.push(data[0]);
-                            alert("✨ Nuovo servizio registrato e pubblicato sulla mappa!");
+                            alert("✨ Nuovo servizio registrato, tradotto automaticamente e pubblicato sulla mappa!");
                         }
 
                         cancelEditing();
@@ -1327,74 +1640,178 @@
                         alert("❌ Operazione non riuscita.\n\nDettaglio errore: " + err.message);
                     } finally {
                         savingServiceId.value = null;
+                        translatingContent.value = false;
+                    }
+                };
+
+                const globalNews = ref([]);
+
+                // Definisce icona e colore per ciascuna tipologia di notizia/allerta
+                const NEWS_TYPES = {
+                    general: { icon: 'fa-solid fa-circle-info', badgeClass: 'bg-blue-100 text-blue-700' },
+                    service_update: { icon: 'fa-solid fa-arrows-rotate', badgeClass: 'bg-amber-100 text-amber-700' },
+                    emergency: { icon: 'fa-solid fa-triangle-exclamation', badgeClass: 'bg-red-100 text-red-700' }
+                };
+                const getNewsTypeStyle = (type) => NEWS_TYPES[type] || NEWS_TYPES.general;
+
+                // Formatta una data ISO in un formato leggibile in italiano (es. "12 luglio 2026, 14:30")
+                const formatNewsDate = (isoDate) => {
+                    if (!isoDate) return '';
+                    try {
+                        return new Date(isoDate).toLocaleString('it-IT', {
+                            day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
+                        });
+                    } catch (e) {
+                        return isoDate;
+                    }
+                };
+
+                // SCARICAMENTO NOTIZIE DAL CLOUD
+                const fetchNews = async () => {
+                    if (!supabase) { isLoadingNews.value = false; return; }
+                    isLoadingNews.value = true;
+                    try {
+                        const { data, error } = await supabase
+                            .from('news')
+                            .select('*')
+                            .order('created_at', { ascending: false });
+
+                        if (error) throw error;
+                        globalNews.value = data || [];
+                    } catch (error) {
+                        console.error("Errore nel caricamento delle notizie da Supabase:", error.message);
+                    } finally {
+                        isLoadingNews.value = false;
+                    }
+                };
+
+                // Seleziona la tipologia di notizia; se "emergency", forza automaticamente la priorità su "high"
+                const selectNewsType = (type) => {
+                    newsForm.value.type = type;
+                    if (type === 'emergency') {
+                        newsForm.value.priority = 'high';
+                    }
+                };
+
+                // AVVIA LA MODIFICA DI UNA NOTIZIA ESISTENTE
+                const startEditingNews = (news) => {
+                    editingNews.value = news;
+                    newsForm.value = {
+                        id: news.id,
+                        type: news.type || 'general',
+                        priority: news.priority || 'normal',
+                        association: news.association || '',
+                        related_service_id: news.related_service_id || null,
+                        title_it: extractText(news.title),
+                        content_it: extractText(news.content)
+                    };
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                };
+
+                // AVVIA LA CREAZIONE DI UNA NUOVA NOTIZIA
+                const startCreatingNews = () => {
+                    editingNews.value = { id: null };
+                    newsForm.value = {
+                        id: null,
+                        type: 'general',
+                        priority: 'normal',
+                        association: '',
+                        related_service_id: null,
+                        title_it: '',
+                        content_it: ''
+                    };
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                };
+
+                // ANNULLA/CHIUDE LA MODIFICA DI UNA NOTIZIA
+                const cancelEditingNews = () => {
+                    editingNews.value = null;
+                    newsForm.value = { id: null };
+                };
+
+                // SALVATAGGIO NOTIZIA SU SUPABASE (CREAZIONE O MODIFICA)
+                const saveNewsChanges = async () => {
+                    if (!supabase || !editingNews.value) return;
+
+                    if (!newsForm.value.title_it || !newsForm.value.title_it.trim()) {
+                        alert('⚠️ Il titolo è obbligatorio.');
+                        return;
+                    }
+                    if (!newsForm.value.content_it || !newsForm.value.content_it.trim()) {
+                        alert('⚠️ Il messaggio è obbligatorio.');
+                        return;
+                    }
+
+                    savingNewsId.value = newsForm.value.id || 'new_record';
+
+                    try {
+                        const newsPayload = {
+                            type: newsForm.value.type,
+                            priority: newsForm.value.priority,
+                            association: String(newsForm.value.association || '').trim(),
+                            related_service_id: newsForm.value.related_service_id || null,
+                            title: { it: String(newsForm.value.title_it || '').trim() },
+                            content: { it: String(newsForm.value.content_it || '').trim() }
+                        };
+
+                        if (newsForm.value.id) {
+                            const { data, error } = await supabase
+                                .from('news')
+                                .update(newsPayload)
+                                .eq('id', newsForm.value.id)
+                                .select();
+
+                            if (error) throw error;
+                            if (!data || data.length === 0) throw new Error("Nessuna notizia modificata. Controlla le policy RLS.");
+
+                            const idx = globalNews.value.findIndex(n => n.id === newsForm.value.id);
+                            if (idx !== -1) globalNews.value[idx] = data[0];
+
+                            alert("✅ Notizia aggiornata con successo!");
+                        } else {
+                            const { data, error } = await supabase
+                                .from('news')
+                                .insert([newsPayload])
+                                .select();
+
+                            if (error) throw error;
+                            if (!data || data.length === 0) throw new Error("Notizia non pubblicata. Controlla le policy RLS di INSERT.");
+
+                            globalNews.value.unshift(data[0]);
+                            alert("📢 Notizia pubblicata con successo!");
+                        }
+
+                        cancelEditingNews();
+
+                    } catch (err) {
+                        console.error("Errore salvataggio notizia:", err.message);
+                        alert("❌ Pubblicazione non riuscita.\n\nDettaglio errore: " + err.message);
+                    } finally {
+                        savingNewsId.value = null;
+                    }
+                };
+
+                // ELIMINAZIONE NOTIZIA
+                const deleteNewsItem = async (news) => {
+                    if (!supabase) return;
+                    const confirmed = confirm(`Eliminare definitivamente la notizia "${news.title.it || ''}"? L'operazione non è reversibile.`);
+                    if (!confirmed) return;
+
+                    try {
+                        const { error } = await supabase.from('news').delete().eq('id', news.id);
+                        if (error) throw error;
+                        globalNews.value = globalNews.value.filter(n => n.id !== news.id);
+                    } catch (err) {
+                        console.error("Errore eliminazione notizia:", err.message);
+                        alert("❌ Eliminazione non riuscita.\n\nDettaglio errore: " + err.message);
                     }
                 };
 
                 onMounted(() => {
                     fetchServices();
+                    fetchNews();
                     checkAuthSession();
                 });
-
-                const globalNews = ref([
-                    {
-                        id: 101,
-                        priority: 'high',
-                        association: 'Coordinamento Unità di Strada Como',
-                        date: 'Ieri / Yesterday',
-                        relatedServiceId: 'docce-caritas',
-                        title: {
-                            it: 'Emergenza Caldo: Distribuzione Borracce e Sali Minerali',
-                            en: 'Heat Emergency: Distribution of Water Bottles and Electrolytes',
-                            fr: 'Urgence Canicule : Distribution de Gourdes et Électrolytes',
-                            ar: 'طوارئ الحر: توزيع عبوات المياه والأملاح المعدنية',
-                            ur: 'شدید گرمی کی صورتحال: پانی کی بوتلیں اور نمکیات کی تقسیم',
-                            hi: 'गर्मी आपातकाल: पानी की बोतलें और इलेक्ट्रोलाइट्स का वितरण',
-                            sw: 'Dharura ya Joto: Ugawaji wa Chupa za Maji na Madini',
-                            tr: 'Sıcak Hava Acil Durumu: Su Matarası ve Mineral Dağıtımı',
-                            es: 'Alerta por Calor: Reparto de Botellas de Agua y Sales Minerales'
-                        },
-                        content: {
-                            it: 'Durante i giri serali delle 4 unità di strada (dalle ore 21:00) e presso le docce di Via Gallio, verranno distribuite borracce termiche e bustine di integratori per combattere la disidratazione.',
-                            en: 'During evening street rounds (from 9 PM) and at the Gallio Street showers, thermal bottles and supplement supplements will be distributed to combat dehydration.',
-                            fr: 'Lors des maraudes du soir (dès 21h00) et aux douches de Via Gallio, distribution de gourdes et compléments pour éviter la déshydratation.',
-                            ar: 'خلال الجولات المسائية لفرق الشارع الأربعة (بدءاً من الساعة 9 مساءً) وفي حمامات شارع غاليو، سيتم توزيع عبوات مياه حرارية ومكملات غذائية لمكافحة الجفاف.',
-                            ur: 'شام کے گشت کے دوران (رات 9 بجے سے) اور ویا گالیو کے غسل خانوں میں، پانی کی کمی سے بچنے کے لیے تھرمل بوتلیں اور نمکیات تقسیم کیے جائیں گے۔',
-                            hi: 'शाम के गश्त के दौरान (रात 9 बजे से) और वाया गालियो के स्नानघरों में, पानी की कमी से बचने के लिए पानी की बोतलें और सप्लीमेंट्स वितरित किए जाएंगे।',
-                            sw: 'Wakati wa mizunguko ya jioni (kuanzia saa 3 usiku) na kwenye bafu za Via Gallio, chupa za maji na virutubisho vitatolewa.',
-                            tr: 'Akşam saha turu sırasında (saat 21:00\'den itibaren) ve Via Gallio duşlarında, susuzlukla mücadele için termal su matara ve mineral takviyeleri dağıtılacaktır.',
-                            es: 'Durante las rutas nocturnas (desde las 21:00) y en las duchas di Via Gallio se entregarán botellas térmicas y sales para combatir la deshidratación.'
-                        }
-                    },
-                    {
-                        id: 102,
-                        priority: 'normal',
-                        association: 'Caritas Como',
-                        date: '2 giorni fa / 2 days ago',
-                        relatedServiceId: 'mensa-solidarieta',
-                        title: {
-                            it: 'Modifica temporanea modalità Mensa dal fine settimana',
-                            en: 'Temporary change in Soup Kitchen operations starting this weekend',
-                            fr: 'Modification temporaire du fonctionnement de la Cantine ce week-end',
-                            ar: 'تعديل مؤقت في نظام عمل المطعم التكافلي اعتباراً من عطلة نهاية الأسبوع',
-                            ur: 'اس ہفتے کے آخر سے سولیڈیریٹی کچن کے نظام میں عارضی تبدیلی',
-                            hi: 'इस सप्ताह के अंत से सॉलिडेरिटी किचन के संचालन में अस्थायी बदलाव',
-                            sw: 'Mabadiliko ya muda katika mfumo wa chakula kuanzia wikiendi',
-                            tr: 'Bu hafta sonundan itibaren Aşevi hizmet şeklinde geçici değişiklik',
-                            es: 'Cambio temporal en el servicio de Comedor desde el fin de semana'
-                        },
-                        content: {
-                            it: 'A causa del rifacimento della pavimentazione interna, la sala pranzo rimarrà chiusa per 4 giorni. I pasti caldi verranno regolarmente serviti in modalità cestino da asporto all\'ingresso di Via Gallio 8.',
-                            en: 'Due to indoor flooring renovations, the dining hall will be closed for 4 days. Hot meals will be served regularly as takeaway bags at the entrance of Via Gallio 8.',
-                            fr: 'En raison de travaux de sol, la salle à manger sera fermée 4 jours. Les repas seront servis à emporter à l\'entrée.',
-                            ar: 'بسبب أعمال تجديد الأرضية الداخلية، ستغلق قاعة الطعام لمدة 4 أيام. سيتم تقديم الوجبات الساخنة كالمعتاد بنظام العبوة السفري عند مدخل شارع غاليو 8.',
-                            ur: 'اندرونی فرش کی مرمت کی وجہ سے ڈائننگ ہال 4 دن بند رہے گا۔ گرم کھانا معمول کے مطابق ویا گالیو 8 کے دروازے پر پارسل کی صورت میں دیا جائے گا۔',
-                            hi: 'अंदरूनी फर्श की मरम्मत के कारण डाइनिंग हॉल 4 दिनों के लिए बंद रहेगा। गर्म भोजन नियमित रूप से वाया गालियो 8 के प्रवेश द्वार पर टेकअवे बैग के रूप में दिया जाएगा।',
-                            sw: 'Kutokana na ukarabati wa sakafu, ukumbi utafungwa siku 4. Chakula kitatolewa mlangoni kama kawaida.',
-                            tr: 'İç zemin yenileme çalışmaları nedeniyle yemek salonu 4 gün kapalı kalacaktır. Sıcak yemekler Via Gallio 8 girişinde paket olarak dağıtılmaya devam edecektir.',
-                            es: 'Por obras en el suelo, el comedor cerrará 4 días. La comida caliente se entregará puntualmente en bolsas para llevar en la entrada de Via Gallio 8.'
-                        }
-                    }
-                ]);
 
                 const filteredServices = computed(() => {
                     return services.value.filter(s => {
@@ -1439,14 +1856,20 @@
                 return {
                     activeTab, selectedCategory, searchQuery, showLangMenu, activeModalService,
                     currentLangCode, languages, currentLang, isRTL,
+                    isServiceExpanded, toggleServiceExpanded,
                     t, translateField, categories, getCategoryIcon, getCategoryLabelKey,
                     services, globalNews, filteredServices, getServiceCount, getServiceName,
                     selectLanguage, goToService, openContactModal, getNavigationUrl,
-                    isLoading,
+                    isLoading, isLoadingNews,
                     openAdminModal, user, authLoading, authError, authForm,
                     handleLogin, handleLogout, 
                     editingService, editForm, startEditing, startCreating, cancelEditing, saveServiceChanges, savingServiceId,
-                    uploadingImage, imageUploadError, handleImageUpload
+                    uploadingImage, imageUploadError, handleImageUpload,
+                    translatingContent, translationError,
+                    adminSection,
+                    editingNews, newsForm, savingNewsId,
+                    startEditingNews, startCreatingNews, cancelEditingNews, saveNewsChanges, deleteNewsItem,
+                    selectNewsType, getNewsTypeStyle, formatNewsDate
                 };
             }
         }).mount('#app');
