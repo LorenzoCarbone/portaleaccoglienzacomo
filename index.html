@@ -1556,6 +1556,10 @@
                     savingServiceId.value = editForm.value.id || 'new_record';
                     translationError.value = '';
 
+                    // Testo dell'avviso PRIMA della modifica, per capire dopo se è davvero cambiato
+                    // (evita di creare una notizia duplicata ogni volta che si salva senza toccare l'avviso)
+                    const previousNoticeText = extractText(targetService.latestUpdate && targetService.latestUpdate.text);
+
                     try {
                         // 1. Traduzione automatica in tutte le lingue (in parallelo) dei testi in italiano.
                         //    Se un campo è vuoto, translateText ritorna semplicemente {} senza fare chiamate inutili.
@@ -1618,6 +1622,11 @@
                             if (!data || data.length === 0) throw new Error("Errore: Nessun record modificato. Controlla le policy RLS.");
 
                             Object.assign(targetService, servicePayload);
+
+                            // Se l'avviso è nuovo o è cambiato rispetto a prima, pubblica automaticamente
+                            // una notizia corrispondente in Notizie & Allerta, così non va scritta due volte.
+                            await maybeCreateNewsFromServiceUpdate({ id: editForm.value.id, ...servicePayload }, previousNoticeText);
+
                             alert("✅ Modifiche salvate e tradotte automaticamente con successo online!");
                         } else {
                             // --- INSERIMENTO NUOVO SERVIZIO ---
@@ -1663,6 +1672,45 @@
                         });
                     } catch (e) {
                         return isoDate;
+                    }
+                };
+
+                // Se l'avviso di un servizio è nuovo o è cambiato rispetto a prima, pubblica automaticamente
+                // una notizia corrispondente in Notizie & Allerta. Se l'avviso è vuoto o identico a quello
+                // già presente, non fa nulla (per evitare notizie duplicate ad ogni salvataggio).
+                const maybeCreateNewsFromServiceUpdate = async (service, previousNoticeText) => {
+                    if (!supabase) return;
+
+                    const currentNoticeText = extractText(service.latestUpdate && service.latestUpdate.text);
+                    if (!currentNoticeText || !currentNoticeText.trim()) return;
+                    if (currentNoticeText.trim() === String(previousNoticeText || '').trim()) return;
+
+                    const newsType = service.status === 'suspended' ? 'emergency' : 'service_update';
+                    const newsPriority = service.status === 'suspended' ? 'high' : 'normal';
+                    const statusLabel = service.status === 'suspended'
+                        ? 'Servizio Sospeso'
+                        : (service.status === 'notice' ? 'Variazione Servizio' : 'Aggiornamento Servizio');
+                    const serviceName = extractText(service.name) || 'Servizio';
+
+                    const newsPayload = {
+                        type: newsType,
+                        priority: newsPriority,
+                        association: service.organization || '',
+                        related_service_id: service.id,
+                        title: { it: `${statusLabel}: ${serviceName}` },
+                        content: { it: currentNoticeText.trim() }
+                    };
+
+                    try {
+                        const { data, error } = await supabase.from('news').insert([newsPayload]).select();
+                        if (error) throw error;
+                        if (data && data[0]) {
+                            globalNews.value.unshift(data[0]);
+                        }
+                    } catch (err) {
+                        // Non blocchiamo il salvataggio del servizio se la creazione della notizia fallisce:
+                        // il servizio è comunque salvato correttamente, si segnala solo in console.
+                        console.error('Errore nella creazione automatica della notizia dal servizio:', err.message);
                     }
                 };
 
