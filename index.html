@@ -1550,48 +1550,24 @@
                 };
 
                 // SALVATAGGIO COMPLETO SU SUPABASE (CREAZIONE O MODIFICA), CON TRADUZIONE AUTOMATICA
-                const saveServiceChanges = async () => {
+const saveServiceChanges = async () => {
                     if (!supabase || !editingService.value) return;
                     const targetService = editingService.value;
                     savingServiceId.value = editForm.value.id || 'new_record';
-                    translationError.value = '';
 
-                    // Testo dell'avviso PRIMA della modifica, per capire dopo se è davvero cambiato
-                    // (evita di creare una notizia duplicata ogni volta che si salva senza toccare l'avviso)
                     const previousNoticeText = extractText(targetService.latestUpdate && targetService.latestUpdate.text);
 
                     try {
-                        // 1. Traduzione automatica in tutte le lingue (in parallelo) dei testi in italiano.
-                        //    Se un campo è vuoto, translateText ritorna semplicemente {} senza fare chiamate inutili.
-                        translatingContent.value = true;
-                        let nameTranslations = {}, hoursTranslations = {}, descriptionTranslations = {}, noticeTranslations = {};
+                        // Prepara i testi solo in italiano (il cloud tradurrà il resto da solo)
+                        const updatedName = { it: String(editForm.value.name_it || '').trim() };
+                        const updatedHours = { it: String(editForm.value.hours_it || '').trim() };
+                        const updatedDescription = { it: String(editForm.value.description_it || '').trim() };
 
-                        try {
-                            [nameTranslations, hoursTranslations, descriptionTranslations, noticeTranslations] = await Promise.all([
-                                translateText(editForm.value.name_it),
-                                translateText(editForm.value.hours_it),
-                                translateText(editForm.value.description_it),
-                                translateText(editForm.value.adminTempNotice)
-                            ]);
-                        } catch (transErr) {
-                            console.error('Errore traduzione automatica:', transErr.message);
-                            translationError.value = 'La traduzione automatica non è riuscita: il servizio verrà salvato solo in italiano. Riprova più tardi per completare le altre lingue.';
-                        } finally {
-                            translatingContent.value = false;
-                        }
-
-                        // 2. Composizione campi multilingua: italiano (sorgente) + traduzioni ottenute.
-                        //    In caso di modifica, si sovrascrivono le lingue con le nuove traduzioni fresche.
-                        const updatedName = { it: String(editForm.value.name_it || '').trim(), ...nameTranslations };
-                        const updatedHours = { it: String(editForm.value.hours_it || '').trim(), ...hoursTranslations };
-                        const updatedDescription = { it: String(editForm.value.description_it || '').trim(), ...descriptionTranslations };
-
-                        // 3. Gestione avviso temporaneo (anch'esso tradotto automaticamente)
                         let updatedLatestUpdate = null;
                         if (editForm.value.adminTempNotice && editForm.value.adminTempNotice.trim() !== '') {
                             const todayStr = new Date().toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' });
                             updatedLatestUpdate = {
-                                text: { it: editForm.value.adminTempNotice.trim(), ...noticeTranslations },
+                                text: { it: editForm.value.adminTempNotice.trim() },
                                 date: todayStr
                             };
                         }
@@ -1611,45 +1587,23 @@
                         };
 
                         if (editForm.value.id) {
-                            // --- AGGIORNAMENTO SERVIZIO ESISTENTE ---
-                            const { data, error } = await supabase
-                                .from('services')
-                                .update(servicePayload)
-                                .eq('id', editForm.value.id)
-                                .select();
-
+                            const { data, error } = await supabase.from('services').update(servicePayload).eq('id', editForm.value.id).select();
                             if (error) throw error;
-                            if (!data || data.length === 0) throw new Error("Errore: Nessun record modificato. Controlla le policy RLS.");
-
                             Object.assign(targetService, servicePayload);
-
-                            // Se l'avviso è nuovo o è cambiato rispetto a prima, pubblica automaticamente
-                            // una notizia corrispondente in Notizie & Allerta, così non va scritta due volte.
                             await maybeCreateNewsFromServiceUpdate({ id: editForm.value.id, ...servicePayload }, previousNoticeText);
-
-                            alert("✅ Modifiche salvate e tradotte automaticamente con successo online!");
+                            alert("✅ Modifiche salvate con successo online!");
                         } else {
-                            // --- INSERIMENTO NUOVO SERVIZIO ---
-                            const { data, error } = await supabase
-                                .from('services')
-                                .insert([servicePayload])
-                                .select();
-
+                            const { data, error } = await supabase.from('services').insert([servicePayload]).select();
                             if (error) throw error;
-                            if (!data || data.length === 0) throw new Error("Errore: Record non inserito. Controlla le policy RLS di INSERT.");
-
                             services.value.push(data[0]);
-                            alert("✨ Nuovo servizio registrato, tradotto automaticamente e pubblicato sulla mappa!");
+                            alert("✨ Nuovo servizio registrato e pubblicato sulla mappa!");
                         }
-
                         cancelEditing();
-
                     } catch (err) {
                         console.error("Errore salvataggio:", err.message);
                         alert("❌ Operazione non riuscita.\n\nDettaglio errore: " + err.message);
                     } finally {
                         savingServiceId.value = null;
-                        translatingContent.value = false;
                     }
                 };
 
