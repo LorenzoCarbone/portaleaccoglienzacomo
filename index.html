@@ -104,7 +104,6 @@
 
         <div v-if="showLangMenu" @click="showLangMenu = false" class="fixed inset-0 z-40 bg-black/10 backdrop-blur-[1px]"></div>
 
-        <!-- Mappa Servizi Pubblica -->
         <main v-if="activeTab === 'services'" class="p-4 sm:p-6 space-y-6 animate-fadeIn">
             <div class="bg-gradient-to-r from-brand-700 to-brand-900 rounded-3xl p-6 sm:p-8 text-white shadow-md relative overflow-hidden">
                 <div class="relative z-10 max-w-2xl">
@@ -198,7 +197,6 @@
             </div>
         </main>
 
-        <!-- Notizie Pubblica -->
         <main v-if="activeTab === 'news'" class="p-4 sm:p-6 space-y-6 animate-fadeIn max-w-4xl mx-auto">
             <div class="bg-gradient-to-r from-amber-500 to-warm-600 rounded-3xl p-6 sm:p-8 text-white shadow-md">
                 <div class="flex items-center gap-3 mb-2">
@@ -235,7 +233,6 @@
             </div>
         </main>
 
-        <!-- Emergenze Pubblica -->
         <main v-if="activeTab === 'emergency'" class="p-4 sm:p-6 space-y-6 animate-fadeIn max-w-4xl mx-auto">
             <div class="bg-red-600 text-white rounded-3xl p-6 sm:p-8 shadow-md">
                 <h2 class="text-2xl sm:text-3xl font-bold flex items-center gap-3 mb-2"><i class="fa-solid fa-phone-volume animate-bounce"></i><span>{{ t('emergency_title') }}</span></h2>
@@ -268,15 +265,14 @@
             </div>
         </main>
 
-        <!-- DASHBOARD OPERATORI -->
         <main v-if="activeTab === 'admin_dashboard' && user" class="p-4 sm:p-6 space-y-6 animate-fadeIn max-w-4xl mx-auto">
             <div class="flex gap-1.5 bg-white p-1.5 rounded-2xl border border-slate-200 shadow-sm w-fit">
                 <button @click="adminSection = 'services'; cancelEditing()" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition" :class="adminSection === 'services' ? 'bg-emerald-600 text-white shadow' : 'text-slate-500 hover:bg-slate-100'"><i class="fa-solid fa-layer-group"></i><span>Servizi</span></button>
                 <button @click="adminSection = 'news'; cancelEditingNews()" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition" :class="adminSection === 'news' ? 'bg-amber-500 text-white shadow' : 'text-slate-500 hover:bg-slate-100'"><i class="fa-solid fa-bell"></i><span>Notizie & Allerta</span></button>
             </div>
 
+            <!-- GESTIONE SERVIZI ADMIN -->
             <template v-if="adminSection === 'services'">
-            
             <div v-if="!editingService" class="space-y-6">
                 <div class="bg-gradient-to-r from-emerald-600 to-teal-800 rounded-3xl p-6 sm:p-8 text-white shadow-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div>
@@ -420,21 +416,6 @@
                                     <button @click="editForm.hoursList.splice(index, 1)" type="button" class="w-full sm:w-10 h-10 rounded-lg bg-white border border-slate-300 text-red-500 hover:bg-red-50 flex items-center justify-center transition shrink-0"><i class="fa-solid fa-trash"></i></button>
                                 </div>
                                 <button @click="editForm.hoursList.push({ day: 1, open: '09:00', close: '12:00' })" type="button" class="text-xs font-bold text-brand-600 hover:text-brand-700 flex items-center gap-1.5 px-2 py-1 transition mt-2"><i class="fa-solid fa-plus-circle"></i> Aggiungi fascia oraria</button>
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-                            <div>
-                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Ente Gestore</label>
-                                <select v-model="editForm.organization_id" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-800 text-sm focus:ring-2 focus:ring-brand-500 transition">
-                                    <option v-for="org in fixedOrganizations" :key="org.id" :value="org.id">{{ org.name }}</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Categoria Filtro</label>
-                                <select v-model="editForm.category" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-800 text-sm focus:ring-2 focus:ring-brand-500 transition">
-                                    <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.icon }} {{ t(cat.labelKey) }}</option>
-                                </select>
                             </div>
                         </div>
                     </div>
@@ -669,8 +650,7 @@
             </template>
 
         </main>
-
-        <!-- Modals -->
+        
         <div v-if="activeModalService" @click.self="activeModalService = null" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fadeIn">
             <div class="bg-white w-full max-w-lg rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl space-y-5 transform transition-transform" :class="{'text-right': isRTL}">
                 <div class="flex items-center justify-between border-b border-slate-100 pb-3">
@@ -779,14 +759,18 @@
                     address: '',
                     phone: '',
                     email: '',
-                    hoursList: [],
+                    hoursList: [{ day: 1, open: '', close: '' }],
                     status: 'active',
                     noticeTemplate: 'none',
                     noticeParams: {},
                     customNotice: { it: '' },
                     category: 'showers',
                     image: '',
-                    generateAutoNotice: false
+                    generateAutoNotice: false,
+                    name_it: '',
+                    name_en: '',
+                    description_it: '',
+                    description_en: ''
                 });
                 
                 const savingServiceId = ref(false);
@@ -1325,6 +1309,20 @@
                     return result;
                 };
 
+                const buildManualMultilangObj = (valIT, valEN) => {
+                    const it = (valIT || '').trim();
+                    const en = (valEN || '').trim();
+                    const result = { it: it };
+                    if (en !== '') result.en = en;
+                    else result.en = it; 
+                    for (const langCode in languages) {
+                        if (langCode !== 'it' && langCode !== 'en') {
+                            result[langCode] = result.en; 
+                        }
+                    }
+                    return result;
+                };
+
                 const selectedNewLangService = ref('');
                 const availableLangsForServiceCustom = computed(() => {
                     const available = {};
@@ -1495,7 +1493,36 @@
                         customNotice: initCustomNotice,
                         category: service.category || 'showers', 
                         image: service.image || '',
-                        generateAutoNotice: false
+                        generateAutoNotice: false,
+                        name_it: extractText(service.name, 'it'),
+                        name_en: extractText(service.name, 'en'),
+                        description_it: extractText(service.description, 'it'),
+                        description_en: extractText(service.description, 'en')
+                    };
+                    imageUploadError.value = ''; 
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                };
+
+                const startCreating = () => {
+                    editingService.value = { id: null };
+                    editForm.value = {
+                        id: null, 
+                        organization_id: '',
+                        address: '', 
+                        phone: '', 
+                        email: '', 
+                        hoursList: [{ day: 1, open: '', close: '' }],
+                        status: 'active', 
+                        noticeTemplate: 'none', 
+                        noticeParams: {}, 
+                        customNotice: { it: '' },
+                        category: 'showers', 
+                        image: '', 
+                        generateAutoNotice: false,
+                        name_it: '',
+                        name_en: '',
+                        description_it: '',
+                        description_en: ''
                     };
                     imageUploadError.value = ''; 
                     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1539,9 +1566,19 @@
                             payload.latestUpdate = null;
                         }
 
-                        const { error } = await supabase.from('services').upsert([payload]).select();
-                        if (error) throw error;
-                        
+                        let savedServiceId = editForm.value.id;
+
+                        if (editForm.value.id) {
+                            const { error } = await supabase.from('services').update(payload).eq('id', editForm.value.id).select();
+                            if (error) throw error;
+                        } else {
+                            // Rimosso, la creazione non è permessa dalla modalità ibrida, ma mantenuto se abilitata altrove
+                            const { data, error } = await supabase.from('services').insert([payload]).select();
+                            if (error) throw error;
+                            savedServiceId = data[0].id;
+                        }
+
+                        // Aggiorna local array per immediata visualizzazione
                         const dbIdx = dbServices.value.findIndex(s => s.id === payload.id);
                         if (dbIdx >= 0) {
                             dbServices.value[dbIdx] = payload;
@@ -1554,7 +1591,7 @@
                                 type: 'service_update', 
                                 priority: 'normal',
                                 association_id: payload.org_id,
-                                related_service_id: payload.id,
+                                related_service_id: savedServiceId,
                                 title: buildMultilangObjFromTemplate('service_updated', {}, true),
                                 content: buildMultilangObjFromTemplate('service_updated', {}, false)
                             };
@@ -1562,7 +1599,7 @@
                             fetchNews(); 
                         }
 
-                        alert("✅ Modifiche salvate con successo online!");
+                        alert(editForm.value.id ? "✅ Modifiche salvate con successo online!" : "✨ Nuovo servizio registrato e pubblicato!");
                         cancelEditing();
                     } catch (err) { 
                         alert("❌ Errore salvataggio: " + err.message); 
@@ -1707,7 +1744,7 @@
                             if (error) throw error;
                         }
                         
-                        await fetchNews();
+                        await fetchNews(); 
                         alert(newsForm.value.id ? "✅ Notizia aggiornata!" : "📢 Notizia pubblicata!");
                         cancelEditingNews();
                     } catch (err) { 
