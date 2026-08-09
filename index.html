@@ -537,16 +537,41 @@
                             <option v-for="tpl in templates" :key="tpl.id" :value="tpl.id">{{ tpl.label }}</option>
                         </select>
 
-                        <!-- Input dinamici per i parametri del template selezionato -->
-                        <div v-if="selectedNoticeTemplate && selectedNoticeTemplate.params.length > 0" class="mt-3 space-y-2 p-3 bg-brand-50 border border-brand-100 rounded-xl">
+                        <!-- Input dinamici per template predefiniti -->
+                        <div v-if="selectedNoticeTemplate && selectedNoticeTemplate.id !== 'custom' && selectedNoticeTemplate.params.length > 0" class="mt-3 space-y-2 p-3 bg-brand-50 border border-brand-100 rounded-xl">
                             <div v-for="param in selectedNoticeTemplate.params" :key="param">
                                 <label class="block text-[11px] font-bold text-brand-700 mb-1 capitalize">{{ param }}</label>
                                 <input v-model="editForm.noticeParams[param]" type="text" :placeholder="'Inserisci ' + param" class="w-full text-sm py-1.5 px-3 rounded-lg border border-brand-200 text-slate-800">
                             </div>
                         </div>
 
-                        <!-- Anteprima dell'avviso -->
-                        <div v-if="editForm.noticeTemplate !== 'none'" class="mt-2 p-3 bg-slate-100 rounded-xl border border-slate-200 text-xs text-slate-700">
+                        <!-- Interfaccia per TEMPLATE LIBERO (Manuale Multilingua) -->
+                        <div v-if="editForm.noticeTemplate === 'custom'" class="mt-3 p-3 bg-brand-50 border border-brand-100 rounded-xl space-y-3">
+                            <div class="flex items-center justify-between border-b border-brand-200 pb-2">
+                                <h4 class="text-xs font-bold uppercase text-brand-800">Testo Avviso Libero</h4>
+                                <div class="flex items-center gap-2">
+                                    <select v-model="selectedNewLangService" class="text-xs border border-brand-200 rounded-lg px-2 py-1 bg-white">
+                                        <option value="">Aggiungi lingua...</option>
+                                        <option v-for="(l, code) in availableLangsForServiceCustom" :key="code" :value="code">{{ l.name }}</option>
+                                    </select>
+                                    <button @click="addLangToServiceCustom" type="button" class="bg-brand-200 hover:bg-brand-300 text-brand-800 text-[10px] font-bold px-2 py-1 rounded transition"><i class="fa-solid fa-plus"></i></button>
+                                </div>
+                            </div>
+                            
+                            <div v-for="(text, lang) in editForm.customNotice" :key="'notice_'+lang" class="relative">
+                                <label class="block text-[10px] font-bold text-brand-700 mb-1 uppercase">
+                                    {{ languages[lang]?.name }} <span v-if="lang === 'it'">(Predefinito - Obbligatorio)</span>
+                                </label>
+                                <textarea v-model="editForm.customNotice[lang]" rows="2" class="w-full text-sm py-1.5 px-3 rounded-lg border border-brand-200 text-slate-800 focus:ring-2 focus:ring-brand-500"></textarea>
+                                <button v-if="lang !== 'it'" @click="delete editForm.customNotice[lang]" type="button" class="absolute top-5 right-2 text-red-500 hover:text-red-700 p-1">
+                                    <i class="fa-solid fa-trash text-xs"></i>
+                                </button>
+                            </div>
+                            <p class="text-[10px] text-brand-600 mt-1">Le lingue non inserite faranno un fallback automatico all'Inglese o all'Italiano.</p>
+                        </div>
+
+                        <!-- Anteprima dell'avviso (solo per template non custom) -->
+                        <div v-if="editForm.noticeTemplate !== 'none' && editForm.noticeTemplate !== 'custom'" class="mt-2 p-3 bg-slate-100 rounded-xl border border-slate-200 text-xs text-slate-700">
                             <span class="block text-[10px] uppercase font-bold text-slate-400 mb-1">Anteprima Avviso (IT)</span>
                             <strong>{{ generateTemplateText(editForm.noticeTemplate, editForm.noticeParams, 'it') }}</strong>
                         </div>
@@ -560,7 +585,7 @@
                         </div>
                         <div>
                             <h3 class="font-bold text-slate-800 text-base">Informazioni Anagrafiche</h3>
-                            <p class="text-xs text-slate-500">Compila i testi. Se manca l'inglese verrà usato l'italiano.</p>
+                            <p class="text-xs text-slate-500">Compila i testi. Se manca l'inglese verrà usato l'italiano per tutti i turisti.</p>
                         </div>
                     </div>
 
@@ -582,7 +607,7 @@
                             </div>
                         </div>
 
-                        <!-- SEZIONE IMMAGINE: anteprima + link URL + upload diretto da dispositivo -->
+                        <!-- SEZIONE IMMAGINE -->
                         <div>
                             <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">Immagine Copertina</label>
 
@@ -618,7 +643,7 @@
                         <div>
                             <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Nome Servizio</label>
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                <input v-model="editForm.name_it" type="text" placeholder="Italiano" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm border-l-4 border-l-emerald-500">
+                                <input v-model="editForm.name_it" type="text" placeholder="Italiano (Predefinito)" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm border-l-4 border-l-emerald-500">
                                 <input v-model="editForm.name_en" type="text" placeholder="Inglese (opzionale)" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm border-l-4 border-l-blue-500">
                             </div>
                         </div>
@@ -799,7 +824,7 @@
                         </div>
                         <div>
                             <h3 class="font-bold text-slate-800 text-base">Componi Notizia con Template</h3>
-                            <p class="text-xs text-slate-500">Scegli la tipologia e usa i modelli per generare avvisi in tutte le lingue.</p>
+                            <p class="text-xs text-slate-500">Scegli la tipologia e usa i modelli per generare avvisi in tutte le lingue (o usa il Testo Libero).</p>
                         </div>
                     </div>
 
@@ -860,19 +885,61 @@
                     </div>
 
                     <div class="bg-amber-50 rounded-2xl p-4 border border-amber-100">
-                        <label class="block text-sm font-bold uppercase text-amber-800 mb-2">Seleziona Template Avviso</label>
+                        <label class="block text-sm font-bold uppercase text-amber-800 mb-2">Seleziona Template Notizia</label>
                         <select v-model="newsForm.template" @change="newsForm.templateParams = {}" class="w-full bg-white border border-amber-200 rounded-xl px-4 py-3 text-sm mb-4 focus:ring-2 focus:ring-amber-500 outline-none">
                             <option v-for="tpl in templates.filter(t => t.id !== 'none')" :key="tpl.id" :value="tpl.id">{{ tpl.label }}</option>
                         </select>
 
-                        <div v-if="selectedNewsTemplate && selectedNewsTemplate.params.length > 0" class="space-y-3">
+                        <!-- Input dinamici per template predefiniti -->
+                        <div v-if="selectedNewsTemplate && selectedNewsTemplate.id !== 'custom' && selectedNewsTemplate.params.length > 0" class="space-y-3">
                             <div v-for="param in selectedNewsTemplate.params" :key="param">
                                 <label class="block text-xs font-bold text-amber-700 mb-1 capitalize">{{ param }}</label>
                                 <input v-model="newsForm.templateParams[param]" type="text" :placeholder="'Inserisci ' + param" class="w-full text-sm py-2 px-3 rounded-lg border border-amber-200">
                             </div>
                         </div>
 
-                        <div v-if="newsForm.template" class="mt-4 p-3 bg-white rounded-lg border border-amber-100 text-sm">
+                        <!-- Interfaccia per NOTIZIA TEMPLATE LIBERO -->
+                        <div v-if="newsForm.template === 'custom'" class="space-y-4">
+                            <!-- Titoli Multipli -->
+                            <div class="p-3 bg-white border border-amber-200 rounded-xl space-y-3">
+                                <div class="flex items-center justify-between border-b border-amber-100 pb-2">
+                                    <h4 class="text-xs font-bold uppercase text-amber-800">Titolo Libero</h4>
+                                    <div class="flex items-center gap-2">
+                                        <select v-model="selectedNewLangNewsTitle" class="text-xs border border-amber-200 rounded-lg px-2 py-1 bg-slate-50">
+                                            <option value="">Aggiungi lingua...</option>
+                                            <option v-for="(l, code) in availableLangsForNewsTitle" :key="code" :value="code">{{ l.name }}</option>
+                                        </select>
+                                        <button @click="addLangToNewsTitle" type="button" class="bg-amber-100 hover:bg-amber-200 text-amber-800 text-[10px] font-bold px-2 py-1 rounded transition"><i class="fa-solid fa-plus"></i></button>
+                                    </div>
+                                </div>
+                                <div v-for="(text, lang) in newsForm.customTitle" :key="'title_'+lang" class="relative">
+                                    <label class="block text-[10px] font-bold text-amber-700 mb-1 uppercase">{{ languages[lang]?.name }} <span v-if="lang==='it'">(Predefinito)</span></label>
+                                    <input v-model="newsForm.customTitle[lang]" type="text" class="w-full text-sm py-1.5 px-3 rounded-lg border border-amber-200 text-slate-800 focus:ring-2 focus:ring-amber-500">
+                                    <button v-if="lang !== 'it'" @click="delete newsForm.customTitle[lang]" type="button" class="absolute top-5 right-2 text-red-500 hover:text-red-700 p-1"><i class="fa-solid fa-trash text-xs"></i></button>
+                                </div>
+                            </div>
+
+                            <!-- Contenuti Multipli -->
+                            <div class="p-3 bg-white border border-amber-200 rounded-xl space-y-3">
+                                <div class="flex items-center justify-between border-b border-amber-100 pb-2">
+                                    <h4 class="text-xs font-bold uppercase text-amber-800">Testo Messaggio Libero</h4>
+                                    <div class="flex items-center gap-2">
+                                        <select v-model="selectedNewLangNewsContent" class="text-xs border border-amber-200 rounded-lg px-2 py-1 bg-slate-50">
+                                            <option value="">Aggiungi lingua...</option>
+                                            <option v-for="(l, code) in availableLangsForNewsContent" :key="code" :value="code">{{ l.name }}</option>
+                                        </select>
+                                        <button @click="addLangToNewsContent" type="button" class="bg-amber-100 hover:bg-amber-200 text-amber-800 text-[10px] font-bold px-2 py-1 rounded transition"><i class="fa-solid fa-plus"></i></button>
+                                    </div>
+                                </div>
+                                <div v-for="(text, lang) in newsForm.customContent" :key="'content_'+lang" class="relative">
+                                    <label class="block text-[10px] font-bold text-amber-700 mb-1 uppercase">{{ languages[lang]?.name }} <span v-if="lang==='it'">(Predefinito)</span></label>
+                                    <textarea v-model="newsForm.customContent[lang]" rows="3" class="w-full text-sm py-2 px-3 rounded-lg border border-amber-200 text-slate-800 focus:ring-2 focus:ring-amber-500"></textarea>
+                                    <button v-if="lang !== 'it'" @click="delete newsForm.customContent[lang]" type="button" class="absolute top-5 right-2 text-red-500 hover:text-red-700 p-1"><i class="fa-solid fa-trash text-xs"></i></button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div v-if="newsForm.template && newsForm.template !== 'custom'" class="mt-4 p-3 bg-white rounded-lg border border-amber-100 text-sm">
                             <span class="block text-[10px] uppercase font-bold text-slate-400 mb-1">Anteprima Finale (IT)</span>
                             <strong class="block text-slate-800">{{ generateTemplateText(newsForm.template, newsForm.templateParams, 'it', true) }}</strong>
                             <p class="text-slate-600 mt-1">{{ generateTemplateText(newsForm.template, newsForm.templateParams, 'it', false) }}</p>
@@ -883,7 +950,7 @@
                 <div class="bg-slate-900 text-white p-4 rounded-3xl shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div class="flex items-center gap-2">
                         <i class="fa-solid fa-cloud text-amber-400 text-lg"></i>
-                        <span class="text-xs sm:text-sm font-medium">Notizia pronta per la pubblicazione multilingua</span>
+                        <span class="text-xs sm:text-sm font-medium">Notizia pronta per la pubblicazione</span>
                     </div>
 
                     <div class="flex items-center gap-3 w-full sm:w-auto">
@@ -909,6 +976,7 @@
 
         </main>
 
+        <!-- Modals and Overlay -->
         <div v-if="activeModalService" @click.self="activeModalService = null" 
              class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fadeIn">
             <div class="bg-white w-full max-w-lg rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl space-y-5 transform transition-transform"
@@ -1111,12 +1179,13 @@
                     status: 'active',
                     noticeTemplate: 'none',
                     noticeParams: {},
+                    customNotice: { it: '' }, // Contiene le traduzioni del Template Libero
                     organization: '',
                     category: 'showers',
                     image: ''
                 });
                 const savingServiceId = ref(false);
-
+                
                 const uploadingImage = ref(false);
                 const imageUploadError = ref('');
 
@@ -1128,7 +1197,9 @@
                     association: '',
                     related_service_id: null,
                     template: 'weather_closure',
-                    templateParams: {}
+                    templateParams: {},
+                    customTitle: { it: '' },   // Contiene i titoli liberi (News)
+                    customContent: { it: '' }  // Contiene i messaggi liberi (News)
                 });
                 const savingNewsId = ref(false);
                 const isLoadingNews = ref(true);
@@ -1215,66 +1286,8 @@
                         tpl_desc_extra_opening: 'Extraordinary opening scheduled at {orario}.',
                         tpl_desc_time_change: 'New temporary service schedule: {orario}.',
                         tpl_desc_service_suspended: 'Service is suspended until further notice.'
-                    },
-                    fr: {
-                        tab_services: 'Services', tab_news: 'Actualités', tab_emergency: 'Urgences',
-                        welcome_title: 'Carte d\'Accueil', welcome_sub: 'Trouvez douches, repas, hébergements et aide juridique à Côme en temps réel.',
-                        search_placeholder: 'Rechercher par nom, service, rue ou quartier...',
-                        categories_title: 'Catégories', show_all: 'Tout voir', cat_all: 'Tous les services',
-                        cat_showers: 'Douches & Hygiène', cat_food: 'Repas & Alimentation', cat_shelter: 'Hébergement', cat_health: 'Santé & Médecins', cat_legal: 'Juridique & Doc.', cat_clothes: 'Vêtements',
-                        services_found: 'services disponibles', no_results_title: 'Aucun service trouvé', no_results_sub: 'Essayez d\'autres mots ou réinitialisez les filtres.', reset_filters: 'Réinitialiser',
-                        status_active: 'Ouvert', status_notice: 'Changement', status_suspended: 'Suspendu', hours_label: 'Horaires / Accès', service_update_label: 'Alerte en temps réel', service_suspended_label: 'Service Suspendu / Avis',
-                        btn_contact: 'Contacter', btn_directions: 'Itinéraire GPS',
-                        news_page_title: 'Actualités des Maraudes', news_page_sub: 'Alertes en temps réel sur les horaires, hébergements d\'urgence ou avis des associations de Côme.',
-                        priority_urgent: 'Urgent', priority_info: 'Info', related_service: 'Service lié', go_to_card: 'Voir la fiche',
-                        emergency_title: 'Numéros d\'Urgence', emergency_sub: 'Numéros gratuits et actifs 24h/24 et 7j/7 pour toute urgence.',
-                        em_112_title: '112 - Urgence Générale', em_112_desc: 'Police, Pompiers, Urgences graves.',
-                        em_118_title: '118 - Urgence Médicale', em_118_desc: 'Ambulance et soins immédiats.',
-                        em_street_unit_title: 'Coordination des Maraudes', em_street_unit_desc: 'Si vous voyez une personne en détresse dans la rue à Côme la nuit, signalez-la aux bénévoles.',
-                        call_coordination: 'Signaler à Vicini di Strada',
-                        choose_contact_method: 'Choisissez comment contacter', call_now: 'Appeler le numéro', send_email: 'Envoyer un e-mail', open_maps: 'Ouvrir le GPS', close: 'Fermer',
-                        
-                        // TEMPLATES
-                        tpl_title_weather_closure: 'Fermeture Météo', tpl_title_temp_closure: 'Fermeture Temporaire',
-                        tpl_title_extra_opening: 'Ouverture Exceptionnelle', tpl_title_time_change: 'Changement d\'Horaire',
-                        tpl_title_service_suspended: 'Service Suspendu',
-                        
-                        tpl_desc_weather_closure: 'Le service est temporairement fermé en raison de conditions météorologiques défavorables.',
-                        tpl_desc_temp_closure: 'Le service sera fermé le: {data}.',
-                        tpl_desc_extra_opening: 'Ouverture exceptionnelle prévue à {orario}.',
-                        tpl_desc_time_change: 'Nouvel horaire temporaire du service: {orario}.',
-                        tpl_desc_service_suspended: 'Le service est suspendu jusqu\'à nouvel ordre.'
-                    },
-                    es: {
-                        tab_services: 'Servicios', tab_news: 'Noticias y Alertas', tab_emergency: 'Emergencias',
-                        welcome_title: 'Mapa de Acogida', welcome_sub: 'Encuentra duchas, comedores, albergues y asistencia legal en Como en tiempo real.',
-                        search_placeholder: 'Buscar por nombre, servicio, calle o barrio...',
-                        categories_title: 'Categorías', show_all: 'Ver todos', cat_all: 'Todos los servicios',
-                        cat_showers: 'Duchas e Higiene', cat_food: 'Comedores y Comida', cat_shelter: 'Albergues / Dormitorios', cat_health: 'Atención Médica', cat_legal: 'Asesoría Legal', cat_clothes: 'Ropa y Vestuario',
-                        services_found: 'servicios disponibles', no_results_title: 'No se encontraron servicios', no_results_sub: 'Intenta buscar con otras palabras o restablece los filtros.', reset_filters: 'Restablecer filtros',
-                        status_active: 'Abierto', status_notice: 'Aviso', status_suspended: 'Suspendido', hours_label: 'Horarios / Acceso', service_update_label: 'Aviso en tiempo real', service_suspended_label: 'Servicio Suspendido / Aviso',
-                        btn_contact: 'Contactar', btn_directions: 'Cómo llegar',
-                        news_page_title: 'Novedades de Unidades de Calle', news_page_sub: 'Alertas en tiempo real sobre horarios, aperturas de emergencia por frío o avisos de las asociaciones de Como.',
-                        priority_urgent: 'Urgente', priority_info: 'Información', related_service: 'Servicio relacionado', go_to_card: 'Ver ficha del servicio',
-                        emergency_title: 'Números de Emergencia', emergency_sub: 'Llamadas gratuítas y activas las 24 horas para emergencias médicas o de seguridad.',
-                        em_112_title: '112 - Emergencias Generales', em_112_desc: 'Policía, Bomberos, Emergencias graves.',
-                        em_118_title: '118 - Emergencia Médica', em_118_desc: 'Ambulance y atención médica inmediata.',
-                        em_street_unit_title: 'Coordinación Unidades de Calle', em_street_unit_desc: 'Si encuentras a una persona en situación de grave vulnerabilidad en la calle por la noche, avisa a los voluntarios.',
-                        call_coordination: 'Avisar a Vicini di Strada',
-                        choose_contact_method: 'Elige cómo contactar', call_now: 'Llamar al teléfono', send_email: 'Enviar un correo', open_maps: 'Abrir navegación GPS', close: 'Cerrar ventana',
-                        
-                        // TEMPLATES
-                        tpl_title_weather_closure: 'Cierre por Clima', tpl_title_temp_closure: 'Cierre Temporal',
-                        tpl_title_extra_opening: 'Apertura Extraordinaria', tpl_title_time_change: 'Cambio de Horario',
-                        tpl_title_service_suspended: 'Servicio Suspendido',
-                        
-                        tpl_desc_weather_closure: 'El servicio está cerrado temporalmente debido a condiciones climáticas adversas.',
-                        tpl_desc_temp_closure: 'El servicio estará cerrado en la fecha: {data}.',
-                        tpl_desc_extra_opening: 'Apertura extraordinaria programada a las {orario}.',
-                        tpl_desc_time_change: 'Nuevo horario temporal del servicio: {orario}.',
-                        tpl_desc_service_suspended: 'El servicio está suspendido hasta nuevo aviso.'
                     }
-                    // Le altre lingue (ar, ur, hi, sw, tr) faranno fallback automatico sull'inglese (impostato sotto).
+                    // Le altre lingue faranno fallback automatico sull'inglese/italiano.
                 };
 
                 const templates = [
@@ -1283,15 +1296,26 @@
                     { id: 'temp_closure', label: 'Chiusura Temporanea', params: ['data'] },
                     { id: 'extra_opening', label: 'Apertura Straordinaria', params: ['orario'] },
                     { id: 'time_change', label: 'Variazione Orario', params: ['orario'] },
-                    { id: 'service_suspended', label: 'Servizio Sospeso', params: [] }
+                    { id: 'service_suspended', label: 'Servizio Sospeso', params: [] },
+                    { id: 'custom', label: 'Testo Libero (Manuale)', params: [] } // NUOVO TEMPLATE
                 ];
 
                 const t = (key) => i18n[currentLangCode.value]?.[key] || i18n['en']?.[key] || i18n['it']?.[key] || key;
 
+                // Estrae la traduzione con sistema di Fallback (lingua richiesta -> Inglese -> Italiano)
                 const translateField = (obj, fieldName) => {
-                    if (!obj || !obj[fieldName]) return '';
-                    if (typeof obj[fieldName] === 'string') return obj[fieldName];
-                    return obj[fieldName][currentLangCode.value] || obj[fieldName]['en'] || obj[fieldName]['it'] || '';
+                    if (!obj) return '';
+                    // Se passiamo l'oggetto intero invece del campo:
+                    const field = fieldName ? obj[fieldName] : obj;
+                    if (!field) return '';
+                    if (typeof field === 'string') return field;
+                    return field[currentLangCode.value] || field['en'] || field['it'] || '';
+                };
+
+                const extractText = (field, lang = 'it') => {
+                    if (!field) return '';
+                    if (typeof field === 'string') return field;
+                    return field[lang] || field['en'] || field['it'] || '';
                 };
 
                 const categories = [
@@ -1306,10 +1330,10 @@
                 const getCategoryIcon = (catId) => categories.find(c => c.id === catId)?.icon || '📍';
                 const getCategoryLabelKey = (catId) => categories.find(c => c.id === catId)?.labelKey || 'cat_all';
 
-                // --- FUNZIONI DI GENERAZIONE TESTI E TEMPLATE ---
+                // --- FUNZIONI DI GENERAZIONE TEMPLATE E LINGUE ---
                 
                 const generateTemplateText = (templateId, params, langCode, isTitle = false) => {
-                    if (templateId === 'none') return '';
+                    if (templateId === 'none' || templateId === 'custom') return '';
                     const prefix = isTitle ? 'tpl_title_' : 'tpl_desc_';
                     
                     let text = i18n[langCode]?.[prefix + templateId] || i18n['en']?.[prefix + templateId] || i18n['it']?.[prefix + templateId] || '';
@@ -1324,7 +1348,7 @@
 
                 const buildMultilangObjFromTemplate = (templateId, params, isTitle = false) => {
                     const result = {};
-                    if (templateId === 'none') return result;
+                    if (templateId === 'none' || templateId === 'custom') return result;
                     for (const langCode in languages) {
                         result[langCode] = generateTemplateText(templateId, params, langCode, isTitle);
                     }
@@ -1347,11 +1371,59 @@
                     return result;
                 };
 
-                const extractText = (field, lang = 'it') => {
-                    if (!field) return '';
-                    if (typeof field === 'string') return field;
-                    return field[lang] || field['en'] || field['it'] || '';
+                // --- GESTIONE CAMPI MANUALI DINAMICI (Custom) ---
+
+                const selectedNewLangService = ref('');
+                const availableLangsForServiceCustom = computed(() => {
+                    const available = {};
+                    for(const code in languages) {
+                        if(code !== 'it' && editForm.value.customNotice && editForm.value.customNotice[code] === undefined) {
+                            available[code] = languages[code];
+                        }
+                    }
+                    return available;
+                });
+                const addLangToServiceCustom = () => {
+                    if (selectedNewLangService.value) {
+                        editForm.value.customNotice[selectedNewLangService.value] = '';
+                        selectedNewLangService.value = '';
+                    }
                 };
+
+                const selectedNewLangNewsTitle = ref('');
+                const availableLangsForNewsTitle = computed(() => {
+                    const available = {};
+                    for(const code in languages) {
+                        if(code !== 'it' && newsForm.value.customTitle && newsForm.value.customTitle[code] === undefined) {
+                            available[code] = languages[code];
+                        }
+                    }
+                    return available;
+                });
+                const addLangToNewsTitle = () => {
+                    if (selectedNewLangNewsTitle.value) {
+                        newsForm.value.customTitle[selectedNewLangNewsTitle.value] = '';
+                        selectedNewLangNewsTitle.value = '';
+                    }
+                };
+
+                const selectedNewLangNewsContent = ref('');
+                const availableLangsForNewsContent = computed(() => {
+                    const available = {};
+                    for(const code in languages) {
+                        if(code !== 'it' && newsForm.value.customContent && newsForm.value.customContent[code] === undefined) {
+                            available[code] = languages[code];
+                        }
+                    }
+                    return available;
+                });
+                const addLangToNewsContent = () => {
+                    if (selectedNewLangNewsContent.value) {
+                        newsForm.value.customContent[selectedNewLangNewsContent.value] = '';
+                        selectedNewLangNewsContent.value = '';
+                    }
+                };
+
 
                 // --- GESTIONE AUTENTICAZIONE E DATABASE ---
 
@@ -1430,6 +1502,17 @@
 
                 const startEditing = (service) => {
                     editingService.value = service;
+                    
+                    let initNoticeTpl = 'none';
+                    let initCustomNotice = { it: '' };
+                    
+                    if (service.latestUpdate && service.latestUpdate.text) {
+                        initNoticeTpl = 'custom'; // Consideriamo le vecchie modifiche salvate come Testo Libero
+                        initCustomNotice = JSON.parse(JSON.stringify(service.latestUpdate.text));
+                        if (typeof initCustomNotice === 'string') initCustomNotice = { it: initCustomNotice };
+                        if (!initCustomNotice.it) initCustomNotice.it = '';
+                    }
+
                     editForm.value = {
                         id: service.id,
                         name_it: extractText(service.name, 'it'), name_en: extractText(service.name, 'en'),
@@ -1437,7 +1520,8 @@
                         hours_it: extractText(service.hours, 'it'), hours_en: extractText(service.hours, 'en'),
                         description_it: extractText(service.description, 'it'), description_en: extractText(service.description, 'en'),
                         status: service.status || 'active',
-                        noticeTemplate: 'none', noticeParams: {},
+                        noticeTemplate: initNoticeTpl, noticeParams: {},
+                        customNotice: initCustomNotice,
                         organization: service.organization || '', category: service.category || 'showers',
                         image: service.image || ''
                     };
@@ -1450,7 +1534,7 @@
                     editForm.value = {
                         id: null, name_it: '', name_en: '', address: '', phone: '', email: '',
                         hours_it: '', hours_en: '', description_it: '', description_en: '',
-                        status: 'active', noticeTemplate: 'none', noticeParams: {},
+                        status: 'active', noticeTemplate: 'none', noticeParams: {}, customNotice: { it: '' },
                         organization: '', category: 'showers', image: ''
                     };
                     imageUploadError.value = '';
@@ -1480,7 +1564,12 @@
                             image: String(editForm.value.image || '').trim()
                         };
 
-                        if (editForm.value.noticeTemplate !== 'none') {
+                        if (editForm.value.noticeTemplate === 'custom') {
+                            payload.latestUpdate = {
+                                date: new Date().toLocaleDateString('it-IT'),
+                                text: JSON.parse(JSON.stringify(editForm.value.customNotice))
+                            };
+                        } else if (editForm.value.noticeTemplate !== 'none') {
                             payload.latestUpdate = {
                                 date: new Date().toLocaleDateString('it-IT'),
                                 text: buildMultilangObjFromTemplate(editForm.value.noticeTemplate, editForm.value.noticeParams, false)
@@ -1492,7 +1581,7 @@
                         if (editForm.value.id) {
                             const { data, error } = await supabase.from('services').update(payload).eq('id', editForm.value.id).select();
                             if (error) throw error;
-                            Object.assign(editingService.value, payload); // Update locale
+                            Object.assign(editingService.value, payload);
                             alert("✅ Modifiche salvate con successo online!");
                         } else {
                             const { data, error } = await supabase.from('services').insert([payload]).select();
@@ -1541,10 +1630,21 @@
 
                 const startEditingNews = (news) => {
                     editingNews.value = news;
+                    
+                    let initCustomTitle = news.title ? JSON.parse(JSON.stringify(news.title)) : { it: '' };
+                    let initCustomContent = news.content ? JSON.parse(JSON.stringify(news.content)) : { it: '' };
+                    if (typeof initCustomTitle === 'string') initCustomTitle = { it: initCustomTitle };
+                    if (typeof initCustomContent === 'string') initCustomContent = { it: initCustomContent };
+                    if (!initCustomTitle.it) initCustomTitle.it = '';
+                    if (!initCustomContent.it) initCustomContent.it = '';
+
                     newsForm.value = {
                         id: news.id, type: news.type || 'general', priority: news.priority || 'normal',
                         association: news.association || '', related_service_id: news.related_service_id || null,
-                        template: 'weather_closure', templateParams: {}
+                        template: news.id ? 'custom' : 'weather_closure', // Se è un edit, la carichiamo come testolibero (custom)
+                        templateParams: {},
+                        customTitle: initCustomTitle,
+                        customContent: initCustomContent
                     };
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                 };
@@ -1553,7 +1653,8 @@
                     editingNews.value = { id: null };
                     newsForm.value = {
                         id: null, type: 'general', priority: 'normal', association: '', related_service_id: null,
-                        template: 'weather_closure', templateParams: {}
+                        template: 'weather_closure', templateParams: {},
+                        customTitle: { it: '' }, customContent: { it: '' }
                     };
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                 };
@@ -1567,13 +1668,23 @@
                     if (!supabase || !editingNews.value) return;
                     savingNewsId.value = true;
                     try {
+                        let finalTitle, finalContent;
+
+                        if (newsForm.value.template === 'custom') {
+                            finalTitle = JSON.parse(JSON.stringify(newsForm.value.customTitle));
+                            finalContent = JSON.parse(JSON.stringify(newsForm.value.customContent));
+                        } else {
+                            finalTitle = buildMultilangObjFromTemplate(newsForm.value.template, newsForm.value.templateParams, true);
+                            finalContent = buildMultilangObjFromTemplate(newsForm.value.template, newsForm.value.templateParams, false);
+                        }
+
                         const payload = {
                             type: newsForm.value.type,
                             priority: newsForm.value.priority,
                             association: String(newsForm.value.association || '').trim(),
                             related_service_id: newsForm.value.related_service_id || null,
-                            title: buildMultilangObjFromTemplate(newsForm.value.template, newsForm.value.templateParams, true),
-                            content: buildMultilangObjFromTemplate(newsForm.value.template, newsForm.value.templateParams, false)
+                            title: finalTitle,
+                            content: finalContent
                         };
 
                         if (newsForm.value.id) {
@@ -1666,7 +1777,10 @@
                     editingNews, newsForm, savingNewsId,
                     startEditingNews, startCreatingNews, cancelEditingNews, saveNewsChanges, deleteNewsItem,
                     selectNewsType, getNewsTypeStyle, formatNewsDate,
-                    templates, selectedNoticeTemplate, selectedNewsTemplate, generateTemplateText
+                    templates, selectedNoticeTemplate, selectedNewsTemplate, generateTemplateText,
+                    selectedNewLangService, availableLangsForServiceCustom, addLangToServiceCustom,
+                    selectedNewLangNewsTitle, availableLangsForNewsTitle, addLangToNewsTitle,
+                    selectedNewLangNewsContent, availableLangsForNewsContent, addLangToNewsContent
                 };
             }
         }).mount('#app');
