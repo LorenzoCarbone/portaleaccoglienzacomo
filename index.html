@@ -17,10 +17,17 @@
                     fontFamily: { sans: ['Inter', 'sans-serif'] },
                     colors: {
                         brand: {
-                            50: '#f0f9ff', 100: '#e0f2fe', 500: '#0ea5e9', 600: '#0284c7', 700: '#0369a1', 900: '#0c4a6e',
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            900: '#0c4a6e',
                         },
                         warm: {
-                            50: '#fdf8f6', 500: '#f97316', 600: '#ea580c',
+                            50: '#fdf8f6',
+                            500: '#f97316',
+                            600: '#ea580c',
                         }
                     }
                 }
@@ -97,7 +104,7 @@
 
         <div v-if="showLangMenu" @click="showLangMenu = false" class="fixed inset-0 z-40 bg-black/10 backdrop-blur-[1px]"></div>
 
-        <!-- Mappa Servizi -->
+        <!-- Mappa Servizi Pubblica -->
         <main v-if="activeTab === 'services'" class="p-4 sm:p-6 space-y-6 animate-fadeIn">
             <div class="bg-gradient-to-r from-brand-700 to-brand-900 rounded-3xl p-6 sm:p-8 text-white shadow-md relative overflow-hidden">
                 <div class="relative z-10 max-w-2xl">
@@ -117,7 +124,6 @@
                     <h3 class="font-bold text-slate-700 text-sm uppercase tracking-wider">{{ t('categories_title') }}</h3>
                     <button v-if="selectedCategory !== 'all'" @click="selectedCategory = 'all'" class="text-xs font-semibold text-brand-600 hover:underline">{{ t('show_all') }}</button>
                 </div>
-                
                 <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
                     <button @click="selectedCategory = 'all'" class="p-3.5 rounded-2xl border transition text-center flex flex-col items-center justify-center gap-1.5 min-h-[85px]" :class="selectedCategory === 'all' ? 'bg-brand-600 border-brand-600 text-white font-bold shadow-md scale-[1.02]' : 'bg-white border-slate-200 text-slate-600 hover:border-brand-300 hover:bg-brand-50/50'"><span class="text-2xl">🌍</span><span class="text-xs leading-tight">{{ t('cat_all') }}</span></button>
                     <button v-for="cat in categories" :key="cat.id" @click="selectedCategory = cat.id" class="p-3.5 rounded-2xl border transition text-center flex flex-col items-center justify-center gap-1.5 min-h-[85px] relative overflow-hidden" :class="selectedCategory === cat.id ? 'bg-brand-600 border-brand-600 text-white font-bold shadow-md scale-[1.02]' : 'bg-white border-slate-200 text-slate-600 hover:border-brand-300 hover:bg-brand-50/50'">
@@ -146,7 +152,8 @@
                     <div v-for="service in filteredServices" :key="service.id" class="bg-white rounded-3xl border border-slate-200/90 overflow-hidden card-shadow hover:shadow-xl transition-all duration-300 flex flex-col justify-between">
                         <div>
                             <div class="relative h-48 w-full bg-slate-100 overflow-hidden">
-                                <img :src="service.image" :alt="service.name" class="w-full h-full object-cover">
+                                <img v-if="service.image" :src="service.image" :alt="translateField(service, 'name')" class="w-full h-full object-cover">
+                                <div v-else class="w-full h-full bg-slate-200 flex items-center justify-center text-4xl opacity-50">{{ getCategoryIcon(service.category) }}</div>
                                 <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
                                 <div class="absolute top-3 left-3 bg-white/90 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold text-slate-800 shadow flex items-center gap-1.5" :class="{'right-3 left-auto': isRTL}"><span>{{ getCategoryIcon(service.category) }}</span><span>{{ t(getCategoryLabelKey(service.category)) }}</span></div>
                                 <div class="absolute top-3 right-3 px-2.5 py-1 rounded-full text-[11px] font-bold shadow flex items-center gap-1.5 backdrop-blur-md" :class="[ service.status === 'active' ? 'bg-emerald-500 text-white' : service.status === 'notice' ? 'bg-amber-500 text-white' : 'bg-red-600 text-white', {'left-3 right-auto': isRTL} ]">
@@ -159,7 +166,7 @@
                                 </div>
                             </div>
                             <div class="p-5 space-y-4">
-                                <div class="flex items-start gap-2.5 text-slate-800 text-sm bg-brand-50/70 p-3 rounded-xl border border-brand-100"><i class="fa-solid fa-location-dot text-brand-600 mt-0.5 text-base shrink-0"></i><span class="font-bold tracking-wide text-brand-900">{{ service.address }}, Como</span></div>
+                                <div class="flex items-start gap-2.5 text-slate-800 text-sm bg-brand-50/70 p-3 rounded-xl border border-brand-100"><i class="fa-solid fa-location-dot text-brand-600 mt-0.5 text-base shrink-0"></i><span class="font-bold tracking-wide text-brand-900">{{ service.address }}</span></div>
                                 <div>
                                     <p class="text-slate-600 text-sm leading-relaxed transition-all" :class="isServiceExpanded(service.id) ? '' : 'line-clamp-3'">{{ translateField(service, 'description') }}</p>
                                     <button @click="toggleServiceExpanded(service.id)" type="button" class="mt-1.5 text-xs font-bold text-brand-600 hover:text-brand-700 flex items-center gap-1 transition"><span>{{ isServiceExpanded(service.id) ? t('show_less') : t('show_more') }}</span><i class="fa-solid fa-chevron-down text-[10px] transition-transform" :class="{'rotate-180': isServiceExpanded(service.id)}"></i></button>
@@ -168,7 +175,7 @@
                                     <i class="fa-regular fa-clock text-slate-400 text-base mt-0.5"></i>
                                     <div class="w-full">
                                         <span class="font-bold text-slate-700 block mb-0.5">{{ t('hours_label') }}:</span>
-                                        <span class="whitespace-pre-line leading-relaxed">{{ translateField(service, 'hours') }}</span>
+                                        <span class="whitespace-pre-line leading-relaxed">{{ formatHours(service.hours, currentLangCode) }}</span>
                                     </div>
                                 </div>
                                 <div v-if="service.latestUpdate" class="rounded-2xl p-3.5 border text-xs flex items-start gap-2.5 transition" :class="service.status === 'suspended' ? 'bg-red-50 border-red-200 text-red-900' : 'bg-amber-50 border-amber-200/80 text-amber-900'">
@@ -190,6 +197,7 @@
             </div>
         </main>
 
+        <!-- Notizie Pubblica -->
         <main v-if="activeTab === 'news'" class="p-4 sm:p-6 space-y-6 animate-fadeIn max-w-4xl mx-auto">
             <div class="bg-gradient-to-r from-amber-500 to-warm-600 rounded-3xl p-6 sm:p-8 text-white shadow-md">
                 <div class="flex items-center gap-3 mb-2">
@@ -264,18 +272,14 @@
                 <button @click="adminSection = 'news'; cancelEditingNews()" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition" :class="adminSection === 'news' ? 'bg-amber-500 text-white shadow' : 'text-slate-500 hover:bg-slate-100'"><i class="fa-solid fa-bell"></i><span>Notizie & Allerta</span></button>
             </div>
 
-            <!-- GESTIONE SERVIZI -->
+            <!-- GESTIONE SERVIZI ADMIN -->
             <template v-if="adminSection === 'services'">
-            
             <div v-if="!editingService" class="space-y-6">
                 <div class="bg-gradient-to-r from-emerald-600 to-teal-800 rounded-3xl p-6 sm:p-8 text-white shadow-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div>
                         <span class="bg-white/20 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-2 inline-block">Pannello Operatori</span>
                         <h2 class="text-2xl sm:text-3xl font-bold leading-tight">Gestione Servizi Como</h2>
-                        <p class="text-emerald-100 text-sm mt-1">Gestisci la mappa: aggiungi, modifica o aggiorna lo stato dei servizi.</p>
-                    </div>
-                    <div class="flex flex-wrap gap-2 shrink-0 w-full sm:w-auto justify-end">
-                        <button @click="startCreating()" class="bg-emerald-500 hover:bg-emerald-400 text-white font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm shadow flex items-center gap-2 transition active:scale-95 border border-emerald-400"><i class="fa-solid fa-plus"></i><span>Nuovo Servizio</span></button>
+                        <p class="text-emerald-100 text-sm mt-1">Aggiorna lo stato, gli orari o i contatti dei servizi mappati.</p>
                     </div>
                 </div>
 
@@ -301,19 +305,25 @@
                 </div>
             </div>
             
-            <!-- EDITOR SERVIZIO RIORGANIZZATO -->
+            <!-- EDITOR SERVIZIO -->
             <div v-else class="space-y-6 animate-fadeIn">
-                <!-- Header Editor -->
                 <div class="flex items-center justify-between bg-white p-4 rounded-2xl border border-slate-200 card-shadow sticky top-20 z-30">
                     <button @click="cancelEditing()" class="flex items-center gap-2 text-slate-600 hover:text-brand-600 font-bold text-xs sm:text-sm bg-slate-100 hover:bg-brand-50 px-3.5 py-2 rounded-xl transition active:scale-95"><i class="fa-solid fa-arrow-left" :class="{'rtl-flip': isRTL}"></i><span>Indietro</span></button>
                     <div class="text-right overflow-hidden pr-2">
-                        <span class="text-[10px] uppercase font-bold text-brand-600 tracking-wider block truncate">Stato Operazione:</span>
-                        <span class="font-bold text-slate-800 text-xs sm:text-sm truncate block">{{ editForm.id ? 'Modifica Servizio' : 'Nuovo Inserimento' }}</span>
+                        <span class="text-[10px] uppercase font-bold text-brand-600 tracking-wider block truncate">Modifica In Corso:</span>
+                        <span class="font-bold text-slate-800 text-xs sm:text-sm truncate block">{{ translateField(editingService, 'name') }}</span>
                     </div>
                 </div>
 
-                <!-- SEZIONE 1: STATO E AVVISI -->
-                <div v-if="editForm.id" class="bg-white rounded-3xl border-2 border-brand-500/20 p-5 sm:p-6 card-shadow space-y-5">
+                <div class="bg-blue-50 border border-blue-200 rounded-3xl p-5 card-shadow flex items-start gap-4">
+                    <div class="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center text-xl shrink-0"><i class="fa-solid fa-info"></i></div>
+                    <div>
+                        <h3 class="font-bold text-blue-900 text-sm">Modalità Ibrida Attiva</h3>
+                        <p class="text-xs text-blue-800 mt-1">Il nome e la descrizione di questo servizio sono integrati nel codice del portale per garantire traduzioni perfette in 9 lingue. Puoi modificare gli orari, i contatti e aggiungere avvisi di chiusura.</p>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-3xl border-2 border-brand-500/20 p-5 sm:p-6 card-shadow space-y-5">
                     <div class="flex items-center gap-3 border-b border-slate-100 pb-3">
                         <div class="w-8 h-8 rounded-xl bg-warm-500 text-white flex items-center justify-center text-sm shadow-sm"><i class="fa-solid fa-triangle-exclamation"></i></div>
                         <div><h3 class="font-bold text-slate-800 text-base">Visibilità e Stato Apertura</h3><p class="text-xs text-slate-500">Controlla come il servizio appare in mappa.</p></div>
@@ -370,13 +380,10 @@
                             </div>
                             
                             <div v-for="(text, lang) in editForm.customNotice" :key="'notice_'+lang" class="relative">
-                                <label class="block text-[10px] font-bold text-brand-700 mb-1 uppercase flex items-center gap-1">
-                                    <span class="flag-emoji">{{ languages[lang]?.flag }}</span> {{ languages[lang]?.name }} <span v-if="lang === 'it'">(Predefinito)</span>
-                                </label>
+                                <label class="block text-[10px] font-bold text-brand-700 mb-1 uppercase flex items-center gap-1"><span class="flag-emoji">{{ languages[lang]?.flag }}</span> {{ languages[lang]?.name }} <span v-if="lang === 'it'">(Predefinito)</span></label>
                                 <textarea v-model="editForm.customNotice[lang]" rows="2" class="w-full text-sm py-2 px-3 rounded-lg border border-brand-200 text-slate-800 focus:ring-2 focus:ring-brand-500 outline-none"></textarea>
                                 <button v-if="lang !== 'it'" @click="delete editForm.customNotice[lang]" type="button" class="absolute top-6 right-2 text-red-500 hover:text-red-700 p-1.5 bg-white rounded-md shadow-sm"><i class="fa-solid fa-trash text-xs"></i></button>
                             </div>
-                            <p class="text-[10px] text-brand-600 mt-1 font-medium"><i class="fa-solid fa-info-circle mr-1"></i>Fallback automatico all'Inglese o Italiano per le lingue mancanti.</p>
                         </div>
 
                         <div v-if="editForm.noticeTemplate !== 'none' && editForm.noticeTemplate !== 'custom'" class="mt-2 p-3 bg-slate-100 rounded-xl border border-slate-200 text-xs text-slate-700">
@@ -386,74 +393,48 @@
                     </div>
                 </div>
 
-                <!-- SEZIONE 2: IDENTIFICAZIONE -->
-                <div class="bg-white rounded-3xl border border-slate-200 p-5 sm:p-6 card-shadow space-y-5">
-                    <div class="flex items-center gap-3 border-b border-slate-100 pb-3">
-                        <div class="w-8 h-8 rounded-xl bg-brand-600 text-white flex items-center justify-center text-sm shadow-sm"><i class="fa-solid fa-tag"></i></div>
-                        <div><h3 class="font-bold text-slate-800 text-base">Identificazione</h3><p class="text-xs text-slate-500">Nome e classificazione del servizio.</p></div>
-                    </div>
-
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Ente Gestore</label>
-                            <input v-model="editForm.organization" type="text" required placeholder="Es. We For The Planet, Legàmi..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-800 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500 transition">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Categoria Filtro</label>
-                            <select v-model="editForm.category" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-800 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500 transition">
-                                <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.icon }} {{ t(cat.labelKey) }}</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Nome Servizio</label>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <input v-model="editForm.name_it" type="text" placeholder="Italiano (Es. Aula Studio Roberto Malgesini)" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm border-l-4 border-l-emerald-500 focus:ring-2 focus:ring-brand-500 outline-none">
-                            <input v-model="editForm.name_en" type="text" placeholder="Inglese (opzionale)" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm border-l-4 border-l-blue-500 focus:ring-2 focus:ring-brand-500 outline-none">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- SEZIONE 3: ORARI DINAMICI -->
                 <div class="bg-white rounded-3xl border border-slate-200 p-5 sm:p-6 card-shadow space-y-5">
                     <div class="flex items-center gap-3 border-b border-slate-100 pb-3">
                         <div class="w-8 h-8 rounded-xl bg-brand-600 text-white flex items-center justify-center text-sm shadow-sm"><i class="fa-regular fa-clock"></i></div>
-                        <div><h3 class="font-bold text-slate-800 text-base">Orari di Accesso</h3><p class="text-xs text-slate-500">Crea la lista degli orari di apertura. Aggiungi tutte le fasce necessarie.</p></div>
+                        <div><h3 class="font-bold text-slate-800 text-base">Orari e Operatività</h3><p class="text-xs text-slate-500">Imposta i giorni e le fasce orarie in cui il servizio è attivo.</p></div>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <!-- ORARI ITALIANO -->
-                        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200">
-                            <div class="flex items-center justify-between mb-3 border-b border-slate-200 pb-2">
-                                <h4 class="text-xs font-bold text-emerald-700 uppercase flex items-center gap-2"><span class="flag-emoji text-base">🇮🇹</span> Italiano</h4>
-                            </div>
-                            <div class="space-y-2 mb-3">
-                                <div v-for="(slot, index) in editForm.hoursList_it" :key="'it_'+index" class="flex items-center gap-2">
-                                    <input v-model="slot.val" type="text" placeholder="Es. Lun-Ven: 09:00 - 12:00" class="flex-1 px-3 py-2 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-emerald-500 outline-none shadow-sm">
-                                    <button v-if="editForm.hoursList_it.length > 1" @click="removeHourSlot('it', index)" type="button" class="w-9 h-9 rounded-lg bg-white border border-slate-300 text-red-500 hover:bg-red-50 flex items-center justify-center transition shrink-0"><i class="fa-solid fa-xmark"></i></button>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">Costruttore Orari</label>
+                            <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3">
+                                <div v-for="(slot, index) in editForm.hoursList" :key="index" class="flex flex-wrap sm:flex-nowrap items-center gap-2">
+                                    <select v-model="slot.day" class="flex-1 sm:w-1/3 bg-white px-3 py-2 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-brand-500 outline-none">
+                                        <option v-for="d in daysOfWeek" :key="d.id" :value="d.id">{{ d.label.it }}</option>
+                                    </select>
+                                    <div class="flex items-center gap-1 w-full sm:w-auto">
+                                        <input v-model="slot.open" type="time" class="w-full sm:w-28 bg-white px-2 py-2 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-brand-500 outline-none">
+                                        <span class="text-slate-400 font-bold">-</span>
+                                        <input v-model="slot.close" type="time" class="w-full sm:w-28 bg-white px-2 py-2 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-brand-500 outline-none">
+                                    </div>
+                                    <button @click="editForm.hoursList.splice(index, 1)" type="button" class="w-full sm:w-10 h-10 rounded-lg bg-white border border-slate-300 text-red-500 hover:bg-red-50 flex items-center justify-center transition shrink-0"><i class="fa-solid fa-trash"></i></button>
                                 </div>
+                                <button @click="editForm.hoursList.push({ day: 1, open: '09:00', close: '12:00' })" type="button" class="text-xs font-bold text-brand-600 hover:text-brand-700 flex items-center gap-1.5 px-2 py-1 transition mt-2"><i class="fa-solid fa-plus-circle"></i> Aggiungi fascia oraria</button>
                             </div>
-                            <button @click="addHourSlot('it')" type="button" class="text-xs font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-1.5 px-2 py-1 transition"><i class="fa-solid fa-plus-circle"></i> Aggiungi fascia oraria</button>
                         </div>
 
-                        <!-- ORARI INGLESE -->
-                        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200">
-                            <div class="flex items-center justify-between mb-3 border-b border-slate-200 pb-2">
-                                <h4 class="text-xs font-bold text-blue-700 uppercase flex items-center gap-2"><span class="flag-emoji text-base">🇬🇧</span> Inglese <span class="text-[9px] font-normal opacity-70">(Fallback Globale)</span></h4>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Ente Gestore</label>
+                                <select v-model="editForm.organization_id" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-800 text-sm focus:ring-2 focus:ring-brand-500 transition">
+                                    <option v-for="org in fixedOrganizations" :key="org.id" :value="org.id">{{ org.name }}</option>
+                                </select>
                             </div>
-                            <div class="space-y-2 mb-3">
-                                <div v-for="(slot, index) in editForm.hoursList_en" :key="'en_'+index" class="flex items-center gap-2">
-                                    <input v-model="slot.val" type="text" placeholder="Es. Mon-Fri: 09:00 - 12:00" class="flex-1 px-3 py-2 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-blue-500 outline-none shadow-sm">
-                                    <button v-if="editForm.hoursList_en.length > 1" @click="removeHourSlot('en', index)" type="button" class="w-9 h-9 rounded-lg bg-white border border-slate-300 text-red-500 hover:bg-red-50 flex items-center justify-center transition shrink-0"><i class="fa-solid fa-xmark"></i></button>
-                                </div>
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Categoria Filtro</label>
+                                <select v-model="editForm.category" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-800 text-sm focus:ring-2 focus:ring-brand-500 transition">
+                                    <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.icon }} {{ t(cat.labelKey) }}</option>
+                                </select>
                             </div>
-                            <button @click="addHourSlot('en')" type="button" class="text-xs font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1.5 px-2 py-1 transition"><i class="fa-solid fa-plus-circle"></i> Add time slot</button>
                         </div>
                     </div>
                 </div>
 
-                <!-- SEZIONE 4: LUOGO E CONTATTI -->
                 <div class="bg-white rounded-3xl border border-slate-200 p-5 sm:p-6 card-shadow space-y-5">
                     <div class="flex items-center gap-3 border-b border-slate-100 pb-3">
                         <div class="w-8 h-8 rounded-xl bg-brand-600 text-white flex items-center justify-center text-sm shadow-sm"><i class="fa-solid fa-map-location-dot"></i></div>
@@ -462,10 +443,7 @@
 
                     <div>
                         <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Indirizzo (senza 'Como')</label>
-                        <div class="relative">
-                            <input v-model="editForm.address" type="text" required placeholder="Es. Camerlata, via..." class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-3.5 py-2.5 text-slate-800 text-sm focus:ring-2 focus:ring-brand-500 transition">
-                            <i class="fa-solid fa-location-dot absolute top-3 left-3.5 text-slate-400 text-xs"></i>
-                        </div>
+                        <div class="relative"><input v-model="editForm.address" type="text" required placeholder="Es. Camerlata, via..." class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-3.5 py-2.5 text-slate-800 text-sm focus:ring-2 focus:ring-brand-500 transition"><i class="fa-solid fa-location-dot absolute top-3 left-3.5 text-slate-400 text-xs"></i></div>
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -476,22 +454,6 @@
                         <div>
                             <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Email Contatto</label>
                             <div class="relative"><input v-model="editForm.email" type="email" placeholder="Es. info@wefortheplanet.org" class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-3.5 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 transition"><i class="fa-solid fa-envelope absolute top-3 left-3.5 text-slate-400 text-xs"></i></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- SEZIONE 5: DETTAGLI E MEDIA -->
-                <div class="bg-white rounded-3xl border border-slate-200 p-5 sm:p-6 card-shadow space-y-5">
-                    <div class="flex items-center gap-3 border-b border-slate-100 pb-3">
-                        <div class="w-8 h-8 rounded-xl bg-brand-600 text-white flex items-center justify-center text-sm shadow-sm"><i class="fa-solid fa-file-lines"></i></div>
-                        <div><h3 class="font-bold text-slate-800 text-base">Dettagli e Media</h3><p class="text-xs text-slate-500">Aggiungi una descrizione estesa e un'immagine rappresentativa.</p></div>
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Descrizione Completa</label>
-                        <div class="space-y-3">
-                            <textarea v-model="editForm.description_it" rows="3" required placeholder="Italiano" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-slate-800 text-sm focus:ring-2 focus:ring-brand-500 transition leading-relaxed border-l-4 border-l-emerald-500 outline-none"></textarea>
-                            <textarea v-model="editForm.description_en" rows="3" placeholder="Inglese" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-slate-800 text-sm focus:ring-2 focus:ring-brand-500 transition leading-relaxed border-l-4 border-l-blue-500 outline-none"></textarea>
                         </div>
                     </div>
 
@@ -507,38 +469,31 @@
                                 <div class="flex items-center gap-2">
                                     <label class="flex-1 cursor-pointer bg-brand-50 hover:bg-brand-100 border border-brand-200 text-brand-700 font-semibold text-xs py-2.5 px-3 rounded-xl flex items-center justify-center gap-2 transition" :class="{'opacity-60 pointer-events-none': uploadingImage}">
                                         <i v-if="uploadingImage" class="fa-solid fa-circle-notch fa-spin"></i><i v-else class="fa-solid fa-upload"></i>
-                                        <span>{{ uploadingImage ? 'Caricamento...' : 'Carica dal dispositivo' }}</span>
+                                        <span>{{ uploadingImage ? 'Caricamento...' : 'Carica immagine' }}</span>
                                         <input type="file" accept="image/*" class="hidden" @change="handleImageUpload" :disabled="uploadingImage">
                                     </label>
                                     <button v-if="editForm.image" @click="editForm.image = ''" type="button" class="bg-slate-100 hover:bg-red-50 text-slate-500 hover:text-red-600 w-9 h-9 rounded-xl flex items-center justify-center transition shrink-0"><i class="fa-solid fa-trash text-xs"></i></button>
                                 </div>
-                                <p v-if="imageUploadError" class="text-[11px] text-red-600 font-medium">{{ imageUploadError }}</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- AUTONOTICE CHECKBOX -->
                 <div class="bg-blue-50 border border-blue-200 rounded-2xl p-4 flex items-start gap-3 mt-4">
                     <input type="checkbox" v-model="editForm.generateAutoNotice" id="autoNoticeCheck" class="mt-1 w-5 h-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500 cursor-pointer">
                     <label for="autoNoticeCheck" class="cursor-pointer">
                         <span class="block text-sm font-bold text-blue-900">Pubblica avviso automatico in bacheca Notizie</span>
-                        <span class="block text-xs text-blue-700 mt-0.5">Selezionando l'opzione, verrà pubblicata automaticamente una notizia "Aggiornamento Servizio" visibile a tutti nella sezione Notizie.</span>
+                        <span class="block text-xs text-blue-700 mt-0.5">Verrà pubblicata automaticamente una notizia "Aggiornamento Servizio" nella pagina Notizie & Allerta.</span>
                     </label>
                 </div>
 
-                <!-- FLOATING ACTION BAR -->
                 <div class="bg-slate-900 text-white p-4 rounded-3xl shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4 sticky bottom-4 z-40">
-                    <div class="flex items-center gap-2">
-                        <i class="fa-solid fa-cloud text-brand-400 text-lg"></i>
-                        <span class="text-xs sm:text-sm font-medium">Modifiche pronte per il cloud Supabase</span>
-                    </div>
-
+                    <div class="flex items-center gap-2"><i class="fa-solid fa-cloud text-brand-400 text-lg"></i><span class="text-xs sm:text-sm font-medium">Modifiche pronte per il cloud</span></div>
                     <div class="flex items-center gap-3 w-full sm:w-auto">
                         <button @click="cancelEditing()" type="button" :disabled="savingServiceId" class="flex-1 sm:flex-initial py-3 px-5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs sm:text-sm transition disabled:opacity-50">Annulla</button>
                         <button @click="saveServiceChanges()" :disabled="savingServiceId" type="button" class="flex-1 sm:flex-initial bg-brand-500 hover:bg-brand-600 active:scale-95 disabled:opacity-50 text-white font-bold py-3 px-6 rounded-2xl text-xs sm:text-sm shadow-lg shadow-brand-500/30 transition flex items-center justify-center gap-2">
                             <i v-if="savingServiceId" class="fa-solid fa-circle-notch fa-spin"></i><i v-else class="fa-solid fa-check"></i>
-                            <span>{{ savingServiceId ? 'Salvataggio...' : (editForm.id ? 'Salva Modifiche Online' : 'Pubblica Servizio Online') }}</span>
+                            <span>{{ savingServiceId ? 'Salvataggio...' : 'Salva Modifiche Online' }}</span>
                         </button>
                     </div>
                 </div>
@@ -546,6 +501,7 @@
             </div>
             </template>
 
+            <!-- GESTIONE NOTIZIE ADMIN -->
             <template v-if="adminSection === 'news'">
             <div v-if="!editingNews" class="space-y-6">
                 <div class="bg-gradient-to-r from-amber-500 to-warm-600 rounded-3xl p-6 sm:p-8 text-white shadow-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -555,56 +511,27 @@
                         <p class="text-white/90 text-sm mt-1">Pubblica aggiornamenti o allerte visibili a tutti.</p>
                     </div>
                     <div class="flex flex-wrap gap-2 shrink-0 w-full sm:w-auto justify-end">
-                        <button @click="startCreatingNews()" class="bg-white text-amber-700 hover:bg-amber-50 font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm shadow flex items-center gap-2 transition active:scale-95">
-                            <i class="fa-solid fa-plus"></i>
-                            <span>Nuova Notizia</span>
-                        </button>
+                        <button @click="startCreatingNews()" class="bg-white text-amber-700 hover:bg-amber-50 font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm shadow flex items-center gap-2 transition active:scale-95"><i class="fa-solid fa-plus"></i><span>Nuova Notizia</span></button>
                     </div>
                 </div>
 
-                <div v-if="isLoadingNews" class="text-center py-16">
-                    <i class="fa-solid fa-circle-notch fa-spin text-4xl text-amber-500 mb-4 inline-block"></i>
-                </div>
-
-                <div v-else-if="globalNews.length === 0" class="text-center py-16 bg-white rounded-3xl border border-slate-200 p-6 shadow-sm">
-                    <span class="text-6xl block mb-4">📭</span>
-                    <h4 class="font-bold text-slate-700 text-lg mb-1">Nessuna notizia pubblicata</h4>
-                </div>
-
+                <div v-if="isLoadingNews" class="text-center py-16"><i class="fa-solid fa-circle-notch fa-spin text-4xl text-amber-500 mb-4 inline-block"></i></div>
+                <div v-else-if="globalNews.length === 0" class="text-center py-16 bg-white rounded-3xl border border-slate-200 p-6 shadow-sm"><span class="text-6xl block mb-4">📭</span><h4 class="font-bold text-slate-700 text-lg mb-1">Nessuna notizia pubblicata</h4></div>
                 <div v-else class="bg-white rounded-3xl border border-slate-200 overflow-hidden card-shadow divide-y divide-slate-100">
-                    <div class="p-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between text-xs font-bold text-slate-500 uppercase tracking-wider">
-                        <span>Notizie pubblicate ({{ globalNews.length }})</span>
-                        <span>Tipo</span>
-                    </div>
-
-                    <div v-for="news in globalNews" :key="news.id"
-                         class="p-4 sm:p-5 hover:bg-amber-50/50 transition flex items-center justify-between gap-4 group">
-                        
+                    <div class="p-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between text-xs font-bold text-slate-500 uppercase tracking-wider"><span>Notizie pubblicate ({{ globalNews.length }})</span><span>Tipo</span></div>
+                    <div v-for="news in globalNews" :key="news.id" class="p-4 sm:p-5 hover:bg-amber-50/50 transition flex items-center justify-between gap-4 group">
                         <div @click="startEditingNews(news)" class="flex items-center gap-3.5 overflow-hidden cursor-pointer flex-1">
-                            <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-xl shrink-0 shadow-sm"
-                                 :class="getNewsTypeStyle(news.type).badgeClass">
-                                <i :class="getNewsTypeStyle(news.type).icon"></i>
-                            </div>
+                            <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-xl shrink-0 shadow-sm" :class="getNewsTypeStyle(news.type).badgeClass"><i :class="getNewsTypeStyle(news.type).icon"></i></div>
                             <div class="overflow-hidden">
                                 <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block truncate">{{ news.association || 'Coordinamento' }} · {{ formatNewsDate(news.created_at) }}</span>
                                 <h4 class="font-bold text-slate-800 text-sm sm:text-base group-hover:text-amber-700 transition truncate">{{ translateField(news, 'title') || '(senza titolo)' }}</h4>
                                 <p class="text-xs text-slate-500 truncate mt-0.5">{{ translateField(news, 'content') }}</p>
                             </div>
                         </div>
-
                         <div class="flex items-center gap-2 shrink-0">
-                            <span class="px-2.5 py-1 rounded-full text-[11px] font-bold shadow-sm"
-                                  :class="news.priority === 'high' ? 'bg-red-100 text-red-800 border border-red-300' : 'bg-blue-100 text-blue-800 border border-blue-300'">
-                                {{ news.priority === 'high' ? 'Urgente' : 'Info' }}
-                            </span>
-                            <button @click="startEditingNews(news)" title="Modifica"
-                                    class="w-8 h-8 rounded-full bg-slate-100 hover:bg-brand-600 text-slate-400 hover:text-white flex items-center justify-center text-xs transition">
-                                <i class="fa-solid fa-pen"></i>
-                            </button>
-                            <button @click="deleteNewsItem(news)" title="Elimina"
-                                    class="w-8 h-8 rounded-full bg-slate-100 hover:bg-red-600 text-slate-400 hover:text-white flex items-center justify-center text-xs transition">
-                                <i class="fa-solid fa-trash"></i>
-                            </button>
+                            <span class="px-2.5 py-1 rounded-full text-[11px] font-bold shadow-sm" :class="news.priority === 'high' ? 'bg-red-100 text-red-800 border border-red-300' : 'bg-blue-100 text-blue-800 border border-blue-300'">{{ news.priority === 'high' ? 'Urgente' : 'Info' }}</span>
+                            <button @click="startEditingNews(news)" title="Modifica" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-brand-600 text-slate-400 hover:text-white flex items-center justify-center text-xs transition"><i class="fa-solid fa-pen"></i></button>
+                            <button @click="deleteNewsItem(news)" title="Elimina" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-red-600 text-slate-400 hover:text-white flex items-center justify-center text-xs transition"><i class="fa-solid fa-trash"></i></button>
                         </div>
                     </div>
                 </div>
@@ -613,26 +540,19 @@
             <!-- EDITOR NOTIZIE -->
             <div v-else class="space-y-6 animate-fadeIn">
                 <div class="flex items-center justify-between bg-white p-4 rounded-2xl border border-slate-200 card-shadow sticky top-20 z-30">
-                    <button @click="cancelEditingNews()" 
-                            class="flex items-center gap-2 text-slate-600 hover:text-amber-600 font-bold text-xs sm:text-sm bg-slate-100 hover:bg-amber-50 px-3.5 py-2 rounded-xl transition active:scale-95">
-                        <i class="fa-solid fa-arrow-left" :class="{'rtl-flip': isRTL}"></i>
-                        <span>Torna alla lista</span>
-                    </button>
-                    <div class="text-right overflow-hidden pr-2">
-                        <span class="text-[10px] uppercase font-bold text-amber-600 tracking-wider block truncate">Stato Operazione:</span>
-                        <span class="font-bold text-slate-800 text-xs sm:text-sm truncate block">{{ newsForm.id ? 'Modifica notizia' : 'Nuova notizia' }}</span>
-                    </div>
+                    <button @click="cancelEditingNews()" class="flex items-center gap-2 text-slate-600 hover:text-amber-600 font-bold text-xs sm:text-sm bg-slate-100 hover:bg-amber-50 px-3.5 py-2 rounded-xl transition active:scale-95"><i class="fa-solid fa-arrow-left" :class="{'rtl-flip': isRTL}"></i><span>Torna alla lista</span></button>
+                    <div class="text-right overflow-hidden pr-2"><span class="text-[10px] uppercase font-bold text-amber-600 tracking-wider block truncate">Stato Operazione:</span><span class="font-bold text-slate-800 text-xs sm:text-sm truncate block">{{ newsForm.id ? 'Modifica notizia' : 'Nuova notizia' }}</span></div>
                 </div>
 
                 <div class="bg-white rounded-3xl border border-slate-200 p-5 sm:p-6 card-shadow">
-                    <div class="flex items-center gap-3 border-b border-slate-100 pb-3 mb-4">
-                        <div class="w-8 h-8 rounded-xl bg-slate-700 text-white flex items-center justify-center text-sm shadow-sm">1</div>
-                        <h3 class="font-bold text-slate-800 text-base">Contesto e Riferimenti</h3>
-                    </div>
+                    <div class="flex items-center gap-3 border-b border-slate-100 pb-3 mb-4"><div class="w-8 h-8 rounded-xl bg-slate-700 text-white flex items-center justify-center text-sm shadow-sm">1</div><h3 class="font-bold text-slate-800 text-base">Contesto e Riferimenti</h3></div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Ente / Associazione</label>
-                            <input v-model="newsForm.association" type="text" placeholder="Es. We For The Planet..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-800 text-sm focus:ring-2 focus:ring-amber-500 transition">
+                            <select v-model="newsForm.association_id" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-800 text-sm focus:ring-2 focus:ring-amber-500 transition">
+                                <option value="generale">Coordinamento Vicini di Strada</option>
+                                <option v-for="org in fixedOrganizations" :key="org.id" :value="org.id">{{ org.name }}</option>
+                            </select>
                         </div>
                         <div>
                             <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Servizio Collegato (opzionale)</label>
@@ -645,53 +565,29 @@
                 </div>
 
                 <div class="bg-white rounded-3xl border border-slate-200 p-5 sm:p-6 card-shadow">
-                    <div class="flex items-center gap-3 border-b border-slate-100 pb-3 mb-4">
-                        <div class="w-8 h-8 rounded-xl bg-slate-700 text-white flex items-center justify-center text-sm shadow-sm">2</div>
-                        <h3 class="font-bold text-slate-800 text-base">Livello di Urgenza</h3>
-                    </div>
+                    <div class="flex items-center gap-3 border-b border-slate-100 pb-3 mb-4"><div class="w-8 h-8 rounded-xl bg-slate-700 text-white flex items-center justify-center text-sm shadow-sm">2</div><h3 class="font-bold text-slate-800 text-base">Livello di Urgenza</h3></div>
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        <button @click="setNewsUrgency('info')" type="button" class="py-4 px-3 rounded-2xl border text-sm font-bold flex flex-col items-center justify-center gap-2 transition active:scale-95" :class="isUrgency('info') ? 'bg-blue-500 border-blue-600 text-white shadow-md' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-blue-50'">
-                            <i class="fa-solid fa-circle-info text-xl"></i><span class="text-center leading-tight">Informativa<br><span class="text-[10px] font-normal opacity-80">Avvisi e Raccolte</span></span>
-                        </button>
-                        <button @click="setNewsUrgency('update')" type="button" class="py-4 px-3 rounded-2xl border text-sm font-bold flex flex-col items-center justify-center gap-2 transition active:scale-95" :class="isUrgency('update') ? 'bg-amber-500 border-amber-600 text-white shadow-md' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-amber-50'">
-                            <i class="fa-solid fa-arrows-rotate text-xl"></i><span class="text-center leading-tight">Variazione<br><span class="text-[10px] font-normal opacity-80">Orari e Sedi</span></span>
-                        </button>
-                        <button @click="setNewsUrgency('emergency')" type="button" class="py-4 px-3 rounded-2xl border text-sm font-bold flex flex-col items-center justify-center gap-2 transition active:scale-95" :class="isUrgency('emergency') ? 'bg-red-600 border-red-700 text-white shadow-md' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-red-50'">
-                            <i class="fa-solid fa-triangle-exclamation text-xl"></i><span class="text-center leading-tight">Emergenza<br><span class="text-[10px] font-normal opacity-80">Chiusure urgenti</span></span>
-                        </button>
+                        <button @click="setNewsUrgency('info')" type="button" class="py-4 px-3 rounded-2xl border text-sm font-bold flex flex-col items-center justify-center gap-2 transition active:scale-95" :class="isUrgency('info') ? 'bg-blue-500 border-blue-600 text-white shadow-md' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-blue-50'"><i class="fa-solid fa-circle-info text-xl"></i><span class="text-center leading-tight">Informativa<br><span class="text-[10px] font-normal opacity-80">Avvisi e Raccolte</span></span></button>
+                        <button @click="setNewsUrgency('update')" type="button" class="py-4 px-3 rounded-2xl border text-sm font-bold flex flex-col items-center justify-center gap-2 transition active:scale-95" :class="isUrgency('update') ? 'bg-amber-500 border-amber-600 text-white shadow-md' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-amber-50'"><i class="fa-solid fa-arrows-rotate text-xl"></i><span class="text-center leading-tight">Variazione<br><span class="text-[10px] font-normal opacity-80">Orari e Sedi</span></span></button>
+                        <button @click="setNewsUrgency('emergency')" type="button" class="py-4 px-3 rounded-2xl border text-sm font-bold flex flex-col items-center justify-center gap-2 transition active:scale-95" :class="isUrgency('emergency') ? 'bg-red-600 border-red-700 text-white shadow-md' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-red-50'"><i class="fa-solid fa-triangle-exclamation text-xl"></i><span class="text-center leading-tight">Emergenza<br><span class="text-[10px] font-normal opacity-80">Chiusure urgenti</span></span></button>
                     </div>
                 </div>
 
                 <div class="bg-white rounded-3xl border border-slate-200 p-5 sm:p-6 card-shadow">
-                    <div class="flex items-center gap-3 border-b border-slate-100 pb-3 mb-4">
-                        <div class="w-8 h-8 rounded-xl bg-slate-700 text-white flex items-center justify-center text-sm shadow-sm">3</div>
-                        <h3 class="font-bold text-slate-800 text-base">Contenuto del Messaggio</h3>
-                    </div>
-
+                    <div class="flex items-center gap-3 border-b border-slate-100 pb-3 mb-4"><div class="w-8 h-8 rounded-xl bg-slate-700 text-white flex items-center justify-center text-sm shadow-sm">3</div><h3 class="font-bold text-slate-800 text-base">Contenuto del Messaggio</h3></div>
                     <div class="flex bg-slate-100 p-1.5 rounded-2xl mb-5 w-full">
-                        <button @click="newsForm.useCustomText = false" type="button" class="flex-1 py-2.5 px-2 rounded-xl text-xs sm:text-sm font-bold transition flex items-center justify-center gap-2" :class="!newsForm.useCustomText ? 'bg-white text-brand-700 shadow-sm border border-slate-200' : 'text-slate-500 hover:text-slate-700'">
-                            <i class="fa-solid fa-language"></i> <span class="hidden sm:inline">Usa Modello Sicuro</span><span class="sm:hidden">Modello</span>
-                        </button>
-                        <button @click="newsForm.useCustomText = true" type="button" class="flex-1 py-2.5 px-2 rounded-xl text-xs sm:text-sm font-bold transition flex items-center justify-center gap-2" :class="newsForm.useCustomText ? 'bg-white text-brand-700 shadow-sm border border-slate-200' : 'text-slate-500 hover:text-slate-700'">
-                            <i class="fa-solid fa-pen"></i> <span class="hidden sm:inline">Scrivi Testo Libero</span><span class="sm:hidden">Libero</span>
-                        </button>
+                        <button @click="newsForm.useCustomText = false" type="button" class="flex-1 py-2.5 px-2 rounded-xl text-xs sm:text-sm font-bold transition flex items-center justify-center gap-2" :class="!newsForm.useCustomText ? 'bg-white text-brand-700 shadow-sm border border-slate-200' : 'text-slate-500 hover:text-slate-700'"><i class="fa-solid fa-language"></i> <span class="hidden sm:inline">Usa Modello Sicuro</span><span class="sm:hidden">Modello</span></button>
+                        <button @click="newsForm.useCustomText = true" type="button" class="flex-1 py-2.5 px-2 rounded-xl text-xs sm:text-sm font-bold transition flex items-center justify-center gap-2" :class="newsForm.useCustomText ? 'bg-white text-brand-700 shadow-sm border border-slate-200' : 'text-slate-500 hover:text-slate-700'"><i class="fa-solid fa-pen"></i> <span class="hidden sm:inline">Scrivi Testo Libero</span><span class="sm:hidden">Libero</span></button>
                     </div>
 
                     <!-- MODELLI PREIMPOSTATI -->
                     <div v-if="!newsForm.useCustomText" class="bg-brand-50 rounded-2xl p-4 border border-brand-100 animate-fadeIn">
                         <label class="block text-sm font-bold uppercase text-brand-800 mb-2">Seleziona Modello di Avviso</label>
                         <select v-model="newsForm.template" @change="newsForm.templateParams = {}" class="w-full bg-white border border-brand-200 rounded-xl px-4 py-3 text-sm mb-4 focus:ring-2 focus:ring-brand-500 outline-none shadow-sm">
-                            <optgroup label="Scenari Ricorrenti">
-                                <option v-for="tpl in templates.filter(t => t.category === 'recurring')" :key="tpl.id" :value="tpl.id">{{ tpl.label }}</option>
-                            </optgroup>
-                            <optgroup label="Variazioni ed Eventi">
-                                <option v-for="tpl in templates.filter(t => t.category === 'extraordinary' || t.category === 'ordinary')" :key="tpl.id" :value="tpl.id">{{ tpl.label }}</option>
-                            </optgroup>
-                            <optgroup label="Emergenze e Chiusure">
-                                <option v-for="tpl in templates.filter(t => t.category === 'emergency')" :key="tpl.id" :value="tpl.id">{{ tpl.label }}</option>
-                            </optgroup>
+                            <optgroup label="Scenari Ricorrenti"><option v-for="tpl in templates.filter(t => t.category === 'recurring')" :key="tpl.id" :value="tpl.id">{{ tpl.label }}</option></optgroup>
+                            <optgroup label="Variazioni ed Eventi"><option v-for="tpl in templates.filter(t => t.category === 'extraordinary' || t.category === 'ordinary')" :key="tpl.id" :value="tpl.id">{{ tpl.label }}</option></optgroup>
+                            <optgroup label="Emergenze e Chiusure"><option v-for="tpl in templates.filter(t => t.category === 'emergency')" :key="tpl.id" :value="tpl.id">{{ tpl.label }}</option></optgroup>
                         </select>
-
                         <div v-if="selectedNewsTemplate && selectedNewsTemplate.params.length > 0" class="space-y-3 mt-4 p-3 bg-white rounded-xl border border-brand-200">
                             <p class="text-xs text-slate-500 mb-2 font-medium">Compila i dati per completare il modello:</p>
                             <div v-for="param in selectedNewsTemplate.params" :key="param.id">
@@ -699,7 +595,6 @@
                                 <input v-model="newsForm.templateParams[param.id]" :type="param.type" class="w-full text-sm py-2 px-3 rounded-lg border border-slate-200 focus:border-brand-500 outline-none">
                             </div>
                         </div>
-
                         <div v-if="newsForm.template" class="mt-4 p-4 bg-white rounded-xl border border-brand-100 shadow-sm text-sm">
                             <div class="flex items-center gap-2 mb-2 border-b border-slate-100 pb-2"><span class="text-lg flag-emoji">🇮🇹</span><span class="text-[10px] uppercase font-bold text-slate-400">Anteprima Finale in Italiano</span></div>
                             <strong class="block text-slate-800 text-base mb-1">{{ generateTemplateText(newsForm.template, newsForm.templateParams, 'it', true) }}</strong>
@@ -750,9 +645,7 @@
                 </div>
 
                 <div class="bg-slate-900 text-white p-4 rounded-3xl shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4 sticky bottom-4 z-40">
-                    <div class="flex items-center gap-2">
-                        <i class="fa-solid fa-cloud-arrow-up text-amber-400 text-lg"></i><span class="text-xs sm:text-sm font-medium">Tutto pronto per la pubblicazione</span>
-                    </div>
+                    <div class="flex items-center gap-2"><i class="fa-solid fa-cloud-arrow-up text-amber-400 text-lg"></i><span class="text-xs sm:text-sm font-medium">Tutto pronto per la pubblicazione</span></div>
                     <div class="flex items-center gap-3 w-full sm:w-auto">
                         <button @click="cancelEditingNews()" type="button" :disabled="savingNewsId" class="flex-1 sm:flex-initial py-3 px-5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs sm:text-sm transition disabled:opacity-50">Annulla</button>
                         <button @click="saveNewsChanges()" :disabled="savingNewsId" type="button" class="flex-1 sm:flex-initial bg-amber-500 hover:bg-amber-600 active:scale-95 disabled:opacity-50 text-white font-bold py-3 px-6 rounded-2xl text-xs sm:text-sm shadow-lg shadow-amber-500/30 transition flex items-center justify-center gap-2">
@@ -766,7 +659,6 @@
 
         </main>
 
-        <!-- Modals -->
         <div v-if="activeModalService" @click.self="activeModalService = null" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fadeIn">
             <div class="bg-white w-full max-w-lg rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl space-y-5 transform transition-transform" :class="{'text-right': isRTL}">
                 <div class="flex items-center justify-between border-b border-slate-100 pb-3">
@@ -852,8 +744,11 @@
                 const isServiceExpanded = (serviceId) => expandedServiceIds.value.has(serviceId);
                 const toggleServiceExpanded = (serviceId) => {
                     const next = new Set(expandedServiceIds.value);
-                    if (next.has(serviceId)) next.delete(serviceId);
-                    else next.add(serviceId);
+                    if (next.has(serviceId)) {
+                        next.delete(serviceId);
+                    } else {
+                        next.add(serviceId);
+                    }
                     expandedServiceIds.value = next;
                 };
 
@@ -865,38 +760,45 @@
 
                 const adminSection = ref('services');
 
-                // MODIFICA GESTIONE SERVIZI: orari dinamici
                 const editingService = ref(null);
                 const editForm = ref({
                     id: null,
-                    name_it: '', name_en: '',
-                    address: '', phone: '', email: '',
-                    hoursList_it: [{ val: '' }], 
-                    hoursList_en: [{ val: '' }],
-                    description_it: '', description_en: '',
+                    organization_id: '',
+                    address: '',
+                    phone: '',
+                    email: '',
+                    hoursList: [],
                     status: 'active',
                     noticeTemplate: 'none',
                     noticeParams: {},
                     customNotice: { it: '' },
-                    organization: '',
                     category: 'showers',
                     image: '',
                     generateAutoNotice: false
                 });
+                
                 const savingServiceId = ref(false);
                 const uploadingImage = ref(false);
                 const imageUploadError = ref('');
 
                 const editingNews = ref(null);
                 const newsForm = ref({
-                    id: null, type: 'general', priority: 'normal', association: '', related_service_id: null,
-                    useCustomText: false, template: 'posti_esauriti', templateParams: {},
-                    customTitle: { it: '' }, customContent: { it: '' }
+                    id: null,
+                    type: 'general',
+                    priority: 'normal',
+                    association_id: 'generale',
+                    related_service_id: null,
+                    useCustomText: false,
+                    template: 'posti_esauriti',
+                    templateParams: {},
+                    customTitle: { it: '' },
+                    customContent: { it: '' }
                 });
+                
                 const savingNewsId = ref(false);
                 const isLoadingNews = ref(true);
 
-                const services = ref([]);
+                const dbServices = ref([]);
                 const isLoading = ref(true);
 
                 const languages = {
@@ -913,109 +815,446 @@
 
                 const currentLang = computed(() => languages[currentLangCode.value]);
                 const isRTL = computed(() => currentLang.value.rtl);
-                const selectLanguage = (code) => { currentLangCode.value = code; showLangMenu.value = false; };
+                const selectLanguage = (code) => { 
+                    currentLangCode.value = code; 
+                    showLangMenu.value = false; 
+                };
 
-                // LOGICA ORARI DINAMICI
-                const addHourSlot = (lang) => {
-                    if (lang === 'it') editForm.value.hoursList_it.push({ val: '' });
-                    if (lang === 'en') editForm.value.hoursList_en.push({ val: '' });
+                const daysOfWeek = [
+                    { id: 1, label: { it: 'Lunedì', en: 'Monday', fr: 'Lundi', es: 'Lunes' } },
+                    { id: 2, label: { it: 'Martedì', en: 'Tuesday', fr: 'Mardi', es: 'Martes' } },
+                    { id: 3, label: { it: 'Mercoledì', en: 'Wednesday', fr: 'Mercredi', es: 'Miércoles' } },
+                    { id: 4, label: { it: 'Giovedì', en: 'Thursday', fr: 'Jeudi', es: 'Jueves' } },
+                    { id: 5, label: { it: 'Venerdì', en: 'Friday', fr: 'Vendredi', es: 'Viernes' } },
+                    { id: 6, label: { it: 'Sabato', en: 'Saturday', fr: 'Samedi', es: 'Sábado' } },
+                    { id: 0, label: { it: 'Domenica', en: 'Sunday', fr: 'Dimanche', es: 'Domingo' } }
+                ];
+
+                const fixedOrganizations = [
+                    { id: 'org_legami', name: 'Gruppo Giovani Legàmi' },
+                    { id: 'org_malgesini', name: 'Aula Studio R. Malgesini (Camerlata)' },
+                    { id: 'org_planet', name: 'We For The Planet' },
+                    { id: 'org_italo', name: 'Associazione Italo' },
+                    { id: 'org_caritas', name: 'Caritas Como' },
+                    { id: 'org_crocerossa', name: 'Croce Rossa Italiana' },
+                    { id: 'org_coordinamento', name: 'Coordinamento Vicini di Strada' }
+                ];
+
+                const fixedServicesBase = [
+                    {
+                        id: 'srv_mensa_legami', org_id: 'org_legami', category: 'food',
+                        name: { it: 'Pranzi Solidali di Quartiere', en: 'Neighborhood Solidarity Lunches', fr: 'Déjeuners Solidaires', es: 'Almuerzos Solidarios' },
+                        desc: { it: 'Mensa solidale per i residenti e le persone in difficoltà, con momenti di aggregazione e condivisione.', en: 'Solidarity kitchen for residents and people in need, with community gathering moments.', fr: 'Cantine solidaire avec moments de partage communautaire.', es: 'Comedor solidario con momentos de encuentro comunitario.' }
+                    },
+                    {
+                        id: 'srv_aula_malgesini', org_id: 'org_malgesini', category: 'shelter',
+                        name: { it: 'Spazio Studio e Comunità', en: 'Study and Community Space', fr: 'Espace d\'Étude et Communauté', es: 'Espacio de Estudio y Comunidad' },
+                        desc: { it: 'Aula studio aperta agli studenti e spazio di ritrovo sicuro per la comunità nel quartiere Camerlata.', en: 'Study room open to students and safe gathering space in the Camerlata neighborhood.', fr: 'Salle d\'étude et espace de rencontre sécurisé dans le quartier Camerlata.', es: 'Sala de estudio y espacio de encuentro seguro en el barrio Camerlata.' }
+                    },
+                    {
+                        id: 'srv_sportello_planet', org_id: 'org_planet', category: 'clothes',
+                        name: { it: 'Sportello Riuso e Sostenibilità', en: 'Reuse and Sustainability Desk', fr: 'Guichet Réemploi et Durabilité', es: 'Punto de Reutilización y Sostenibilidad' },
+                        desc: { it: 'Punto di raccolta e distribuzione di abbigliamento recuperato, con informazioni su pratiche ecologiche.', en: 'Collection and distribution point for recovered clothing, with eco-friendly info.', fr: 'Point de collecte et distribution de vêtements récupérés.', es: 'Punto de recogida y distribución de ropa recuperada.' }
+                    },
+                    {
+                        id: 'srv_dormitorio_invernale', org_id: 'org_caritas', category: 'shelter',
+                        name: { it: 'Dormitorio Emergenza Freddo', en: 'Cold Emergency Shelter', fr: 'Dortoir d\'Urgence Froid', es: 'Albergue de Emergencia por Frío' },
+                        desc: { it: 'Accoglienza notturna straordinaria per persone senza dimora durante il Piano Inverno.', en: 'Extraordinary night shelter for homeless people during the Winter Plan.', fr: 'Accueil de nuit extraordinaire pendant le Plan Hiver.', es: 'Acogida nocturna extraordinaria durante el Plan de Invierno.' }
+                    },
+                    {
+                        id: 'srv_docce_pubbliche', org_id: 'org_coordinamento', category: 'showers',
+                        name: { it: 'Servizio Docce e Igiene Personale', en: 'Showers and Personal Hygiene Service', fr: 'Service Douches et Hygiène', es: 'Servicio de Duchas e Higiene' },
+                        desc: { it: 'Servizio di docce pubbliche gratuite con fornitura di kit igienico base.', en: 'Free public showers service with basic hygiene kit provided.', fr: 'Douches publiques gratuites avec kit d\'hygiène.', es: 'Duchas públicas gratuitas con kit de higiene.' }
+                    }
+                ];
+
+                const formatHours = (hoursArray, langCode) => {
+                    if (!hoursArray || !hoursArray.length) return i18n[langCode]?.hours_not_available || 'Orari non inseriti';
+                    return hoursArray.map(h => {
+                        const dayObj = daysOfWeek.find(d => d.id === h.day);
+                        const dayName = dayObj ? (dayObj.label[langCode] || dayObj.label['en']) : '';
+                        return `${dayName}: ${h.open} - ${h.close}`;
+                    }).join('\n');
                 };
-                const removeHourSlot = (lang, index) => {
-                    if (lang === 'it') editForm.value.hoursList_it.splice(index, 1);
-                    if (lang === 'en') editForm.value.hoursList_en.splice(index, 1);
-                };
-                const parseHoursStringToList = (str) => {
-                    if (!str) return [{ val: '' }];
-                    const lines = str.split('\n').map(s => s.trim()).filter(s => s);
-                    return lines.length ? lines.map(s => ({ val: s })) : [{ val: '' }];
-                };
+
+                const services = computed(() => {
+                    return fixedServicesBase.map(fs => {
+                        const dbRecord = dbServices.value.find(db => db.id === fs.id) || {};
+                        return {
+                            ...fs,
+                            ...dbRecord,
+                            name: fs.name,
+                            description: fs.desc,
+                            organization: fixedOrganizations.find(o => o.id === (dbRecord.org_id || fs.org_id))?.name || 'Ente Sconosciuto',
+                            org_id: dbRecord.org_id || fs.org_id,
+                            hours: dbRecord.hours || []
+                        };
+                    });
+                });
 
                 const i18n = {
                     it: {
-                        tab_services: 'Esplora Servizi', tab_news: 'Notizie & Allerta', tab_emergency: 'Emergenze',
-                        welcome_title: 'Mappa dell\'Accoglienza', welcome_sub: 'Trova docce, mense, dormitori e sportelli di assistenza sul territorio di Como in tempo reale.',
+                        tab_services: 'Esplora Servizi',
+                        tab_news: 'Notizie & Allerta',
+                        tab_emergency: 'Emergenze',
+                        welcome_title: 'Mappa dell\'Accoglienza',
+                        welcome_sub: 'Trova docce, mense, dormitori e sportelli di assistenza sul territorio di Como in tempo reale.',
                         search_placeholder: 'Cerca per nome, servizio, via o quartiere...',
-                        categories_title: 'Categorie Servizi', show_all: 'Mostra tutti', cat_all: 'Tutti i servizi',
-                        cat_showers: 'Docce & Igiene', cat_food: 'Mense & Cibo', cat_shelter: 'Dormitori', cat_health: 'Medici & Salute', cat_legal: 'Legale & Doc.', cat_clothes: 'Vestiario',
-                        services_found: 'servizi disponibili', no_results_title: 'Nessun servizio trovato', no_results_sub: 'Prova a cercare con altre parole o azzera i filtri della categoria.', reset_filters: 'Azzera filtri',
-                        status_active: 'Regolare', status_notice: 'Variazione', status_suspended: 'Sospeso', hours_label: 'Orari / Accesso', service_update_label: 'Avviso in tempo reale', service_suspended_label: 'Servizio Sospeso / Avviso',
-                        btn_contact: 'Contatta', btn_directions: 'Direzioni GPS', show_more: 'Mostra di più', show_less: 'Mostra di meno',
-                        news_page_title: 'Aggiornamenti dalle Unità di Strada', news_page_sub: 'Avvisi in tempo reale su cambi di orario, aperture straordinarie per freddo o urgenze dalle associazioni di Como.',
-                        priority_urgent: 'Importante', priority_info: 'Informazione', related_service: 'Scheda collegata', go_to_card: 'Vedi scheda servizio',
-                        emergency_title: 'Numeri di Emergenza', emergency_sub: 'Chiamate gratuite e attive 24 ore su 24 per qualsiasi emergenza di salute o sicurezza.',
-                        em_112_title: '112 - Numero Unico Emergenze', em_112_desc: 'Carabinieri, Polizia, Vigili del Fuoco, Emergenze gravi.',
-                        em_118_title: '118 - Soccorso Sanitario', em_118_desc: 'Ambulanza e urgenze mediche immediate.',
-                        em_street_unit_title: 'Coordinamento Unità di Strada e Marginalità', em_street_unit_desc: 'Se incontri una persona in grave difficoltà in strada a Como durante la notte, segnalala ai volontari.',
-                        call_coordination: 'Segnala a Vicini di Strada', choose_contact_method: 'Scegli come contattare il servizio', call_now: 'Chiama il numero', send_email: 'Invia una mail', open_maps: 'Apri navigatore GPS', close: 'Chiudi finestra',
+                        categories_title: 'Categorie Servizi',
+                        show_all: 'Mostra tutti',
+                        cat_all: 'Tutti i servizi',
+                        cat_showers: 'Docce & Igiene',
+                        cat_food: 'Mense & Cibo',
+                        cat_shelter: 'Dormitori',
+                        cat_health: 'Medici & Salute',
+                        cat_legal: 'Legale & Doc.',
+                        cat_clothes: 'Vestiario',
+                        services_found: 'servizi disponibili',
+                        no_results_title: 'Nessun servizio trovato',
+                        no_results_sub: 'Prova a cercare con altre parole o azzera i filtri della categoria.',
+                        reset_filters: 'Azzera filtri',
+                        status_active: 'Regolare',
+                        status_notice: 'Variazione',
+                        status_suspended: 'Sospeso',
+                        hours_label: 'Orari / Accesso',
+                        hours_not_available: 'Orari non inseriti',
+                        service_update_label: 'Avviso in tempo reale',
+                        service_suspended_label: 'Servizio Sospeso / Avviso',
+                        btn_contact: 'Contatta',
+                        btn_directions: 'Direzioni GPS',
+                        show_more: 'Mostra di più',
+                        show_less: 'Mostra di meno',
+                        news_page_title: 'Aggiornamenti dalle Unità di Strada',
+                        news_page_sub: 'Avvisi in tempo reale su cambi di orario, aperture straordinarie per freddo o urgenze dalle associazioni di Como.',
+                        priority_urgent: 'Importante',
+                        priority_info: 'Informazione',
+                        related_service: 'Scheda collegata',
+                        go_to_card: 'Vedi scheda servizio',
+                        emergency_title: 'Numeri di Emergenza',
+                        emergency_sub: 'Chiamate gratuite e attive 24 ore su 24 per qualsiasi emergenza di salute o sicurezza.',
+                        em_112_title: '112 - Numero Unico Emergenze',
+                        em_112_desc: 'Carabinieri, Polizia, Vigili del Fuoco, Emergenze gravi.',
+                        em_118_title: '118 - Soccorso Sanitario',
+                        em_118_desc: 'Ambulanza e urgenze mediche immediate.',
+                        em_street_unit_title: 'Coordinamento Unità di Strada e Marginalità',
+                        em_street_unit_desc: 'Se incontri una persona in grave difficoltà in strada a Como durante la notte, segnalala ai volontari.',
+                        call_coordination: 'Segnala a Vicini di Strada',
+                        choose_contact_method: 'Scegli come contattare il servizio',
+                        call_now: 'Chiama il numero',
+                        send_email: 'Invia una mail',
+                        open_maps: 'Apri navigatore GPS',
+                        close: 'Chiudi finestra',
                         
-                        tpl_title_summer_closure: 'Chiusura Estiva', tpl_desc_summer_closure: 'Il servizio chiuderà per il periodo estivo dal {data_inizio} al {data_fine}.',
-                        tpl_title_holiday_closure: 'Chiusura Festività', tpl_desc_holiday_closure: 'Il servizio resterà chiuso in occasione delle festività in data {data}.',
-                        tpl_title_address_change: 'Trasferimento Sede', tpl_desc_address_change: 'Il servizio si sposta temporaneamente in {indirizzo} a partire dal {data}.',
-                        tpl_title_service_resumed: 'Ripresa Attività', tpl_desc_service_resumed: 'Le attività riprenderanno regolarmente in data {data}.',
-                        tpl_title_weather_closure: 'Chiusura per Maltempo', tpl_desc_weather_closure: 'Il servizio è momentaneamente chiuso per avverse condizioni meteo.',
-                        tpl_title_temp_closure: 'Chiusura Temporanea', tpl_desc_temp_closure: 'Il servizio resterà chiuso in data {data}.',
-                        tpl_title_extra_opening: 'Apertura Straordinaria', tpl_desc_extra_opening: 'È prevista un\'apertura straordinaria in data {data} alle ore {orario}.',
-                        tpl_title_time_change: 'Variazione Orario', tpl_desc_time_change: 'Il nuovo orario temporaneo di servizio è alle ore {orario}.',
-                        tpl_title_service_suspended: 'Servizio Sospeso', tpl_desc_service_suspended: 'Il servizio è sospeso fino a nuovo avviso.',
-                        tpl_title_service_updated: 'Aggiornamento Servizio', tpl_desc_service_updated: 'Le informazioni o gli orari di questo servizio sono stati appena aggiornati dall\'ente gestore.',
-                        tpl_title_posti_esauriti: 'Posti Letto Esauriti', tpl_desc_posti_esauriti: 'Si comunica che i posti letto sono esauriti per questa notte.',
-                        tpl_title_emergenza_freddo: 'Piano Inverno / Emergenza Freddo', tpl_desc_emergenza_freddo: 'Apertura straordinaria Piano Inverno per emergenza freddo.',
-                        tpl_title_guasto_tecnico: 'Guasto Tecnico Temporaneo', tpl_desc_guasto_tecnico: 'Servizio temporaneamente sospeso per guasto tecnico.',
-                        tpl_title_raccolta_urgente: 'Raccolta Urgente', tpl_desc_raccolta_urgente: 'Abbiamo urgente bisogno di: {oggetto}. Puoi portarlo in sede.',
-                        tpl_title_distribuzione_speciale: 'Distribuzione Speciale', tpl_desc_distribuzione_speciale: 'Oggi è prevista una distribuzione speciale di: {oggetto}.',
-                        tpl_title_assenza_medico: 'Presidio Medico Sospeso', tpl_desc_assenza_medico: 'Il presidio medico è sospeso in data {data} per assenza del personale.'
+                        // TEMPLATES
+                        tpl_title_summer_closure: 'Chiusura Estiva',
+                        tpl_desc_summer_closure: 'Il servizio chiuderà per il periodo estivo dal {data_inizio} al {data_fine}.',
+                        tpl_title_holiday_closure: 'Chiusura Festività',
+                        tpl_desc_holiday_closure: 'Il servizio resterà chiuso in occasione delle festività in data {data}.',
+                        tpl_title_address_change: 'Trasferimento Sede',
+                        tpl_desc_address_change: 'Il servizio si sposta temporaneamente in {indirizzo} a partire dal {data}.',
+                        tpl_title_service_resumed: 'Ripresa Attività',
+                        tpl_desc_service_resumed: 'Le attività riprenderanno regolarmente in data {data}.',
+                        tpl_title_weather_closure: 'Chiusura per Maltempo',
+                        tpl_desc_weather_closure: 'Il servizio è momentaneamente chiuso per avverse condizioni meteo.',
+                        tpl_title_temp_closure: 'Chiusura Temporanea',
+                        tpl_desc_temp_closure: 'Il servizio resterà chiuso in data {data}.',
+                        tpl_title_extra_opening: 'Apertura Straordinaria',
+                        tpl_desc_extra_opening: 'È prevista un\'apertura straordinaria in data {data} alle ore {orario}.',
+                        tpl_title_time_change: 'Variazione Orario',
+                        tpl_desc_time_change: 'Il nuovo orario temporaneo di servizio è alle ore {orario}.',
+                        tpl_title_service_suspended: 'Servizio Sospeso',
+                        tpl_desc_service_suspended: 'Il servizio è sospeso fino a nuovo avviso.',
+                        tpl_title_service_updated: 'Aggiornamento Servizio',
+                        tpl_desc_service_updated: 'Le informazioni o gli orari di questo servizio sono stati appena aggiornati dall\'ente gestore.',
+                        tpl_title_posti_esauriti: 'Posti Letto Esauriti',
+                        tpl_desc_posti_esauriti: 'Si comunica che i posti letto sono esauriti per questa notte.',
+                        tpl_title_emergenza_freddo: 'Piano Inverno / Emergenza Freddo',
+                        tpl_desc_emergenza_freddo: 'Apertura straordinaria Piano Inverno per emergenza freddo.',
+                        tpl_title_guasto_tecnico: 'Guasto Tecnico Temporaneo',
+                        tpl_desc_guasto_tecnico: 'Servizio temporaneamente sospeso per guasto tecnico.',
+                        tpl_title_raccolta_urgente: 'Raccolta Urgente',
+                        tpl_desc_raccolta_urgente: 'Abbiamo urgente bisogno di: {oggetto}. Puoi portarlo in sede.',
+                        tpl_title_distribuzione_speciale: 'Distribuzione Speciale',
+                        tpl_desc_distribuzione_speciale: 'Oggi è prevista una distribuzione speciale di: {oggetto}.',
+                        tpl_title_assenza_medico: 'Presidio Medico Sospeso',
+                        tpl_desc_assenza_medico: 'Il presidio medico è sospeso in data {data} per assenza del personale.'
                     },
                     en: {
-                        tab_services: 'Explore Services', tab_news: 'News & Alerts', tab_emergency: 'Emergency',
-                        welcome_title: 'Hospitality Map', welcome_sub: 'Find showers, soup kitchens, shelters, and assistance desks in Como in real time.',
-                        search_placeholder: 'Search by name, service, street or neighborhood...', categories_title: 'Service Categories', show_all: 'Show all', cat_all: 'All services',
-                        cat_showers: 'Showers & Hygiene', cat_food: 'Food & Kitchens', cat_shelter: 'Shelters', cat_health: 'Medical Care', cat_legal: 'Legal & Docs', cat_clothes: 'Clothing',
-                        services_found: 'services available', no_results_title: 'No services found', no_results_sub: 'Try searching with different words or reset the category filters.', reset_filters: 'Reset filters',
-                        status_active: 'Active', status_notice: 'Notice', status_suspended: 'Suspended', hours_label: 'Hours / Access', service_update_label: 'Real-time alert', service_suspended_label: 'Service Suspended / Notice',
-                        btn_contact: 'Contact', btn_directions: 'GPS Directions', show_more: 'Show more', show_less: 'Show less',
-                        news_page_title: 'Street Outreach Updates', news_page_sub: 'Real-time alerts on schedule changes, emergency winter shelters, or notices from Como associations.',
-                        priority_urgent: 'Urgent', priority_info: 'Info', related_service: 'Related service', go_to_card: 'View service card',
-                        emergency_title: 'Emergency Numbers', emergency_sub: 'Toll-free numbers active 24/7 for any health or safety emergency.',
-                        em_112_title: '112 - General Emergency', em_112_desc: 'Police, Firefighters, Severe emergencies.', em_118_title: '118 - Medical Emergency', em_118_desc: 'Ambulance and immediate medical help.',
-                        em_street_unit_title: 'Street Outreach Coordination', em_street_unit_desc: 'If you see someone in severe distress on the streets of Como at night, report it to volunteers.', call_coordination: 'Report to Vicini di Strada',
-                        choose_contact_method: 'Choose how to contact the service', call_now: 'Call phone number', send_email: 'Send an email', open_maps: 'Open GPS navigation', close: 'Close window',
+                        tab_services: 'Explore Services',
+                        tab_news: 'News & Alerts',
+                        tab_emergency: 'Emergency',
+                        welcome_title: 'Hospitality Map',
+                        welcome_sub: 'Find showers, soup kitchens, shelters, and assistance desks in Como in real time.',
+                        search_placeholder: 'Search by name, service, street or neighborhood...',
+                        categories_title: 'Service Categories',
+                        show_all: 'Show all',
+                        cat_all: 'All services',
+                        cat_showers: 'Showers & Hygiene',
+                        cat_food: 'Food & Kitchens',
+                        cat_shelter: 'Shelters',
+                        cat_health: 'Medical Care',
+                        cat_legal: 'Legal & Docs',
+                        cat_clothes: 'Clothing',
+                        services_found: 'services available',
+                        no_results_title: 'No services found',
+                        no_results_sub: 'Try searching with different words or reset the category filters.',
+                        reset_filters: 'Reset filters',
+                        status_active: 'Active',
+                        status_notice: 'Notice',
+                        status_suspended: 'Suspended',
+                        hours_label: 'Hours / Access',
+                        hours_not_available: 'Hours not provided',
+                        service_update_label: 'Real-time alert',
+                        service_suspended_label: 'Service Suspended / Notice',
+                        btn_contact: 'Contact',
+                        btn_directions: 'GPS Directions',
+                        show_more: 'Show more',
+                        show_less: 'Show less',
+                        news_page_title: 'Street Outreach Updates',
+                        news_page_sub: 'Real-time alerts on schedule changes, emergency winter shelters, or notices from Como associations.',
+                        priority_urgent: 'Urgent',
+                        priority_info: 'Info',
+                        related_service: 'Related service',
+                        go_to_card: 'View service card',
+                        emergency_title: 'Emergency Numbers',
+                        emergency_sub: 'Toll-free numbers active 24/7 for any health or safety emergency.',
+                        em_112_title: '112 - General Emergency',
+                        em_112_desc: 'Police, Firefighters, Severe emergencies.',
+                        em_118_title: '118 - Medical Emergency',
+                        em_118_desc: 'Ambulance and immediate medical help.',
+                        em_street_unit_title: 'Street Outreach Coordination',
+                        em_street_unit_desc: 'If you see someone in severe distress on the streets of Como at night, report it to volunteers.',
+                        call_coordination: 'Report to Vicini di Strada',
+                        choose_contact_method: 'Choose how to contact the service',
+                        call_now: 'Call phone number',
+                        send_email: 'Send an email',
+                        open_maps: 'Open GPS navigation',
+                        close: 'Close window',
                         
-                        tpl_title_summer_closure: 'Summer Closure', tpl_desc_summer_closure: 'The service will be closed for the summer from {data_inizio} to {data_fine}.',
-                        tpl_title_holiday_closure: 'Holiday Closure', tpl_desc_holiday_closure: 'The service will be closed for the holidays on {data}.',
-                        tpl_title_address_change: 'Relocation', tpl_desc_address_change: 'The service is temporarily moving to {indirizzo} starting {data}.',
-                        tpl_title_service_resumed: 'Service Resumed', tpl_desc_service_resumed: 'Regular activities will resume on {data}.',
-                        tpl_title_weather_closure: 'Weather Closure', tpl_desc_weather_closure: 'Service is temporarily closed due to adverse weather conditions.',
-                        tpl_title_temp_closure: 'Temporary Closure', tpl_desc_temp_closure: 'Service will be closed on {data}.',
-                        tpl_title_extra_opening: 'Extraordinary Opening', tpl_desc_extra_opening: 'Extraordinary opening scheduled on {data} at {orario}.',
-                        tpl_title_time_change: 'Schedule Change', tpl_desc_time_change: 'New temporary service schedule: {orario}.',
-                        tpl_title_service_suspended: 'Service Suspended', tpl_desc_service_suspended: 'Service is suspended until further notice.',
-                        tpl_title_service_updated: 'Service Updated', tpl_desc_service_updated: 'Information or schedules for this service have just been updated.',
-                        tpl_title_posti_esauriti: 'Beds Full', tpl_desc_posti_esauriti: 'Please be advised that all beds are full for tonight.',
-                        tpl_title_emergenza_freddo: 'Winter Plan / Cold Emergency', tpl_desc_emergenza_freddo: 'Extraordinary Winter Plan opening due to severe cold.',
-                        tpl_title_guasto_tecnico: 'Temporary Technical Issue', tpl_desc_guasto_tecnico: 'Service temporarily suspended due to technical issues.',
-                        tpl_title_raccolta_urgente: 'Urgent Collection', tpl_desc_raccolta_urgente: 'We urgently need: {oggetto}. You can drop it off at our location.',
-                        tpl_title_distribuzione_speciale: 'Special Distribution', tpl_desc_distribuzione_speciale: 'A special distribution of {oggetto} is scheduled for today.',
-                        tpl_title_assenza_medico: 'Medical Desk Suspended', tpl_desc_assenza_medico: 'Medical desk is suspended on {data} due to staff absence.'
+                        // TEMPLATES
+                        tpl_title_summer_closure: 'Summer Closure',
+                        tpl_desc_summer_closure: 'The service will be closed for the summer from {data_inizio} to {data_fine}.',
+                        tpl_title_holiday_closure: 'Holiday Closure',
+                        tpl_desc_holiday_closure: 'The service will be closed for the holidays on {data}.',
+                        tpl_title_address_change: 'Relocation',
+                        tpl_desc_address_change: 'The service is temporarily moving to {indirizzo} starting {data}.',
+                        tpl_title_service_resumed: 'Service Resumed',
+                        tpl_desc_service_resumed: 'Regular activities will resume on {data}.',
+                        tpl_title_weather_closure: 'Weather Closure',
+                        tpl_desc_weather_closure: 'Service is temporarily closed due to adverse weather conditions.',
+                        tpl_title_temp_closure: 'Temporary Closure',
+                        tpl_desc_temp_closure: 'Service will be closed on {data}.',
+                        tpl_title_extra_opening: 'Extraordinary Opening',
+                        tpl_desc_extra_opening: 'Extraordinary opening scheduled on {data} at {orario}.',
+                        tpl_title_time_change: 'Schedule Change',
+                        tpl_desc_time_change: 'New temporary service schedule: {orario}.',
+                        tpl_title_service_suspended: 'Service Suspended',
+                        tpl_desc_service_suspended: 'Service is suspended until further notice.',
+                        tpl_title_service_updated: 'Service Updated',
+                        tpl_desc_service_updated: 'Information or schedules for this service have just been updated.',
+                        tpl_title_posti_esauriti: 'Beds Full',
+                        tpl_desc_posti_esauriti: 'Please be advised that all beds are full for tonight.',
+                        tpl_title_emergenza_freddo: 'Winter Plan / Cold Emergency',
+                        tpl_desc_emergenza_freddo: 'Extraordinary Winter Plan opening due to severe cold.',
+                        tpl_title_guasto_tecnico: 'Temporary Technical Issue',
+                        tpl_desc_guasto_tecnico: 'Service temporarily suspended due to technical issues.',
+                        tpl_title_raccolta_urgente: 'Urgent Collection',
+                        tpl_desc_raccolta_urgente: 'We urgently need: {oggetto}. You can drop it off at our location.',
+                        tpl_title_distribuzione_speciale: 'Special Distribution',
+                        tpl_desc_distribuzione_speciale: 'A special distribution of {oggetto} is scheduled for today.',
+                        tpl_title_assenza_medico: 'Medical Desk Suspended',
+                        tpl_desc_assenza_medico: 'Medical desk is suspended on {data} due to staff absence.'
+                    },
+                    fr: {
+                        tpl_title_summer_closure: 'Fermeture Estivale',
+                        tpl_desc_summer_closure: 'Le service sera fermé pour l\'été du {data_inizio} au {data_fine}.',
+                        tpl_title_holiday_closure: 'Fermeture pour Jours Fériés',
+                        tpl_desc_holiday_closure: 'Le service sera fermé le {data}.',
+                        tpl_title_address_change: 'Changement d\'Adresse',
+                        tpl_desc_address_change: 'Le service déménage à {indirizzo} à partir du {data}.',
+                        tpl_title_service_resumed: 'Reprise du Service',
+                        tpl_desc_service_resumed: 'Les activités normales reprendront le {data}.',
+                        tpl_title_weather_closure: 'Fermeture Météo',
+                        tpl_desc_weather_closure: 'Le service est temporairement fermé en raison de la météo.',
+                        tpl_title_temp_closure: 'Fermeture Temporaire',
+                        tpl_desc_temp_closure: 'Le service sera fermé le {data}.',
+                        tpl_title_extra_opening: 'Ouverture Exceptionnelle',
+                        tpl_desc_extra_opening: 'Ouverture exceptionnelle prévue le {data} à {orario}.',
+                        tpl_title_time_change: 'Changement d\'Horaire',
+                        tpl_desc_time_change: 'Nouvel horaire : {orario}.',
+                        tpl_title_service_suspended: 'Service Suspendu',
+                        tpl_desc_service_suspended: 'Le service est suspendu jusqu\'à nouvel ordre.',
+                        tpl_title_service_updated: 'Service Mis à Jour',
+                        tpl_desc_service_updated: 'Les informations de ce service ont été mises à jour.',
+                        tpl_title_posti_esauriti: 'Complet',
+                        tpl_desc_posti_esauriti: 'Tous les lits sont occupés pour cette nuit.',
+                        tpl_title_emergenza_freddo: 'Plan Grand Froid',
+                        tpl_desc_emergenza_freddo: 'Ouverture exceptionnelle (Plan Grand Froid).',
+                        tpl_title_guasto_tecnico: 'Problème Technique',
+                        tpl_desc_guasto_tecnico: 'Service suspendu suite à un problème technique.',
+                        tpl_title_raccolta_urgente: 'Collecte Urgente',
+                        tpl_desc_raccolta_urgente: 'Nous avons un besoin urgent de : {oggetto}.',
+                        tpl_title_distribuzione_speciale: 'Distribution Spéciale',
+                        tpl_desc_distribuzione_speciale: 'Distribution spéciale aujourd\'hui : {oggetto}.',
+                        tpl_title_assenza_medico: 'Permanence Médicale Suspendue',
+                        tpl_desc_assenza_medico: 'Permanence médicale suspendue le {data}.'
+                    },
+                    es: {
+                        tpl_title_summer_closure: 'Cierre de Verano',
+                        tpl_desc_summer_closure: 'Cerrado por vacaciones del {data_inizio} al {data_fine}.',
+                        tpl_title_holiday_closure: 'Cierre por Festivos',
+                        tpl_desc_holiday_closure: 'El servicio estará cerrado el {data}.',
+                        tpl_title_address_change: 'Cambio de Dirección',
+                        tpl_desc_address_change: 'El servicio se traslada a {indirizzo} a partir del {data}.',
+                        tpl_title_service_resumed: 'Reanudación',
+                        tpl_desc_service_resumed: 'Las actividades se reanudarán el {data}.',
+                        tpl_title_weather_closure: 'Cierre por Clima',
+                        tpl_desc_weather_closure: 'Servicio cerrado temporalmente por clima adverso.',
+                        tpl_title_temp_closure: 'Cierre Temporal',
+                        tpl_desc_temp_closure: 'El servicio estará cerrado el {data}.',
+                        tpl_title_extra_opening: 'Apertura Extraordinaria',
+                        tpl_desc_extra_opening: 'Apertura extraordinaria el {data} a las {orario}.',
+                        tpl_title_time_change: 'Cambio de Horario',
+                        tpl_desc_time_change: 'Nuevo horario: {orario}.',
+                        tpl_title_service_suspended: 'Servicio Suspendido',
+                        tpl_desc_service_suspended: 'El servicio está suspendido temporalmente.',
+                        tpl_title_service_updated: 'Servicio Actualizado',
+                        tpl_desc_service_updated: 'La información del servicio ha sido actualizada.',
+                        tpl_title_posti_esauriti: 'Camas Agotadas',
+                        tpl_desc_posti_esauriti: 'Todas las camas están ocupadas por esta noche.',
+                        tpl_title_emergenza_freddo: 'Plan de Invierno',
+                        tpl_desc_emergenza_freddo: 'Apertura extraordinaria por emergencia de frío.',
+                        tpl_title_guasto_tecnico: 'Fallo Técnico',
+                        tpl_desc_guasto_tecnico: 'Servicio suspendido temporalmente por fallo técnico.',
+                        tpl_title_raccolta_urgente: 'Recolección Urgente',
+                        tpl_desc_raccolta_urgente: 'Necesitamos urgentemente: {oggetto}.',
+                        tpl_title_distribuzione_speciale: 'Distribución Especial',
+                        tpl_desc_distribuzione_speciale: 'Hoy hay distribución especial de: {oggetto}.',
+                        tpl_title_assenza_medico: 'Servicio Médico Suspendido',
+                        tpl_desc_assenza_medico: 'Servicio médico suspendido el {data}.'
                     }
                 };
 
                 const templates = [
-                    { id: 'posti_esauriti', category: 'recurring', label: 'Posti Letto Esauriti (Dormitori)', params: [] },
-                    { id: 'raccolta_urgente', category: 'recurring', label: 'Richiesta Vestiario / Oggetti', params: [{ id: 'oggetto', type: 'text', label: 'Cosa serve? (es. scarpe tg 42)' }] },
-                    { id: 'distribuzione_speciale', category: 'recurring', label: 'Distribuzione Speciale (Cibo/Vestiario)', params: [{ id: 'oggetto', type: 'text', label: 'Cosa viene distribuito?' }] },
-                    { id: 'summer_closure', category: 'ordinary', label: 'Chiusura Estiva', params: [{ id: 'data_inizio', type: 'date', label: 'Data di inizio chiusura' }, { id: 'data_fine', type: 'date', label: 'Data di riapertura' }] },
-                    { id: 'holiday_closure', category: 'ordinary', label: 'Chiusura per Festività', params: [{ id: 'data', type: 'date', label: 'Data della festività' }] },
-                    { id: 'address_change', category: 'ordinary', label: 'Trasferimento Sede', params: [{ id: 'indirizzo', type: 'text', label: 'Nuovo indirizzo' }, { id: 'data', type: 'date', label: 'A partire da quale data?' }] },
-                    { id: 'service_resumed', category: 'ordinary', label: 'Ripresa Attività', params: [{ id: 'data', type: 'date', label: 'Data di ripresa' }] },
-                    { id: 'time_change', category: 'extraordinary', label: 'Variazione Orario Temporanea', params: [{ id: 'orario', type: 'time', label: 'Nuovo orario (es. 20:00)' }] },
-                    { id: 'extra_opening', category: 'extraordinary', label: 'Apertura Straordinaria', params: [{ id: 'data', type: 'date', label: 'Data apertura' }, { id: 'orario', type: 'time', label: 'A che ora?' }] },
-                    { id: 'assenza_medico', category: 'extraordinary', label: 'Assenza Medico / Sportello Chiuso', params: [{ id: 'data', type: 'date', label: 'Giorno di assenza' }] },
-                    { id: 'temp_closure', category: 'extraordinary', label: 'Chiusura Temporanea Generica', params: [{ id: 'data', type: 'date', label: 'Giorno di chiusura' }] },
-                    { id: 'emergenza_freddo', category: 'emergency', label: 'Attivazione Piano Inverno / Emergenza Freddo', params: [] },
-                    { id: 'guasto_tecnico', category: 'emergency', label: 'Guasto Tecnico (es. caldaia rotta)', params: [] },
-                    { id: 'weather_closure', category: 'emergency', label: 'Chiusura per Allerta Meteo', params: [] },
-                    { id: 'service_suspended', category: 'emergency', label: 'Servizio Sospeso a tempo indeterminato', params: [] },
-                    { id: 'service_updated', category: 'system', label: 'Aggiornamento Servizio', params: [] }
+                    {
+                        id: 'posti_esauriti',
+                        category: 'recurring',
+                        label: 'Posti Letto Esauriti (Dormitori)',
+                        params: []
+                    },
+                    {
+                        id: 'raccolta_urgente',
+                        category: 'recurring',
+                        label: 'Richiesta Vestiario / Oggetti',
+                        params: [
+                            { id: 'oggetto', type: 'text', label: 'Cosa serve? (es. scarpe tg 42)' }
+                        ]
+                    },
+                    {
+                        id: 'distribuzione_speciale',
+                        category: 'recurring',
+                        label: 'Distribuzione Speciale (Cibo/Vestiario)',
+                        params: [
+                            { id: 'oggetto', type: 'text', label: 'Cosa viene distribuito?' }
+                        ]
+                    },
+                    {
+                        id: 'summer_closure',
+                        category: 'ordinary',
+                        label: 'Chiusura Estiva',
+                        params: [
+                            { id: 'data_inizio', type: 'date', label: 'Data di inizio chiusura' },
+                            { id: 'data_fine', type: 'date', label: 'Data di riapertura' }
+                        ]
+                    },
+                    {
+                        id: 'holiday_closure',
+                        category: 'ordinary',
+                        label: 'Chiusura per Festività',
+                        params: [
+                            { id: 'data', type: 'date', label: 'Data della festività' }
+                        ]
+                    },
+                    {
+                        id: 'address_change',
+                        category: 'ordinary',
+                        label: 'Trasferimento Sede',
+                        params: [
+                            { id: 'indirizzo', type: 'text', label: 'Nuovo indirizzo' },
+                            { id: 'data', type: 'date', label: 'A partire da quale data?' }
+                        ]
+                    },
+                    {
+                        id: 'service_resumed',
+                        category: 'ordinary',
+                        label: 'Ripresa Attività',
+                        params: [
+                            { id: 'data', type: 'date', label: 'Data di ripresa' }
+                        ]
+                    },
+                    {
+                        id: 'time_change',
+                        category: 'extraordinary',
+                        label: 'Variazione Orario Temporanea',
+                        params: [
+                            { id: 'orario', type: 'time', label: 'Nuovo orario (es. 20:00)' }
+                        ]
+                    },
+                    {
+                        id: 'extra_opening',
+                        category: 'extraordinary',
+                        label: 'Apertura Straordinaria',
+                        params: [
+                            { id: 'data', type: 'date', label: 'Data apertura' },
+                            { id: 'orario', type: 'time', label: 'A che ora?' }
+                        ]
+                    },
+                    {
+                        id: 'assenza_medico',
+                        category: 'extraordinary',
+                        label: 'Assenza Medico / Sportello Chiuso',
+                        params: [
+                            { id: 'data', type: 'date', label: 'Giorno di assenza' }
+                        ]
+                    },
+                    {
+                        id: 'temp_closure',
+                        category: 'extraordinary',
+                        label: 'Chiusura Temporanea Generica',
+                        params: [
+                            { id: 'data', type: 'date', label: 'Giorno di chiusura' }
+                        ]
+                    },
+                    {
+                        id: 'emergenza_freddo',
+                        category: 'emergency',
+                        label: 'Attivazione Piano Inverno / Emergenza Freddo',
+                        params: []
+                    },
+                    {
+                        id: 'guasto_tecnico',
+                        category: 'emergency',
+                        label: 'Guasto Tecnico (es. caldaia rotta)',
+                        params: []
+                    },
+                    {
+                        id: 'weather_closure',
+                        category: 'emergency',
+                        label: 'Chiusura per Allerta Meteo',
+                        params: []
+                    },
+                    {
+                        id: 'service_suspended',
+                        category: 'emergency',
+                        label: 'Servizio Sospeso a tempo indeterminato',
+                        params: []
+                    },
+                    {
+                        id: 'service_updated',
+                        category: 'system',
+                        label: 'Aggiornamento Servizio',
+                        params: []
+                    }
                 ];
 
                 const t = (key) => i18n[currentLangCode.value]?.[key] || i18n['en']?.[key] || i18n['it']?.[key] || key;
@@ -1035,16 +1274,21 @@
                 };
 
                 const categories = [
-                    { id: 'showers', icon: '🚿', labelKey: 'cat_showers' }, { id: 'food', icon: '🍲', labelKey: 'cat_food' },
-                    { id: 'shelter', icon: '🛏️', labelKey: 'cat_shelter' }, { id: 'health', icon: '🩺', labelKey: 'cat_health' },
-                    { id: 'legal', icon: '⚖️', labelKey: 'cat_legal' }, { id: 'clothes', icon: '👕', labelKey: 'cat_clothes' }
+                    { id: 'showers', icon: '🚿', labelKey: 'cat_showers' },
+                    { id: 'food', icon: '🍲', labelKey: 'cat_food' },
+                    { id: 'shelter', icon: '🛏️', labelKey: 'cat_shelter' },
+                    { id: 'health', icon: '🩺', labelKey: 'cat_health' },
+                    { id: 'legal', icon: '⚖️', labelKey: 'cat_legal' },
+                    { id: 'clothes', icon: '👕', labelKey: 'cat_clothes' }
                 ];
+
                 const getCategoryIcon = (catId) => categories.find(c => c.id === catId)?.icon || '📍';
                 const getCategoryLabelKey = (catId) => categories.find(c => c.id === catId)?.labelKey || 'cat_all';
 
                 const generateTemplateText = (templateId, params, langCode, isTitle = false) => {
                     if (!templateId || templateId === 'none' || templateId === 'custom') return '';
                     const prefix = isTitle ? 'tpl_title_' : 'tpl_desc_';
+                    
                     let text = i18n[langCode]?.[prefix + templateId] || i18n['en']?.[prefix + templateId] || i18n['it']?.[prefix + templateId] || '';
                     
                     if (params) {
@@ -1069,46 +1313,58 @@
                     return result;
                 };
 
-                const buildManualMultilangObj = (valIT, valEN) => {
-                    const it = (valIT || '').trim();
-                    const en = (valEN || '').trim();
-                    const result = { it: it };
-                    if (en !== '') result.en = en;
-                    else result.en = it; 
-                    for (const langCode in languages) {
-                        if (langCode !== 'it' && langCode !== 'en') result[langCode] = result.en; 
-                    }
-                    return result;
-                };
-
                 const selectedNewLangService = ref('');
                 const availableLangsForServiceCustom = computed(() => {
                     const available = {};
-                    for(const code in languages) if(code !== 'it' && editForm.value.customNotice && editForm.value.customNotice[code] === undefined) available[code] = languages[code];
+                    for(const code in languages) {
+                        if(code !== 'it' && editForm.value.customNotice && editForm.value.customNotice[code] === undefined) {
+                            available[code] = languages[code];
+                        }
+                    }
                     return available;
                 });
+                
                 const addLangToServiceCustom = () => {
-                    if (selectedNewLangService.value) { editForm.value.customNotice[selectedNewLangService.value] = ''; selectedNewLangService.value = ''; }
+                    if (selectedNewLangService.value) { 
+                        editForm.value.customNotice[selectedNewLangService.value] = ''; 
+                        selectedNewLangService.value = ''; 
+                    }
                 };
 
                 const selectedNewLangNewsTitle = ref('');
                 const availableLangsForNewsTitle = computed(() => {
                     const available = {};
-                    for(const code in languages) if(code !== 'it' && newsForm.value.customTitle && newsForm.value.customTitle[code] === undefined) available[code] = languages[code];
+                    for(const code in languages) {
+                        if(code !== 'it' && newsForm.value.customTitle && newsForm.value.customTitle[code] === undefined) {
+                            available[code] = languages[code];
+                        }
+                    }
                     return available;
                 });
+                
                 const addLangToNewsTitle = () => {
-                    if (selectedNewLangNewsTitle.value) { newsForm.value.customTitle[selectedNewLangNewsTitle.value] = ''; selectedNewLangNewsTitle.value = ''; }
+                    if (selectedNewLangNewsTitle.value) { 
+                        newsForm.value.customTitle[selectedNewLangNewsTitle.value] = ''; 
+                        selectedNewLangNewsTitle.value = ''; 
+                    }
                 };
 
                 const selectedNewLangNewsContent = ref('');
                 const availableLangsForNewsContent = computed(() => {
                     const available = {};
-                    for(const code in languages) if(code !== 'it' && newsForm.value.customContent && newsForm.value.customContent[code] === undefined) available[code] = languages[code];
+                    for(const code in languages) {
+                        if(code !== 'it' && newsForm.value.customContent && newsForm.value.customContent[code] === undefined) {
+                            available[code] = languages[code];
+                        }
+                    }
                     return available;
                 });
+                
                 const addLangToNewsContent = () => {
-                    if (selectedNewLangNewsContent.value) { newsForm.value.customContent[selectedNewLangNewsContent.value] = ''; selectedNewLangNewsContent.value = ''; }
+                    if (selectedNewLangNewsContent.value) { 
+                        newsForm.value.customContent[selectedNewLangNewsContent.value] = ''; 
+                        selectedNewLangNewsContent.value = ''; 
+                    }
                 };
 
                 const checkAuthSession = async () => {
@@ -1117,43 +1373,74 @@
                     user.value = session ? session.user : null;
                     supabase.auth.onAuthStateChange((_, session) => {
                         user.value = session ? session.user : null;
-                        if (!session && activeTab.value === 'admin_dashboard') { activeTab.value = 'services'; cancelEditing(); }
+                        if (!session && activeTab.value === 'admin_dashboard') { 
+                            activeTab.value = 'services'; 
+                            cancelEditing(); 
+                        }
                     });
                 };
                 
                 const handleLogin = async () => {
                     if (!supabase) return;
-                    authLoading.value = true; authError.value = '';
+                    authLoading.value = true; 
+                    authError.value = '';
                     try {
-                        const { data, error } = await supabase.auth.signInWithPassword({ email: authForm.value.email.trim(), password: authForm.value.password });
+                        const { data, error } = await supabase.auth.signInWithPassword({ 
+                            email: authForm.value.email.trim(), 
+                            password: authForm.value.password 
+                        });
                         if (error) throw error;
-                        user.value = data.user; authForm.value = { email: '', password: '' }; openAdminModal.value = false; activeTab.value = 'admin_dashboard';
-                    } catch (err) { authError.value = "Credenziali non valide."; } finally { authLoading.value = false; }
+                        user.value = data.user; 
+                        authForm.value = { email: '', password: '' }; 
+                        openAdminModal.value = false; 
+                        activeTab.value = 'admin_dashboard';
+                    } catch (err) { 
+                        authError.value = "Credenziali non valide."; 
+                    } finally { 
+                        authLoading.value = false; 
+                    }
                 };
                 
                 const handleLogout = async () => {
                     if (!supabase) return;
                     await supabase.auth.signOut();
-                    user.value = null; openAdminModal.value = false; activeTab.value = 'services'; cancelEditing();
+                    user.value = null; 
+                    openAdminModal.value = false; 
+                    activeTab.value = 'services'; 
+                    cancelEditing();
                 };
 
                 const fetchServices = async () => {
-                    if (!supabase) { isLoading.value = false; return; }
+                    if (!supabase) { 
+                        isLoading.value = false; 
+                        return; 
+                    }
                     isLoading.value = true;
                     try {
                         const { data, error } = await supabase.from('services').select('*').order('category', { ascending: true });
                         if (error) throw error;
-                        if (data) services.value = data;
-                    } catch (error) { console.error(error.message); } finally { isLoading.value = false; }
+                        if (data) dbServices.value = data;
+                    } catch (error) { 
+                        console.error(error.message); 
+                    } finally { 
+                        isLoading.value = false; 
+                    }
                 };
 
                 const handleImageUpload = async (event) => {
                     const file = event.target.files && event.target.files[0];
                     if (!file || !supabase) return;
-                    if (!file.type.startsWith('image/')) { imageUploadError.value = 'File non valido.'; return; }
-                    if (file.size > 15 * 1024 * 1024) { imageUploadError.value = 'Supera 15MB.'; return; }
+                    if (!file.type.startsWith('image/')) { 
+                        imageUploadError.value = 'File non valido.'; 
+                        return; 
+                    }
+                    if (file.size > 15 * 1024 * 1024) { 
+                        imageUploadError.value = 'Supera 15MB.'; 
+                        return; 
+                    }
 
-                    uploadingImage.value = true; imageUploadError.value = '';
+                    uploadingImage.value = true; 
+                    imageUploadError.value = '';
                     try {
                         const fileExt = (file.name.split('.').pop() || 'jpg').toLowerCase();
                         const uniqueName = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}.${fileExt}`;
@@ -1161,12 +1448,18 @@
                         if (error) throw error;
                         const { data } = supabase.storage.from(IMAGE_BUCKET).getPublicUrl(uniqueName);
                         editForm.value.image = data.publicUrl;
-                    } catch (err) { imageUploadError.value = 'Errore upload: ' + err.message; } finally { uploadingImage.value = false; event.target.value = ''; }
+                    } catch (err) { 
+                        imageUploadError.value = 'Errore upload: ' + err.message; 
+                    } finally { 
+                        uploadingImage.value = false; 
+                        event.target.value = ''; 
+                    }
                 };
 
                 const startEditing = (service) => {
                     editingService.value = service;
-                    let initNoticeTpl = 'none'; let initCustomNotice = { it: '' };
+                    let initNoticeTpl = 'none'; 
+                    let initCustomNotice = { it: '' };
                     
                     if (service.latestUpdate && service.latestUpdate.text) {
                         initNoticeTpl = 'custom'; 
@@ -1175,85 +1468,101 @@
                         if (!initCustomNotice.it) initCustomNotice.it = '';
                     }
 
+                    // Se non ci sono orari nel db (array vuoto o mancante), preimpostiamo una riga vuota
+                    let dbHoursList = Array.isArray(service.hours) && service.hours.length > 0 ? [...service.hours] : [{ day: 1, open: '', close: '' }];
+
                     editForm.value = {
                         id: service.id, 
-                        name_it: extractText(service.name, 'it'), name_en: extractText(service.name, 'en'),
-                        address: service.address || '', phone: service.phone || '', email: service.email || '',
-                        hoursList_it: parseHoursStringToList(extractText(service.hours, 'it')), 
-                        hoursList_en: parseHoursStringToList(extractText(service.hours, 'en')),
-                        description_it: extractText(service.description, 'it'), description_en: extractText(service.description, 'en'),
+                        organization_id: service.org_id,
+                        address: service.address || '', 
+                        phone: service.phone || '', 
+                        email: service.email || '',
+                        hoursList: dbHoursList,
                         status: service.status || 'active', 
-                        noticeTemplate: initNoticeTpl, noticeParams: {}, customNotice: initCustomNotice,
-                        organization: service.organization || '', category: service.category || 'showers', image: service.image || '',
+                        noticeTemplate: initNoticeTpl, 
+                        noticeParams: {}, 
+                        customNotice: initCustomNotice,
+                        category: service.category || 'showers', 
+                        image: service.image || '',
                         generateAutoNotice: false
                     };
-                    imageUploadError.value = ''; window.scrollTo({ top: 0, behavior: 'smooth' });
-                };
-
-                const startCreating = () => {
-                    editingService.value = { id: null };
-                    editForm.value = {
-                        id: null, name_it: '', name_en: '', address: '', phone: '', email: '', 
-                        hoursList_it: [{ val: '' }], hoursList_en: [{ val: '' }], 
-                        description_it: '', description_en: '',
-                        status: 'active', noticeTemplate: 'none', noticeParams: {}, customNotice: { it: '' },
-                        organization: '', category: 'showers', image: '', generateAutoNotice: false
-                    };
-                    imageUploadError.value = ''; window.scrollTo({ top: 0, behavior: 'smooth' });
+                    imageUploadError.value = ''; 
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
                 };
                 
-                const cancelEditing = () => { editingService.value = null; editForm.value = { id: null }; imageUploadError.value = ''; };
+                const cancelEditing = () => { 
+                    editingService.value = null; 
+                    editForm.value = { id: null }; 
+                    imageUploadError.value = ''; 
+                };
 
                 const saveServiceChanges = async () => {
                     if (!supabase || !editingService.value) return;
                     savingServiceId.value = true;
                     try {
-                        const compiledHoursIT = editForm.value.hoursList_it.map(h => h.val.trim()).filter(h => h).join('\n');
-                        const compiledHoursEN = editForm.value.hoursList_en.map(h => h.val.trim()).filter(h => h).join('\n');
+                        const validHours = editForm.value.hoursList.filter(h => h.open && h.close);
 
                         const payload = {
-                            status: editForm.value.status, address: String(editForm.value.address || '').trim(), phone: String(editForm.value.phone || '').trim(), email: String(editForm.value.email || '').trim(),
-                            name: buildManualMultilangObj(editForm.value.name_it, editForm.value.name_en), 
-                            hours: buildManualMultilangObj(compiledHoursIT, compiledHoursEN), 
-                            description: buildManualMultilangObj(editForm.value.description_it, editForm.value.description_en),
-                            organization: String(editForm.value.organization || '').trim(), category: editForm.value.category, image: String(editForm.value.image || '').trim()
+                            id: editForm.value.id,
+                            status: editForm.value.status, 
+                            address: String(editForm.value.address || '').trim(), 
+                            phone: String(editForm.value.phone || '').trim(), 
+                            email: String(editForm.value.email || '').trim(),
+                            org_id: editForm.value.organization_id, 
+                            category: editForm.value.category, 
+                            image: String(editForm.value.image || '').trim(),
+                            hours: validHours
                         };
 
                         if (editForm.value.noticeTemplate === 'custom') {
-                            payload.latestUpdate = { date: new Date().toLocaleDateString('it-IT'), text: JSON.parse(JSON.stringify(editForm.value.customNotice)) };
+                            payload.latestUpdate = { 
+                                date: new Date().toLocaleDateString('it-IT'), 
+                                text: JSON.parse(JSON.stringify(editForm.value.customNotice)) 
+                            };
                         } else if (editForm.value.noticeTemplate !== 'none') {
-                            payload.latestUpdate = { date: new Date().toLocaleDateString('it-IT'), text: buildMultilangObjFromTemplate(editForm.value.noticeTemplate, editForm.value.noticeParams, false) };
+                            payload.latestUpdate = { 
+                                date: new Date().toLocaleDateString('it-IT'), 
+                                text: buildMultilangObjFromTemplate(editForm.value.noticeTemplate, editForm.value.noticeParams, false) 
+                            };
                         } else if (editForm.value.status === 'active') {
                             payload.latestUpdate = null;
                         }
 
-                        let savedServiceId = editForm.value.id;
-
-                        if (editForm.value.id) {
-                            const { error } = await supabase.from('services').update(payload).eq('id', editForm.value.id).select();
-                            if (error) throw error;
-                            Object.assign(editingService.value, payload);
+                        const { error } = await supabase.from('services').upsert([payload]).select();
+                        if (error) throw error;
+                        
+                        // Aggiorna local array per immediata visualizzazione
+                        const dbIdx = dbServices.value.findIndex(s => s.id === payload.id);
+                        if (dbIdx >= 0) {
+                            dbServices.value[dbIdx] = payload;
                         } else {
-                            const { data, error } = await supabase.from('services').insert([payload]).select();
-                            if (error) throw error;
-                            savedServiceId = data[0].id;
-                            services.value.push(data[0]);
+                            dbServices.value.push(payload);
                         }
 
+                        // Pubblicazione Notizia Automatica in bacheca
                         if (editForm.value.generateAutoNotice) {
                             const payloadNews = {
-                                type: 'service_update', priority: 'normal', association: payload.organization, related_service_id: savedServiceId,
-                                title: buildMultilangObjFromTemplate('service_updated', {}, true), content: buildMultilangObjFromTemplate('service_updated', {}, false)
+                                type: 'service_update', 
+                                priority: 'normal',
+                                association_id: payload.org_id,
+                                related_service_id: payload.id,
+                                title: buildMultilangObjFromTemplate('service_updated', {}, true),
+                                content: buildMultilangObjFromTemplate('service_updated', {}, false)
                             };
                             await supabase.from('news').insert([payloadNews]);
                             fetchNews(); 
                         }
 
-                        alert(editForm.value.id ? "✅ Modifiche salvate con successo online!" : "✨ Nuovo servizio registrato e pubblicato!");
+                        alert("✅ Modifiche salvate con successo online!");
                         cancelEditing();
-                    } catch (err) { alert("❌ Errore salvataggio: " + err.message); } finally { savingServiceId.value = false; }
+                    } catch (err) { 
+                        alert("❌ Errore salvataggio: " + err.message); 
+                    } finally { 
+                        savingServiceId.value = false; 
+                    }
                 };
 
+                // --- GESTIONE NOTIZIE ---
                 const globalNews = ref([]);
                 const NEWS_TYPES = {
                     general: { icon: 'fa-solid fa-circle-info', badgeClass: 'bg-blue-100 text-blue-700' },
@@ -1270,24 +1579,47 @@
                 };
 
                 const setNewsUrgency = (level) => {
-                    if (level === 'info') { newsForm.value.type = 'general'; newsForm.value.priority = 'normal'; } 
-                    else if (level === 'update') { newsForm.value.type = 'service_update'; newsForm.value.priority = 'normal'; } 
-                    else if (level === 'emergency') { newsForm.value.type = 'emergency'; newsForm.value.priority = 'high'; }
+                    if (level === 'info') { 
+                        newsForm.value.type = 'general'; 
+                        newsForm.value.priority = 'normal'; 
+                    } else if (level === 'update') { 
+                        newsForm.value.type = 'service_update'; 
+                        newsForm.value.priority = 'normal'; 
+                    } else if (level === 'emergency') { 
+                        newsForm.value.type = 'emergency'; 
+                        newsForm.value.priority = 'high'; 
+                    }
                 };
 
                 const formatNewsDate = (isoDate) => {
                     if (!isoDate) return '';
-                    try { return new Date(isoDate).toLocaleString('it-IT', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }); } catch (e) { return isoDate; }
+                    try { 
+                        return new Date(isoDate).toLocaleString('it-IT', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }); 
+                    } catch (e) { 
+                        return isoDate; 
+                    }
                 };
 
                 const fetchNews = async () => {
-                    if (!supabase) { isLoadingNews.value = false; return; }
+                    if (!supabase) { 
+                        isLoadingNews.value = false; 
+                        return; 
+                    }
                     isLoadingNews.value = true;
                     try {
                         const { data, error } = await supabase.from('news').select('*').order('created_at', { ascending: false });
                         if (error) throw error;
-                        globalNews.value = data || [];
-                    } catch (error) { console.error(error.message); } finally { isLoadingNews.value = false; }
+                        
+                        // Map organization names
+                        globalNews.value = (data || []).map(n => {
+                            const org = fixedOrganizations.find(o => o.id === n.association_id);
+                            return { ...n, association: org ? org.name : (n.association_id === 'generale' ? 'Coordinamento Vicini di Strada' : '') };
+                        });
+                    } catch (error) { 
+                        console.error(error.message); 
+                    } finally { 
+                        isLoadingNews.value = false; 
+                    }
                 };
 
                 const startEditingNews = (news) => {
@@ -1297,11 +1629,21 @@
                     
                     if (typeof initCustomTitle === 'string') initCustomTitle = { it: initCustomTitle };
                     if (typeof initCustomContent === 'string') initCustomContent = { it: initCustomContent };
-                    if (!initCustomTitle.it) initCustomTitle.it = ''; if (!initCustomContent.it) initCustomContent.it = '';
+                    
+                    if (!initCustomTitle.it) initCustomTitle.it = ''; 
+                    if (!initCustomContent.it) initCustomContent.it = '';
 
                     newsForm.value = {
-                        id: news.id, type: news.type || 'general', priority: news.priority || 'normal', association: news.association || '', related_service_id: news.related_service_id || null,
-                        useCustomText: !!news.id, template: 'posti_esauriti', templateParams: {}, customTitle: initCustomTitle, customContent: initCustomContent
+                        id: news.id, 
+                        type: news.type || 'general', 
+                        priority: news.priority || 'normal', 
+                        association_id: news.association_id || 'generale', 
+                        related_service_id: news.related_service_id || null,
+                        useCustomText: !!news.id, 
+                        template: 'posti_esauriti', 
+                        templateParams: {}, 
+                        customTitle: initCustomTitle, 
+                        customContent: initCustomContent
                     };
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                 };
@@ -1309,13 +1651,24 @@
                 const startCreatingNews = () => {
                     editingNews.value = { id: null };
                     newsForm.value = {
-                        id: null, type: 'general', priority: 'normal', association: '', related_service_id: null,
-                        useCustomText: false, template: 'posti_esauriti', templateParams: {}, customTitle: { it: '' }, customContent: { it: '' }
+                        id: null, 
+                        type: 'general', 
+                        priority: 'normal', 
+                        association_id: 'generale', 
+                        related_service_id: null,
+                        useCustomText: false, 
+                        template: 'posti_esauriti', 
+                        templateParams: {}, 
+                        customTitle: { it: '' }, 
+                        customContent: { it: '' }
                     };
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                 };
                 
-                const cancelEditingNews = () => { editingNews.value = null; newsForm.value = { id: null }; };
+                const cancelEditingNews = () => { 
+                    editingNews.value = null; 
+                    newsForm.value = { id: null }; 
+                };
 
                 const saveNewsChanges = async () => {
                     if (!supabase || !editingNews.value) return;
@@ -1323,31 +1676,38 @@
                     try {
                         let finalTitle, finalContent;
                         if (newsForm.value.useCustomText) {
-                            finalTitle = JSON.parse(JSON.stringify(newsForm.value.customTitle)); finalContent = JSON.parse(JSON.stringify(newsForm.value.customContent));
+                            finalTitle = JSON.parse(JSON.stringify(newsForm.value.customTitle)); 
+                            finalContent = JSON.parse(JSON.stringify(newsForm.value.customContent));
                         } else {
                             finalTitle = buildMultilangObjFromTemplate(newsForm.value.template, newsForm.value.templateParams, true);
                             finalContent = buildMultilangObjFromTemplate(newsForm.value.template, newsForm.value.templateParams, false);
                         }
 
                         const payload = {
-                            type: newsForm.value.type, priority: newsForm.value.priority, association: String(newsForm.value.association || '').trim(), related_service_id: newsForm.value.related_service_id || null,
-                            title: finalTitle, content: finalContent
+                            type: newsForm.value.type, 
+                            priority: newsForm.value.priority, 
+                            association_id: newsForm.value.association_id, 
+                            related_service_id: newsForm.value.related_service_id || null,
+                            title: finalTitle, 
+                            content: finalContent
                         };
 
                         if (newsForm.value.id) {
-                            const { data, error } = await supabase.from('news').update(payload).eq('id', newsForm.value.id).select();
+                            const { error } = await supabase.from('news').update(payload).eq('id', newsForm.value.id).select();
                             if (error) throw error;
-                            const idx = globalNews.value.findIndex(n => n.id === newsForm.value.id);
-                            if (idx !== -1) globalNews.value[idx] = data[0];
-                            alert("✅ Notizia aggiornata!");
                         } else {
-                            const { data, error } = await supabase.from('news').insert([payload]).select();
+                            const { error } = await supabase.from('news').insert([payload]).select();
                             if (error) throw error;
-                            globalNews.value.unshift(data[0]);
-                            alert("📢 Notizia pubblicata!");
                         }
+                        
+                        await fetchNews(); // Reload to get mapped names
+                        alert(newsForm.value.id ? "✅ Notizia aggiornata!" : "📢 Notizia pubblicata!");
                         cancelEditingNews();
-                    } catch (err) { alert("❌ Errore pubblicazione: " + err.message); } finally { savingNewsId.value = false; }
+                    } catch (err) { 
+                        alert("❌ Errore pubblicazione: " + err.message); 
+                    } finally { 
+                        savingNewsId.value = false; 
+                    }
                 };
 
                 const deleteNewsItem = async (news) => {
@@ -1358,44 +1718,134 @@
                         const { error } = await supabase.from('news').delete().eq('id', news.id);
                         if (error) throw error;
                         globalNews.value = globalNews.value.filter(n => n.id !== news.id);
-                    } catch (err) { alert("❌ Eliminazione non riuscita: " + err.message); }
+                    } catch (err) { 
+                        alert("❌ Eliminazione non riuscita: " + err.message); 
+                    }
                 };
 
-                onMounted(() => { fetchServices(); fetchNews(); checkAuthSession(); });
+                onMounted(() => { 
+                    fetchServices(); 
+                    fetchNews(); 
+                    checkAuthSession(); 
+                });
 
                 const filteredServices = computed(() => {
                     return services.value.filter(s => {
                         const matchesCategory = selectedCategory.value === 'all' || s.category === selectedCategory.value;
                         if (!searchQuery.value.trim()) return matchesCategory;
                         const q = searchQuery.value.toLowerCase().trim();
-                        const nameStr = Object.values(s.name || {}).join(' ').toLowerCase(); const descStr = Object.values(s.description || {}).join(' ').toLowerCase();
-                        const orgStr = (s.organization || '').toLowerCase(); const addrStr = (s.address || '').toLowerCase();
+                        const nameStr = Object.values(s.name || {}).join(' ').toLowerCase(); 
+                        const descStr = Object.values(s.description || {}).join(' ').toLowerCase();
+                        const orgStr = (s.organization || '').toLowerCase(); 
+                        const addrStr = (s.address || '').toLowerCase();
                         return matchesCategory && (nameStr.includes(q) || descStr.includes(q) || orgStr.includes(q) || addrStr.includes(q));
                     });
                 });
 
                 const getServiceCount = (catId) => services.value.filter(s => s.category === catId).length;
-                const getServiceName = (serviceId) => { const s = services.value.find(item => item.id === serviceId); return s ? translateField(s, 'name') : ''; };
+                
+                const getServiceName = (serviceId) => { 
+                    const s = services.value.find(item => item.id === serviceId); 
+                    return s ? translateField(s, 'name') : ''; 
+                };
+                
                 const goToService = (serviceId) => {
                     const s = services.value.find(item => item.id === serviceId);
-                    if (s) { selectedCategory.value = s.category; activeTab.value = 'services'; setTimeout(() => openContactModal(s), 200); }
+                    if (s) { 
+                        selectedCategory.value = s.category; 
+                        activeTab.value = 'services'; 
+                        setTimeout(() => openContactModal(s), 200); 
+                    }
                 };
-                const openContactModal = (service) => { activeModalService.value = service; };
-                const getNavigationUrl = (address) => { const query = encodeURIComponent(`${address}, Como, Italy`); return `https://www.google.com/maps/search/?api=1&query=${query}`; };
+                
+                const openContactModal = (service) => { 
+                    activeModalService.value = service; 
+                };
+                
+                const getNavigationUrl = (address) => { 
+                    const query = encodeURIComponent(`${address}, Como, Italy`); 
+                    return `https://www.google.com/maps/search/?api=1&query=${query}`; 
+                };
                 
                 const selectedNoticeTemplate = computed(() => templates.find(t => t.id === editForm.value.noticeTemplate));
                 const selectedNewsTemplate = computed(() => templates.find(t => t.id === newsForm.value.template));
 
                 return {
-                    activeTab, selectedCategory, searchQuery, showLangMenu, activeModalService, currentLangCode, languages, currentLang, isRTL,
-                    isServiceExpanded, toggleServiceExpanded, t, translateField, categories, getCategoryIcon, getCategoryLabelKey,
-                    services, globalNews, filteredServices, getServiceCount, getServiceName, selectLanguage, goToService, openContactModal, getNavigationUrl,
-                    isLoading, isLoadingNews, openAdminModal, user, authLoading, authError, authForm, handleLogin, handleLogout, 
-                    editingService, editForm, startEditing, startCreating, cancelEditing, saveServiceChanges, savingServiceId, uploadingImage, imageUploadError, handleImageUpload,
-                    adminSection, editingNews, newsForm, savingNewsId, startEditingNews, startCreatingNews, cancelEditingNews, saveNewsChanges, deleteNewsItem,
-                    getNewsTypeStyle, formatNewsDate, isUrgency, setNewsUrgency, templates, selectedNoticeTemplate, selectedNewsTemplate, generateTemplateText,
-                    selectedNewLangService, availableLangsForServiceCustom, addLangToServiceCustom, selectedNewLangNewsTitle, availableLangsForNewsTitle, addLangToNewsTitle,
-                    selectedNewLangNewsContent, availableLangsForNewsContent, addLangToNewsContent, addHourSlot, removeHourSlot
+                    activeTab, 
+                    selectedCategory, 
+                    searchQuery, 
+                    showLangMenu, 
+                    activeModalService, 
+                    currentLangCode, 
+                    languages, 
+                    currentLang, 
+                    isRTL,
+                    isServiceExpanded, 
+                    toggleServiceExpanded, 
+                    t, 
+                    translateField, 
+                    categories, 
+                    getCategoryIcon, 
+                    getCategoryLabelKey,
+                    services, 
+                    globalNews, 
+                    filteredServices, 
+                    getServiceCount, 
+                    getServiceName, 
+                    selectLanguage, 
+                    goToService, 
+                    openContactModal, 
+                    getNavigationUrl,
+                    isLoading, 
+                    isLoadingNews, 
+                    openAdminModal, 
+                    user, 
+                    authLoading, 
+                    authError, 
+                    authForm, 
+                    handleLogin, 
+                    handleLogout, 
+                    editingService, 
+                    editForm, 
+                    startEditing, 
+                    startCreating, 
+                    cancelEditing, 
+                    saveServiceChanges, 
+                    savingServiceId, 
+                    uploadingImage, 
+                    imageUploadError, 
+                    handleImageUpload,
+                    adminSection, 
+                    editingNews, 
+                    newsForm, 
+                    savingNewsId, 
+                    startEditingNews, 
+                    startCreatingNews, 
+                    cancelEditingNews, 
+                    saveNewsChanges, 
+                    deleteNewsItem,
+                    getNewsTypeStyle, 
+                    formatNewsDate, 
+                    isUrgency, 
+                    setNewsUrgency, 
+                    templates, 
+                    selectedNoticeTemplate, 
+                    selectedNewsTemplate, 
+                    generateTemplateText,
+                    selectedNewLangService, 
+                    availableLangsForServiceCustom, 
+                    addLangToServiceCustom, 
+                    selectedNewLangNewsTitle, 
+                    availableLangsForNewsTitle, 
+                    addLangToNewsTitle,
+                    selectedNewLangNewsContent, 
+                    availableLangsForNewsContent, 
+                    addLangToNewsContent,
+                    daysOfWeek,
+                    formatHours,
+                    addHourSlot,
+                    removeHourSlot,
+                    fixedOrganizations
                 };
             }
         }).mount('#app');
