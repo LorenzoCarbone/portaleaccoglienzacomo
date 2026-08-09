@@ -453,7 +453,7 @@
                             </div>
                             <div class="overflow-hidden">
                                 <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block truncate">{{ service.organization }}</span>
-                                <h4 class="font-bold text-slate-800 text-sm sm:text-base group-hover:text-brand-700 transition truncate">{{ translateField(service, 'name') }}</h4>
+                                <h4 class="font-bold text-slate-800 text-sm sm:text-base group-hover:text-brand-700 transition truncate">{{ service.name.it || service.name }}</h4>
                                 <p class="text-xs text-slate-500 truncate mt-0.5"><i class="fa-solid fa-location-dot text-slate-400 mr-1"></i>{{ service.address }}</p>
                             </div>
                         </div>
@@ -491,6 +491,8 @@
                     </div>
                 </div>
 
+                <!-- Il pannello "Stato Apertura & Allerte Rapide" è visibile SOLO in modifica (editForm.id valorizzato).
+                     In creazione resta nascosto e lo status viene salvato automaticamente come 'active' (Regolare). -->
                 <div v-if="editForm.id" class="bg-white rounded-3xl border-2 border-brand-500/20 p-5 sm:p-6 card-shadow space-y-5">
                     <div class="flex items-center gap-3 border-b border-slate-100 pb-3">
                         <div class="w-8 h-8 rounded-xl bg-warm-500 text-white flex items-center justify-center text-sm shadow-sm">
@@ -531,25 +533,15 @@
                         </div>
                     </div>
 
-                    <div class="mt-4">
-                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Seleziona un Template per l'Avviso Rapido:</label>
-                        <select v-model="editForm.noticeTemplate" @change="editForm.noticeParams = {}" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-800 text-sm focus:ring-2 focus:ring-brand-500 transition">
-                            <option v-for="tpl in templates" :key="tpl.id" :value="tpl.id">{{ tpl.label }}</option>
-                        </select>
-
-                        <!-- Input dinamici per i parametri del template selezionato -->
-                        <div v-if="selectedNoticeTemplate && selectedNoticeTemplate.params.length > 0" class="mt-3 space-y-2 p-3 bg-brand-50 border border-brand-100 rounded-xl">
-                            <div v-for="param in selectedNoticeTemplate.params" :key="param">
-                                <label class="block text-[11px] font-bold text-brand-700 mb-1 capitalize">{{ param }}</label>
-                                <input v-model="editForm.noticeParams[param]" type="text" :placeholder="'Inserisci ' + param" class="w-full text-sm py-1.5 px-3 rounded-lg border border-brand-200 text-slate-800">
-                            </div>
+                    <div>
+                        <div class="flex items-center justify-between mb-1.5">
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500">Avviso Cittadini / Motivo:</label>
+                            <span class="text-[10px] bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full font-bold border border-emerald-200">🌍 Tradotto automaticamente al salvataggio</span>
                         </div>
-
-                        <!-- Anteprima dell'avviso -->
-                        <div v-if="editForm.noticeTemplate !== 'none'" class="mt-2 p-3 bg-slate-100 rounded-xl border border-slate-200 text-xs text-slate-700">
-                            <span class="block text-[10px] uppercase font-bold text-slate-400 mb-1">Anteprima Avviso (IT)</span>
-                            <strong>{{ generateTemplateText(editForm.noticeTemplate, editForm.noticeParams, 'it') }}</strong>
-                        </div>
+                        <textarea v-model="editForm.adminTempNotice" 
+                                  rows="2" 
+                                  placeholder="Es. Chiuso per maltempo stanotte / Apertura straordinaria ore 20:00..."
+                                  class="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3.5 text-slate-800 text-xs sm:text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500 transition shadow-inner"></textarea>
                     </div>
                 </div>
 
@@ -560,7 +552,7 @@
                         </div>
                         <div>
                             <h3 class="font-bold text-slate-800 text-base">Informazioni Anagrafiche</h3>
-                            <p class="text-xs text-slate-500">Compila i testi. Se manca l'inglese verrà usato l'italiano.</p>
+                            <p class="text-xs text-slate-500">Modifica o inserisci i dati di base del servizio visualizzati sulle schede.</p>
                         </div>
                     </div>
 
@@ -616,11 +608,9 @@
                         </div>
 
                         <div>
-                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Nome Servizio</label>
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                <input v-model="editForm.name_it" type="text" placeholder="Italiano" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm border-l-4 border-l-emerald-500">
-                                <input v-model="editForm.name_en" type="text" placeholder="Inglese (opzionale)" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm border-l-4 border-l-blue-500">
-                            </div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Nome Servizio (in Italiano)</label>
+                            <input v-model="editForm.name_it" type="text" required
+                                   class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-800 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500 transition">
                         </div>
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -635,17 +625,10 @@
 
                             <div>
                                 <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Orari / Accessibilità</label>
-                                <div class="grid grid-cols-1 gap-1">
-                                    <div class="relative">
-                                        <input v-model="editForm.hours_it" type="text" required placeholder="Italiano (Es. Lun-Ven 18:00)"
-                                            class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-3.5 py-2.5 text-slate-800 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500 transition border-l-4 border-l-emerald-500">
-                                        <i class="fa-regular fa-clock absolute top-3 left-3.5 text-slate-400 text-xs"></i>
-                                    </div>
-                                    <div class="relative">
-                                        <input v-model="editForm.hours_en" type="text" placeholder="Inglese (Es. Mon-Fri 18:00)"
-                                            class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-3.5 py-2.5 text-slate-800 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500 transition border-l-4 border-l-blue-500">
-                                        <i class="fa-regular fa-clock absolute top-3 left-3.5 text-slate-400 text-xs"></i>
-                                    </div>
+                                <div class="relative">
+                                    <input v-model="editForm.hours_it" type="text" required placeholder="Es. Lun-Ven 18:00 - 20:00"
+                                           class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-3.5 py-2.5 text-slate-800 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500 transition">
+                                    <i class="fa-regular fa-clock absolute top-3 left-3.5 text-slate-400 text-xs"></i>
                                 </div>
                             </div>
                         </div>
@@ -671,13 +654,9 @@
                         </div>
 
                         <div>
-                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Descrizione Completa</label>
-                            <div class="space-y-2">
-                                <textarea v-model="editForm.description_it" rows="3" required placeholder="Italiano"
-                                        class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-slate-800 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500 transition leading-relaxed border-l-4 border-l-emerald-500"></textarea>
-                                <textarea v-model="editForm.description_en" rows="3" placeholder="Inglese"
-                                        class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-slate-800 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500 transition leading-relaxed border-l-4 border-l-blue-500"></textarea>
-                            </div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Descrizione Completa (in Italiano)</label>
+                            <textarea v-model="editForm.description_it" rows="4" required
+                                      class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-slate-800 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500 transition leading-relaxed"></textarea>
                         </div>
                     </div>
                 </div>
@@ -685,26 +664,34 @@
                 <div class="bg-slate-900 text-white p-4 rounded-3xl shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div class="flex items-center gap-2">
                         <i class="fa-solid fa-cloud text-brand-400 text-lg"></i>
-                        <span class="text-xs sm:text-sm font-medium">Modifiche pronte per il cloud Supabase</span>
+                        <span class="text-xs sm:text-sm font-medium">
+                            {{ translatingContent ? '🌍 Traduzione automatica in tutte le lingue in corso...' : 'Modifiche pronte per il cloud Supabase' }}
+                        </span>
                     </div>
 
                     <div class="flex items-center gap-3 w-full sm:w-auto">
                         <button @click="cancelEditing()" 
                                 type="button"
-                                :disabled="savingServiceId"
+                                :disabled="translatingContent || savingServiceId"
                                 class="flex-1 sm:flex-initial py-3 px-5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs sm:text-sm transition disabled:opacity-50">
                             Annulla
                         </button>
 
                         <button @click="saveServiceChanges()" 
-                                :disabled="savingServiceId"
+                                :disabled="savingServiceId || translatingContent"
                                 type="button"
                                 class="flex-1 sm:flex-initial bg-brand-500 hover:bg-brand-600 active:scale-95 disabled:opacity-50 text-white font-bold py-3 px-6 rounded-2xl text-xs sm:text-sm shadow-lg shadow-brand-500/30 transition flex items-center justify-center gap-2">
-                            <i v-if="savingServiceId" class="fa-solid fa-circle-notch fa-spin"></i>
+                            <i v-if="translatingContent" class="fa-solid fa-language fa-spin"></i>
+                            <i v-else-if="savingServiceId" class="fa-solid fa-circle-notch fa-spin"></i>
                             <i v-else class="fa-solid fa-check"></i>
-                            <span>{{ savingServiceId ? 'Salvataggio...' : (editForm.id ? 'Salva Modifiche Online' : 'Pubblica Servizio Online') }}</span>
+                            <span>{{ translatingContent ? 'Traduzione in corso...' : (savingServiceId ? 'Salvataggio...' : (editForm.id ? 'Salva Modifiche Online' : 'Pubblica Servizio Online')) }}</span>
                         </button>
                     </div>
+                </div>
+
+                <div v-if="translationError" class="bg-amber-50 border border-amber-200 text-amber-800 text-xs font-medium rounded-2xl p-3.5 flex items-start gap-2.5">
+                    <i class="fa-solid fa-triangle-exclamation text-amber-600 mt-0.5 shrink-0"></i>
+                    <span>{{ translationError }}</span>
                 </div>
 
             </div>
@@ -756,8 +743,8 @@
                             </div>
                             <div class="overflow-hidden">
                                 <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block truncate">{{ news.association || 'Coordinamento' }} · {{ formatNewsDate(news.created_at) }}</span>
-                                <h4 class="font-bold text-slate-800 text-sm sm:text-base group-hover:text-amber-700 transition truncate">{{ translateField(news, 'title') || '(senza titolo)' }}</h4>
-                                <p class="text-xs text-slate-500 truncate mt-0.5">{{ translateField(news, 'content') }}</p>
+                                <h4 class="font-bold text-slate-800 text-sm sm:text-base group-hover:text-amber-700 transition truncate">{{ news.title.it || '(senza titolo)' }}</h4>
+                                <p class="text-xs text-slate-500 truncate mt-0.5">{{ news.content.it }}</p>
                             </div>
                         </div>
 
@@ -798,8 +785,8 @@
                             <i class="fa-solid fa-bullhorn"></i>
                         </div>
                         <div>
-                            <h3 class="font-bold text-slate-800 text-base">Componi Notizia con Template</h3>
-                            <p class="text-xs text-slate-500">Scegli la tipologia e usa i modelli per generare avvisi in tutte le lingue.</p>
+                            <h3 class="font-bold text-slate-800 text-base">Contenuto della Notizia</h3>
+                            <p class="text-xs text-slate-500">Scegli tipologia e priorità, poi scrivi il messaggio per il pubblico.</p>
                         </div>
                     </div>
 
@@ -841,6 +828,7 @@
                                 <span>Urgente</span>
                             </button>
                         </div>
+                        <p class="text-[11px] text-slate-400 mt-1.5">Selezionando "Emergenza" come tipologia, la priorità viene impostata automaticamente su Urgente.</p>
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -854,36 +842,29 @@
                             <select v-model="newsForm.related_service_id"
                                     class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-800 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 transition">
                                 <option :value="null">Nessuno / non collegata a un servizio</option>
-                                <option v-for="s in services" :key="s.id" :value="s.id">{{ getCategoryIcon(s.category) }} {{ translateField(s, 'name') }}</option>
+                                <option v-for="s in services" :key="s.id" :value="s.id">{{ getCategoryIcon(s.category) }} {{ s.name.it || s.name }}</option>
                             </select>
                         </div>
                     </div>
 
-                    <div class="bg-amber-50 rounded-2xl p-4 border border-amber-100">
-                        <label class="block text-sm font-bold uppercase text-amber-800 mb-2">Seleziona Template Avviso</label>
-                        <select v-model="newsForm.template" @change="newsForm.templateParams = {}" class="w-full bg-white border border-amber-200 rounded-xl px-4 py-3 text-sm mb-4 focus:ring-2 focus:ring-amber-500 outline-none">
-                            <option v-for="tpl in templates.filter(t => t.id !== 'none')" :key="tpl.id" :value="tpl.id">{{ tpl.label }}</option>
-                        </select>
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Titolo (in Italiano)</label>
+                        <input v-model="newsForm.title_it" type="text" required placeholder="Es. Emergenza Freddo: Apertura Straordinaria Dormitori"
+                               class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-800 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 transition">
+                    </div>
 
-                        <div v-if="selectedNewsTemplate && selectedNewsTemplate.params.length > 0" class="space-y-3">
-                            <div v-for="param in selectedNewsTemplate.params" :key="param">
-                                <label class="block text-xs font-bold text-amber-700 mb-1 capitalize">{{ param }}</label>
-                                <input v-model="newsForm.templateParams[param]" type="text" :placeholder="'Inserisci ' + param" class="w-full text-sm py-2 px-3 rounded-lg border border-amber-200">
-                            </div>
-                        </div>
-
-                        <div v-if="newsForm.template" class="mt-4 p-3 bg-white rounded-lg border border-amber-100 text-sm">
-                            <span class="block text-[10px] uppercase font-bold text-slate-400 mb-1">Anteprima Finale (IT)</span>
-                            <strong class="block text-slate-800">{{ generateTemplateText(newsForm.template, newsForm.templateParams, 'it', true) }}</strong>
-                            <p class="text-slate-600 mt-1">{{ generateTemplateText(newsForm.template, newsForm.templateParams, 'it', false) }}</p>
-                        </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Messaggio Completo (in Italiano)</label>
+                        <textarea v-model="newsForm.content_it" rows="5" required
+                                  placeholder="Descrivi con chiarezza cosa sta succedendo, cosa cambia e cosa devono fare le persone..."
+                                  class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-slate-800 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 transition leading-relaxed"></textarea>
                     </div>
                 </div>
 
                 <div class="bg-slate-900 text-white p-4 rounded-3xl shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div class="flex items-center gap-2">
                         <i class="fa-solid fa-cloud text-amber-400 text-lg"></i>
-                        <span class="text-xs sm:text-sm font-medium">Notizia pronta per la pubblicazione multilingua</span>
+                        <span class="text-xs sm:text-sm font-medium">Notizia pronta per la pubblicazione</span>
                     </div>
 
                     <div class="flex items-center gap-3 w-full sm:w-auto">
@@ -1070,6 +1051,8 @@
                 const supabaseKey = 'sb_publishable_v7QcdhlmY2T8yrxXgg8gWA_MIdOv1J4'; 
                 const supabase = window.supabase ? window.supabase.createClient(supabaseUrl, supabaseKey) : null;
 
+                // Nome del bucket Supabase Storage usato per le immagini caricate dal pannello operatori.
+                // Deve essere creato manualmente su Supabase (Storage > New bucket), impostato come "Public".
                 const IMAGE_BUCKET = 'service-images';
 
                 const activeTab = ref('services');
@@ -1079,6 +1062,7 @@
                 const activeModalService = ref(null);
                 const currentLangCode = ref('it');
 
+                // Traccia quali schede servizio sono "espanse" (descrizione completa visibile) nella vista pubblica
                 const expandedServiceIds = ref(new Set());
                 const isServiceExpanded = (serviceId) => expandedServiceIds.value.has(serviceId);
                 const toggleServiceExpanded = (serviceId) => {
@@ -1091,35 +1075,43 @@
                     expandedServiceIds.value = next;
                 };
 
+                // Variabili di Stato per l'Autenticazione Operatori
                 const openAdminModal = ref(false);
                 const user = ref(null);
                 const authLoading = ref(false);
                 const authError = ref('');
                 const authForm = ref({ email: '', password: '' });
 
-                const adminSection = ref('services');
-
+                // Variabili per l'interfaccia MASTER-DETAIL (Modifica e Creazione Servizi)
                 const editingService = ref(null);
                 const editForm = ref({
                     id: null,
-                    name_it: '', name_en: '',
+                    name_it: '',
                     address: '',
                     phone: '',
                     email: '',
-                    hours_it: '', hours_en: '',
-                    description_it: '', description_en: '',
+                    hours_it: '',
+                    description_it: '',
                     status: 'active',
-                    noticeTemplate: 'none',
-                    noticeParams: {},
+                    adminTempNotice: '',
                     organization: '',
                     category: 'showers',
                     image: ''
                 });
-                const savingServiceId = ref(false);
+                const savingServiceId = ref(null);
 
+                // Stato upload immagine
                 const uploadingImage = ref(false);
                 const imageUploadError = ref('');
 
+                // Stato traduzione automatica al salvataggio
+                const translatingContent = ref(false);
+                const translationError = ref('');
+
+                // Sezione attiva nel pannello operatori: 'services' oppure 'news'
+                const adminSection = ref('services');
+
+                // Variabili per l'interfaccia MASTER-DETAIL della gestione Notizie & Allerta
                 const editingNews = ref(null);
                 const newsForm = ref({
                     id: null,
@@ -1127,10 +1119,10 @@
                     priority: 'normal',
                     association: '',
                     related_service_id: null,
-                    template: 'weather_closure',
-                    templateParams: {}
+                    title_it: '',
+                    content_it: ''
                 });
-                const savingNewsId = ref(false);
+                const savingNewsId = ref(null);
                 const isLoadingNews = ref(true);
 
                 const services = ref([]);
@@ -1156,7 +1148,6 @@
                     showLangMenu.value = false;
                 };
 
-                // DIZIONARIO UI E TEMPLATES
                 const i18n = {
                     it: {
                         tab_services: 'Esplora Servizi', tab_news: 'Notizie & Allerta', tab_emergency: 'Emergenze',
@@ -1174,18 +1165,7 @@
                         em_118_title: '118 - Soccorso Sanitario', em_118_desc: 'Ambulanza e urgenze mediche immediate.',
                         em_street_unit_title: 'Coordinamento Unità di Strada e Marginalità', em_street_unit_desc: 'Se incontri una persona in grave difficoltà in strada a Como durante la notte, segnalala ai volontari.',
                         call_coordination: 'Segnala a Vicini di Strada',
-                        choose_contact_method: 'Scegli come contattare il servizio', call_now: 'Chiama il numero', send_email: 'Invia una mail', open_maps: 'Apri navigatore GPS', close: 'Chiudi finestra',
-                        
-                        // TEMPLATES
-                        tpl_title_weather_closure: 'Chiusura per Maltempo', tpl_title_temp_closure: 'Chiusura Temporanea',
-                        tpl_title_extra_opening: 'Apertura Straordinaria', tpl_title_time_change: 'Variazione Orario',
-                        tpl_title_service_suspended: 'Servizio Sospeso',
-                        
-                        tpl_desc_weather_closure: 'Il servizio è momentaneamente chiuso per avverse condizioni meteo.',
-                        tpl_desc_temp_closure: 'Il servizio resterà chiuso in data: {data}.',
-                        tpl_desc_extra_opening: 'È prevista un\'apertura straordinaria alle ore {orario}.',
-                        tpl_desc_time_change: 'Il nuovo orario temporaneo di servizio è: {orario}.',
-                        tpl_desc_service_suspended: 'Il servizio è sospeso fino a nuovo avviso.'
+                        choose_contact_method: 'Scegli come contattare il servizio', call_now: 'Chiama il numero', send_email: 'Invia una mail', open_maps: 'Apri navigatore GPS', close: 'Chiudi finestra'
                     },
                     en: {
                         tab_services: 'Explore Services', tab_news: 'News & Alerts', tab_emergency: 'Emergency',
@@ -1203,18 +1183,7 @@
                         em_118_title: '118 - Medical Emergency', em_118_desc: 'Ambulance and immediate medical help.',
                         em_street_unit_title: 'Street Outreach Coordination', em_street_unit_desc: 'If you see someone in severe distress on the streets of Como at night, report it to volunteers.',
                         call_coordination: 'Report to Vicini di Strada',
-                        choose_contact_method: 'Choose how to contact the service', call_now: 'Call phone number', send_email: 'Send an email', open_maps: 'Open GPS navigation', close: 'Close window',
-                        
-                        // TEMPLATES
-                        tpl_title_weather_closure: 'Weather Closure', tpl_title_temp_closure: 'Temporary Closure',
-                        tpl_title_extra_opening: 'Extraordinary Opening', tpl_title_time_change: 'Schedule Change',
-                        tpl_title_service_suspended: 'Service Suspended',
-                        
-                        tpl_desc_weather_closure: 'Service is temporarily closed due to adverse weather conditions.',
-                        tpl_desc_temp_closure: 'Service will be closed on: {data}.',
-                        tpl_desc_extra_opening: 'Extraordinary opening scheduled at {orario}.',
-                        tpl_desc_time_change: 'New temporary service schedule: {orario}.',
-                        tpl_desc_service_suspended: 'Service is suspended until further notice.'
+                        choose_contact_method: 'Choose how to contact the service', call_now: 'Call phone number', send_email: 'Send an email', open_maps: 'Open GPS navigation', close: 'Close window'
                     },
                     fr: {
                         tab_services: 'Services', tab_news: 'Actualités', tab_emergency: 'Urgences',
@@ -1232,18 +1201,97 @@
                         em_118_title: '118 - Urgence Médicale', em_118_desc: 'Ambulance et soins immédiats.',
                         em_street_unit_title: 'Coordination des Maraudes', em_street_unit_desc: 'Si vous voyez une personne en détresse dans la rue à Côme la nuit, signalez-la aux bénévoles.',
                         call_coordination: 'Signaler à Vicini di Strada',
-                        choose_contact_method: 'Choisissez comment contacter', call_now: 'Appeler le numéro', send_email: 'Envoyer un e-mail', open_maps: 'Ouvrir le GPS', close: 'Fermer',
-                        
-                        // TEMPLATES
-                        tpl_title_weather_closure: 'Fermeture Météo', tpl_title_temp_closure: 'Fermeture Temporaire',
-                        tpl_title_extra_opening: 'Ouverture Exceptionnelle', tpl_title_time_change: 'Changement d\'Horaire',
-                        tpl_title_service_suspended: 'Service Suspendu',
-                        
-                        tpl_desc_weather_closure: 'Le service est temporairement fermé en raison de conditions météorologiques défavorables.',
-                        tpl_desc_temp_closure: 'Le service sera fermé le: {data}.',
-                        tpl_desc_extra_opening: 'Ouverture exceptionnelle prévue à {orario}.',
-                        tpl_desc_time_change: 'Nouvel horaire temporaire du service: {orario}.',
-                        tpl_desc_service_suspended: 'Le service est suspendu jusqu\'à nouvel ordre.'
+                        choose_contact_method: 'Choisissez comment contacter', call_now: 'Appeler le numéro', send_email: 'Envoyer un e-mail', open_maps: 'Ouvrir le GPS', close: 'Fermer'
+                    },
+                    ar: {
+                        tab_services: 'استكشف الخدمات', tab_news: 'الأخبار والتنبيهات', tab_emergency: 'طوارئ',
+                        welcome_title: 'خريطة الاستقبال والمساعدة', welcome_sub: 'ابحث عن الحمامات، المطاعم المجانية، الملاجئ، ومكاتب المساعدة في كومو في الوقت الفعلي.',
+                        search_placeholder: 'ابحث بالاسم، الخدمة، الشارع أو الحي...',
+                        categories_title: 'فئات الخدمات', show_all: 'عرض الكل', cat_all: 'جميع الخدمات',
+                        cat_showers: 'استحمام ونظافة', cat_food: 'وجبات وطعام', cat_shelter: 'مبيت وملاجئ', cat_health: 'رعاية صحية', cat_legal: 'قانوني ووثائق', cat_clothes: 'ملابس',
+                        services_found: 'خدمات متاحة', no_results_title: 'لم يتم العثور على خدمات', no_results_sub: 'حاول البحث بكلمات مختلفة أو قم بإعادة تعيين عوامل تصفية الفئة.', reset_filters: 'إعادة تعيين',
+                        status_active: 'مفتوح', status_notice: 'تنبيه', status_suspended: 'متوقف مؤقتاً', hours_label: 'ساعات العمل / الوصول', service_update_label: 'تحديث مباشر', service_suspended_label: 'الخدمة متوقفة مؤقتاً / تنبيه',
+                        btn_contact: 'اتصل', btn_directions: 'اتجاهات GPS',
+                        news_page_title: 'تحديثات من فرق الشارع', news_page_sub: 'تنبيهات فورية بشأن تغييرات المواعيد أو ملاجئ الطوارئ الشتوية من جمعيات كومو.',
+                        priority_urgent: 'هام جداً', priority_info: 'معلومة', related_service: 'الخدمة المرتبطة', go_to_card: 'عرض تفاصيل الخدمة',
+                        emergency_title: 'أرقام الطوارئ', emergency_sub: 'أرقام مجانية تعمل على مدار 24 ساعة لأي حالة طوارئ صحية أو أمنية.',
+                        em_112_title: '112 - رقم الطوارئ العام', em_112_desc: 'الشرطة، الإطفاء، حالات الطوارئ الخطيرة.',
+                        em_118_title: '118 - الإسعاف الطبي', em_118_desc: 'سيارة إسعاف ومساعدة طبية فورية.',
+                        em_street_unit_title: 'تنسيق فرق المساعدة في الشوارع', em_street_unit_desc: 'إذا رأيت شخصاً في أزمة شديدة في شوارع كومو ليلاً، أبلغ المتطوعين.',
+                        call_coordination: 'إبلاغ Vicini di Strada',
+                        choose_contact_method: 'اختر طريقة الاتصال بالخدمة', call_now: 'اتصل برقم الهاتف', send_email: 'إرسال بريد إلكتروني', open_maps: 'فتح تطبيق الخرائط', close: 'إغلاق النافذة'
+                    },
+                    ur: {
+                        tab_services: 'خدمات تلاش کریں', tab_news: 'خبریں اور الرٹس', tab_emergency: 'ایمرجنسی',
+                        welcome_title: 'رہنمائی اور مدد کا نقشہ', welcome_sub: 'کومو میں غسل خانے، مفت کھانے، پناہ گاہیں اور امدادی دفاتر ریئل ٹائم میں تلاش کریں۔',
+                        search_placeholder: 'نام، سروس، سڑک یا محلے کے لحاظ سے تلاش کریں...',
+                        categories_title: 'خدمات کے زمرے', show_all: 'سب دکھائیں', cat_all: 'تمام خدمات',
+                        cat_showers: 'نہانا اور صفائی', cat_food: 'کھانا اور کچن', cat_shelter: 'پناہ گاہیں', cat_health: 'طبی امداد', cat_legal: 'قانونی اور کاغذات', cat_clothes: 'لباس',
+                        services_found: 'خدمات دستیاب ہیں', no_results_title: 'کوئی سروس نہیں ملی', no_results_sub: 'مختلف الفاظ کے ساتھ تلاش کرنے کی کوشش کریں یا فلٹرز کو ری سیٹ کریں۔', reset_filters: 'فلٹرز ری سیٹ کریں',
+                        status_active: 'فعال / کھلا', status_notice: 'تبدیلی', status_suspended: 'معطل / بند', hours_label: 'اوقات / رسائی', service_update_label: 'فوری اطلاع', service_suspended_label: 'سروس عارضی طور پر بند / اطلاع',
+                        btn_contact: 'رابطہ کریں', btn_directions: 'GPS راستہ',
+                        news_page_title: 'اسٹریٹ آؤٹ ریچ کی تازہ ترین خبریں', news_page_sub: 'اوقات میں تبدیلی، سردیوں کی ہنگامی پناہ گاہوں یا کومو کی تنظیموں کی طرف سے فوری اطلاعات۔',
+                        priority_urgent: 'اہم', priority_info: 'معلومات', related_service: 'متعلقہ سروس', go_to_card: 'سروس کارڈ دیکھیں',
+                        emergency_title: 'ایمرجنسی نمبرز', emergency_sub: 'کسی بھی طبی یا حفاظتی ہنگامی صورتحال کے لیے 24 گھنٹے مفت کال نمبرز۔',
+                        em_112_title: '112 - جنرل ایمرجنسی', em_112_desc: 'پولیس، فائر بریگیڈ، شدید ہنگامی حالات۔',
+                        em_118_title: '118 - طبی امداد (ایمبولینس)', em_118_desc: 'ایمبولینس اور فوری طبی مدد۔',
+                        em_street_unit_title: 'اسٹریٹ آؤٹ ریچ کوآرڈینیشن', em_street_unit_desc: 'اگر آپ رات کو کومو کی سڑکوں پر کسی کو شدید پریشانی میں دیکھیں تو رضاکاروں کو مطلع کریں۔',
+                        call_coordination: 'Vicini di Strada کو اطلاع دیں',
+                        choose_contact_method: 'رابطے کا طریقہ منتخب کریں', call_now: 'فون نمبر پر کال کریں', send_email: 'ای میل بھیجیں', open_maps: 'GPS نقشہ کھولیں', close: 'بند کریں'
+                    },
+                    hi: {
+                        tab_services: 'सेवाएं खोजें', tab_news: 'समाचार और अलर्ट', tab_emergency: 'आपातकालीन',
+                        welcome_title: 'सहायता और स्वागत मानचित्र', welcome_sub: 'कोमो में सार्वजनिक स्नानघर, भोजन, आश्रय स्थल और सहायता डेस्क वास्तविक समय में खोजें।',
+                        search_placeholder: 'नाम, सेवा, सड़क या मोहल्ले से खोजें...',
+                        categories_title: 'सेवा श्रेणियां', show_all: 'सभी दिखाएं', cat_all: 'सभी सेवाएं',
+                        cat_showers: 'स्नान और स्वच्छता', cat_food: 'भोजन और रसोई', cat_shelter: 'आश्रय / रैन बसेरा', cat_health: 'चिकित्सा देखभाल', cat_legal: 'कानूनी और दस्तावेज़', cat_clothes: 'कपड़े',
+                        services_found: 'सेवाएं उपलब्ध हैं', no_results_title: 'कोई सेवा नहीं मिली', no_results_sub: 'अलग शब्दों से खोजने का प्रयास करें या श्रेणी फ़िल्टर रीसेट करें।', reset_filters: 'फ़िल्टर रीसेट करें',
+                        status_active: 'सक्रिय / खुला', status_notice: 'सूचना / बदलाव', status_suspended: 'निलंबित / बंद', hours_label: 'समय / पहुँच', service_update_label: 'ताज़ा अपडेट', service_suspended_label: 'सेवा निलंबित / महत्वपूर्ण सूचना',
+                        btn_contact: 'संपर्क करें', btn_directions: 'जीपीएस दिशा-निर्देश',
+                        news_page_title: 'स्ट्रीट आउटरीच अपडेट', news_page_sub: 'समय में बदलाव, शीतकालीन आपातकालीन आश्रयों या कोमो संघों से वास्तविक समय की सूचनाएं।',
+                        priority_urgent: 'ज़रूरी', priority_info: 'जानकारी', related_service: 'संबंधित सेवा', go_to_card: 'सेवा कार्ड देखें',
+                        emergency_title: 'आपातकालीन नंबर', emergency_sub: 'किसी भी स्वास्थ्य या सुरक्षा आपात स्थिति के लिए 24/7 निःशुल्क टोल-फ्री नंबर।',
+                        em_112_title: '112 - सामान्य आपातकाल', em_112_desc: 'पुलिस, दमकल, गंभीर आपात स्थिति।',
+                        em_118_title: '118 - चिकित्सा आपातकाल', em_118_desc: 'एम्बुलेंस Ext और तत्काल चिकित्सा सहायता।',
+                        em_street_unit_title: 'स्ट्रीट आउटरीच समन्वय', em_street_unit_desc: 'यदि आप रात में कोमो की सड़कों पर किसी को गंभीर परेशानी में देखते हैं, तो स्वयंसेवकों को सूचित करें।',
+                        call_coordination: 'Vicini di Strada को सूचित करें',
+                        choose_contact_method: 'संपर्क का तरीका चुनें', call_now: 'फ़ोन नंबर पर कॉल करें', send_email: 'ईमेल भेजें', open_maps: 'जीपीएस नेविगेशन खोलें', close: 'बंद करें'
+                    },
+                    sw: {
+                        tab_services: 'Gundua Huduma', tab_news: 'Habari & Taarifa', tab_emergency: 'Dharura',
+                        welcome_title: 'Ramani ya Ukarimu', welcome_sub: 'Pata bafu za umma, chakula, makazi na msaada wa kisheria jijini Como moja kwa moja.',
+                        search_placeholder: 'Tafuta kwa jina, huduma, mtaa au eneo...',
+                        categories_title: 'Aina za Huduma', show_all: 'Onyesha zote', cat_all: 'Huduma zote',
+                        cat_showers: 'Bafu & Usafi', cat_food: 'Chakula & Jikoni', cat_shelter: 'Makazi ya Kulala', cat_health: 'Afya & Madaktari', cat_legal: 'Sheria & Nyaraka', cat_clothes: 'Mavazi',
+                        services_found: 'huduma zinazopatikana', no_results_title: 'Hakuna huduma iliyopatikana', no_results_sub: 'Jaribu kutafuta kwa maneno mengine au weka upya vichujio.', reset_filters: 'Weka upya vichujio',
+                        status_active: 'Wazi', status_notice: 'Taarifa', status_suspended: 'Imesitishwa', hours_label: 'Saa / Upatikanaji', service_update_label: 'Taarifa ya papo hapo', service_suspended_label: 'Huduma Imesitishwa / Taarifa',
+                        btn_contact: 'Wasiliana', btn_directions: 'Maelekezo ya GPS',
+                        news_page_title: 'Taarifa za Mtaani', news_page_sub: 'Taarifa za papo hapo kuhusu mabadiliko ya ratiba, makazi ya dharura au matangazo kutoka kwa vyama vya Como.',
+                        priority_urgent: 'Muhimu Sana', priority_info: 'Maelezo', related_service: 'Huduma inayohusika', go_to_card: 'Tazama kadi ya huduma',
+                        emergency_title: 'Nambari za Dharura', emergency_sub: 'Nambari za bure zinazofanya kazi saa 24/7 kwa dharura yoyote ya afya au usalama.',
+                        em_112_title: '112 - Dharura ya Jumla', em_112_desc: 'Polisi, Zimamoto, Dharura kubwa.',
+                        em_118_title: '118 - Dharura ya Tiba', em_118_desc: 'Ambulance na msaada wa haraka wa matibabu.',
+                        em_street_unit_title: 'Uratibu wa Wafanyakazi wa Mtaani', em_street_unit_desc: 'Ukiona mtu yuko kwenye shida kubwa mitaani mwa Como usiku, mjulishe wa kujitolea.',
+                        call_coordination: 'Taarifu Vicini di Strada',
+                        choose_contact_method: 'Chagua jinsi ya kuwasiliana', call_now: 'Piga simu sasa', send_email: 'Tuma barua pepe', open_maps: 'Fungua ramani ya GPS', close: 'Funga dirisha'
+                    },
+                    tr: {
+                        tab_services: 'Hizmetleri Keşfet', tab_news: 'Haberler & Duyurular', tab_emergency: 'Acil Durum',
+                        welcome_title: 'Yardım ve Karşılama Haritası', welcome_sub: 'Como\'daki halka açık duşları, aşevlerini, yatakhaneleri ve danışma masalarını anlık bulun.',
+                        search_placeholder: 'İsim, hizmet, sokak veya mahalleye göre ara...',
+                        categories_title: 'Hizmet Kategorileri', show_all: 'Tümünü göster', cat_all: 'Tüm hizmetler',
+                        cat_showers: 'Duş & Hijyen', cat_food: 'Yemek & Aşevleri', cat_shelter: 'Yatakhaneler', cat_health: 'Sağlık & Tıbbi', cat_legal: 'Yasal & Evrak', cat_clothes: 'Giyim Yardımı',
+                        services_found: 'hizmet mevcut', no_results_title: 'Hizmet bulunamadı', no_results_sub: 'Farklı kelimelerle aramayı deneyin veya kategori filtrelerini sıfırlayın.', reset_filters: 'Filtreleri sıfırla',
+                        status_active: 'Açık / Aktif', status_notice: 'Değişiklik', status_suspended: 'Askıya Alındı', hours_label: 'Saatler / Erişim', service_update_label: 'Anlık Duyuru', service_suspended_label: 'Hizmet Askıya Alındı / Duyuru',
+                        btn_contact: 'İletişim', btn_directions: 'GPS Yol Tarifi',
+                        news_page_title: 'Saha Ekipleri Güncellemeleri', news_page_sub: 'Saat değişiklikleri, kış acil barınakları veya Como derneklerinden anlık uyarılar.',
+                        priority_urgent: 'Acil', priority_info: 'Bilgi', related_service: 'İlgili hizmet', go_to_card: 'Hizmet kartına git',
+                        emergency_title: 'Acil Numaralar', emergency_sub: 'Her türlü sağlık veya güvenlik acil durumu için 7/24 ücretsiz numaralar.',
+                        em_112_title: '112 - Genel Acil Durum', em_112_desc: 'Polisi, İtfaiye, Ciddi acil durumlar.',
+                        em_118_title: '118 - Tıbbi Acil (Ambulans)', em_118_desc: 'Ambulance ve anlık tıbbi müdahale.',
+                        em_street_unit_title: 'Saha Ekipleri Koordinasyonu', em_street_unit_desc: 'Como sokaklarında gece saatlerinde acil yardıma muhtaç birini görürseniz gönüllülere bildirin.',
+                        call_coordination: 'Vicini di Strada\'ya Bildir',
+                        choose_contact_method: 'İletişim yöntemini seçin', call_now: 'Telefonu ara', send_email: 'E-posta gönder', open_maps: 'GPS Haritasını aç', close: 'Pencereyi kapat'
                     },
                     es: {
                         tab_services: 'Servicios', tab_news: 'Noticias y Alertas', tab_emergency: 'Emergencias',
@@ -1261,37 +1309,18 @@
                         em_118_title: '118 - Emergencia Médica', em_118_desc: 'Ambulance y atención médica inmediata.',
                         em_street_unit_title: 'Coordinación Unidades de Calle', em_street_unit_desc: 'Si encuentras a una persona en situación de grave vulnerabilidad en la calle por la noche, avisa a los voluntarios.',
                         call_coordination: 'Avisar a Vicini di Strada',
-                        choose_contact_method: 'Elige cómo contactar', call_now: 'Llamar al teléfono', send_email: 'Enviar un correo', open_maps: 'Abrir navegación GPS', close: 'Cerrar ventana',
-                        
-                        // TEMPLATES
-                        tpl_title_weather_closure: 'Cierre por Clima', tpl_title_temp_closure: 'Cierre Temporal',
-                        tpl_title_extra_opening: 'Apertura Extraordinaria', tpl_title_time_change: 'Cambio de Horario',
-                        tpl_title_service_suspended: 'Servicio Suspendido',
-                        
-                        tpl_desc_weather_closure: 'El servicio está cerrado temporalmente debido a condiciones climáticas adversas.',
-                        tpl_desc_temp_closure: 'El servicio estará cerrado en la fecha: {data}.',
-                        tpl_desc_extra_opening: 'Apertura extraordinaria programada a las {orario}.',
-                        tpl_desc_time_change: 'Nuevo horario temporal del servicio: {orario}.',
-                        tpl_desc_service_suspended: 'El servicio está suspendido hasta nuevo aviso.'
+                        choose_contact_method: 'Elige cómo contactar', call_now: 'Llamar al teléfono', send_email: 'Enviar un correo', open_maps: 'Abrir navegación GPS', close: 'Cerrar ventana'
                     }
-                    // Le altre lingue (ar, ur, hi, sw, tr) faranno fallback automatico sull'inglese (impostato sotto).
                 };
 
-                const templates = [
-                    { id: 'none', label: 'Nessun avviso speciale', params: [] },
-                    { id: 'weather_closure', label: 'Chiusura per Maltempo', params: [] },
-                    { id: 'temp_closure', label: 'Chiusura Temporanea', params: ['data'] },
-                    { id: 'extra_opening', label: 'Apertura Straordinaria', params: ['orario'] },
-                    { id: 'time_change', label: 'Variazione Orario', params: ['orario'] },
-                    { id: 'service_suspended', label: 'Servizio Sospeso', params: [] }
-                ];
-
-                const t = (key) => i18n[currentLangCode.value]?.[key] || i18n['en']?.[key] || i18n['it']?.[key] || key;
+                const t = (key) => {
+                    const langDict = i18n[currentLangCode.value] || i18n['it'];
+                    return langDict[key] || i18n['it'][key] || key;
+                };
 
                 const translateField = (obj, fieldName) => {
                     if (!obj || !obj[fieldName]) return '';
-                    if (typeof obj[fieldName] === 'string') return obj[fieldName];
-                    return obj[fieldName][currentLangCode.value] || obj[fieldName]['en'] || obj[fieldName]['it'] || '';
+                    return obj[fieldName][currentLangCode.value] || obj[fieldName]['it'] || obj[fieldName]['en'] || '';
                 };
 
                 const categories = [
@@ -1306,55 +1335,39 @@
                 const getCategoryIcon = (catId) => categories.find(c => c.id === catId)?.icon || '📍';
                 const getCategoryLabelKey = (catId) => categories.find(c => c.id === catId)?.labelKey || 'cat_all';
 
-                // --- FUNZIONI DI GENERAZIONE TESTI E TEMPLATE ---
-                
-                const generateTemplateText = (templateId, params, langCode, isTitle = false) => {
-                    if (templateId === 'none') return '';
-                    const prefix = isTitle ? 'tpl_title_' : 'tpl_desc_';
-                    
-                    let text = i18n[langCode]?.[prefix + templateId] || i18n['en']?.[prefix + templateId] || i18n['it']?.[prefix + templateId] || '';
-                    
-                    if (params) {
-                        for (const key in params) {
-                            text = text.replace(`{${key}}`, params[key] || `[${key}]`);
-                        }
-                    }
-                    return text;
-                };
-
-                const buildMultilangObjFromTemplate = (templateId, params, isTitle = false) => {
-                    const result = {};
-                    if (templateId === 'none') return result;
-                    for (const langCode in languages) {
-                        result[langCode] = generateTemplateText(templateId, params, langCode, isTitle);
-                    }
-                    return result;
-                };
-
-                const buildManualMultilangObj = (valIT, valEN) => {
-                    const it = (valIT || '').trim();
-                    const en = (valEN || '').trim();
-                    const result = { it: it };
-                    
-                    if (en !== '') result.en = en;
-                    else result.en = it; // Fallback se manca inglese
-
-                    for (const langCode in languages) {
-                        if (langCode !== 'it' && langCode !== 'en') {
-                            result[langCode] = result.en; 
-                        }
-                    }
-                    return result;
-                };
-
-                const extractText = (field, lang = 'it') => {
+                // Estrae sempre una stringa sicura da un campo multilingua (oggetto {it, en, ...} o stringa semplice).
+                // Evita che editForm venga popolato con un oggetto anziché con del testo, causando errori tipo ".trim is not a function".
+                const extractText = (field) => {
                     if (!field) return '';
                     if (typeof field === 'string') return field;
-                    return field[lang] || field['en'] || field['it'] || '';
+                    if (typeof field === 'object') return field.it || field.en || '';
+                    return '';
                 };
 
-                // --- GESTIONE AUTENTICAZIONE E DATABASE ---
+                // Lista delle lingue verso cui tradurre: tutte tranne l'italiano (lingua sorgente).
+                // Si aggiorna automaticamente se in futuro si aggiungono nuove lingue all'oggetto "languages" più sopra.
+                const TARGET_LANGS = computed(() => Object.keys(languages).filter(code => code !== 'it'));
 
+                // Chiama la Supabase Edge Function "translate-text" per tradurre un testo italiano
+                // in tutte le lingue disponibili. Ritorna un oggetto { en: '...', fr: '...', ... }.
+                // In caso di errore lo propaga, così saveServiceChanges può avvisare l'operatore.
+                const translateText = async (text) => {
+                    const cleanText = String(text || '').trim();
+                    if (!cleanText || !supabase) return {};
+
+                    const { data, error } = await supabase.functions.invoke('translate-text', {
+                        body: {
+                            text: cleanText,
+                            sourceLang: 'it',
+                            targetLangs: TARGET_LANGS.value
+                        }
+                    });
+
+                    if (error) throw error;
+                    return (data && data.translations) || {};
+                };
+
+                // CONTROLLO SESSIONE AUTENTICAZIONE OPERATORE
                 const checkAuthSession = async () => {
                     if (!supabase) return;
                     const { data: { session } } = await supabase.auth.getSession();
@@ -1369,24 +1382,33 @@
                     });
                 };
 
+                // ESECUZIONE LOGIN CON SUPABASE AUTH
                 const handleLogin = async () => {
                     if (!supabase) return;
                     authLoading.value = true;
                     authError.value = '';
+                    
                     try {
                         const { data, error } = await supabase.auth.signInWithPassword({
-                            email: authForm.value.email.trim(), password: authForm.value.password
+                            email: authForm.value.email.trim(),
+                            password: authForm.value.password
                         });
+                        
                         if (error) throw error;
+                        
                         user.value = data.user;
                         authForm.value = { email: '', password: '' };
                         openAdminModal.value = false;
                         activeTab.value = 'admin_dashboard';
                     } catch (err) {
-                        authError.value = "Credenziali non valide. Riprova.";
-                    } finally { authLoading.value = false; }
+                        authError.value = "Credenziali non valide. Riprova o contatta l'amministratore.";
+                        console.error("Errore Auth:", err.message);
+                    } finally {
+                        authLoading.value = false;
+                    }
                 };
 
+                // ESECUZIONE LOGOUT
                 const handleLogout = async () => {
                     if (!supabase) return;
                     await supabase.auth.signOut();
@@ -1396,23 +1418,52 @@
                     cancelEditing();
                 };
 
+                // SCARICAMENTO DATI DAL CLOUD
                 const fetchServices = async () => {
-                    if (!supabase) { isLoading.value = false; return; }
+                    if (!supabase) {
+                        console.error("Supabase non inizializzato correttamente.");
+                        isLoading.value = false;
+                        return;
+                    }
                     isLoading.value = true;
                     try {
-                        const { data, error } = await supabase.from('services').select('*').order('category', { ascending: true });
+                        const { data, error } = await supabase
+                            .from('services')
+                            .select('*')
+                            .order('category', { ascending: true });
+
                         if (error) throw error;
-                        if (data) services.value = data;
-                    } catch (error) { console.error(error.message); } 
-                    finally { isLoading.value = false; }
+                        
+                        if (data && data.length > 0) {
+                            services.value = data; 
+                        }
+                    } catch (error) {
+                        console.error("Errore nel caricamento dei servizi da Supabase:", error.message);
+                    } finally {
+                        isLoading.value = false;
+                    }
                 };
 
+                // CARICAMENTO IMMAGINE SU SUPABASE STORAGE
                 const handleImageUpload = async (event) => {
                     const file = event.target.files && event.target.files[0];
-                    if (!file || !supabase) return;
+                    if (!file) return;
+                    if (!supabase) {
+                        imageUploadError.value = 'Connessione al cloud non disponibile.';
+                        return;
+                    }
 
-                    if (!file.type.startsWith('image/')) { imageUploadError.value = 'File non valido.'; return; }
-                    if (file.size > 15 * 1024 * 1024) { imageUploadError.value = 'Supera 15MB.'; return; }
+                    // Validazione base: solo immagini, max 5MB
+                    if (!file.type.startsWith('image/')) {
+                        imageUploadError.value = 'Il file selezionato non è un\'immagine valida.';
+                        event.target.value = '';
+                        return;
+                    }
+                    if (file.size > 15 * 1024 * 1024) {
+                        imageUploadError.value = 'L\'immagine supera i 15MB. Scegline una più leggera.';
+                        event.target.value = '';
+                        return;
+                    }
 
                     uploadingImage.value = true;
                     imageUploadError.value = '';
@@ -1420,93 +1471,145 @@
                     try {
                         const fileExt = (file.name.split('.').pop() || 'jpg').toLowerCase();
                         const uniqueName = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}.${fileExt}`;
-                        const { error } = await supabase.storage.from(IMAGE_BUCKET).upload(uniqueName, file);
-                        if (error) throw error;
-                        const { data } = supabase.storage.from(IMAGE_BUCKET).getPublicUrl(uniqueName);
-                        editForm.value.image = data.publicUrl;
-                    } catch (err) { imageUploadError.value = 'Errore upload: ' + err.message; } 
-                    finally { uploadingImage.value = false; event.target.value = ''; }
+
+                        const { error: uploadError } = await supabase.storage
+                            .from(IMAGE_BUCKET)
+                            .upload(uniqueName, file, {
+                                cacheControl: '3600',
+                                upsert: false
+                            });
+
+                        if (uploadError) throw uploadError;
+
+                        const { data: publicUrlData } = supabase.storage
+                            .from(IMAGE_BUCKET)
+                            .getPublicUrl(uniqueName);
+
+                        if (!publicUrlData || !publicUrlData.publicUrl) {
+                            throw new Error('Impossibile ottenere il link pubblico dell\'immagine.');
+                        }
+
+                        editForm.value.image = publicUrlData.publicUrl;
+                    } catch (err) {
+                        console.error('Errore upload immagine:', err.message);
+                        imageUploadError.value = 'Caricamento non riuscito: ' + err.message;
+                    } finally {
+                        uploadingImage.value = false;
+                        event.target.value = '';
+                    }
                 };
 
+                // AVVIA LA MODIFICA DI UN SERVIZIO (PASSA A VISTA DETTAGLIO)
                 const startEditing = (service) => {
                     editingService.value = service;
                     editForm.value = {
                         id: service.id,
-                        name_it: extractText(service.name, 'it'), name_en: extractText(service.name, 'en'),
-                        address: service.address || '', phone: service.phone || '', email: service.email || '',
-                        hours_it: extractText(service.hours, 'it'), hours_en: extractText(service.hours, 'en'),
-                        description_it: extractText(service.description, 'it'), description_en: extractText(service.description, 'en'),
+                        name_it: extractText(service.name),
+                        address: service.address || '',
+                        phone: service.phone || '',
+                        email: service.email || '',
+                        hours_it: extractText(service.hours),
+                        description_it: extractText(service.description),
                         status: service.status || 'active',
-                        noticeTemplate: 'none', noticeParams: {},
-                        organization: service.organization || '', category: service.category || 'showers',
+                        adminTempNotice: service.latestUpdate ? extractText(service.latestUpdate.text) : '',
+                        organization: service.organization || '',
+                        category: service.category || 'showers',
                         image: service.image || ''
                     };
                     imageUploadError.value = '';
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                 };
 
+                // AVVIA LA CREAZIONE DI UN NUOVO SERVIZIO
                 const startCreating = () => {
                     editingService.value = { id: null };
                     editForm.value = {
-                        id: null, name_it: '', name_en: '', address: '', phone: '', email: '',
-                        hours_it: '', hours_en: '', description_it: '', description_en: '',
-                        status: 'active', noticeTemplate: 'none', noticeParams: {},
-                        organization: '', category: 'showers', image: ''
+                        id: null,
+                        name_it: '',
+                        address: '',
+                        phone: '',
+                        email: '',
+                        hours_it: '',
+                        description_it: '',
+                        status: 'active', // Status predefinito "Regolare" per i nuovi servizi (pannello nascosto in creazione)
+                        adminTempNotice: '',
+                        organization: '',
+                        category: 'showers',
+                        image: 'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=600&auto=format&fit=crop&q=80'
                     };
                     imageUploadError.value = '';
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                 };
 
+                // ANNULLA O CHIUDE LA MODIFICA DI UN SERVIZIO
                 const cancelEditing = () => {
                     editingService.value = null;
                     editForm.value = { id: null };
                     imageUploadError.value = '';
+                    translationError.value = '';
                 };
 
-                const saveServiceChanges = async () => {
+                // SALVATAGGIO COMPLETO SU SUPABASE (CREAZIONE O MODIFICA), CON TRADUZIONE AUTOMATICA
+const saveServiceChanges = async () => {
                     if (!supabase || !editingService.value) return;
-                    savingServiceId.value = true;
+                    const targetService = editingService.value;
+                    savingServiceId.value = editForm.value.id || 'new_record';
+
+                    const previousNoticeText = extractText(targetService.latestUpdate && targetService.latestUpdate.text);
+
                     try {
-                        const payload = {
+                        // Prepara i testi solo in italiano (il cloud tradurrà il resto da solo)
+                        const updatedName = { it: String(editForm.value.name_it || '').trim() };
+                        const updatedHours = { it: String(editForm.value.hours_it || '').trim() };
+                        const updatedDescription = { it: String(editForm.value.description_it || '').trim() };
+
+                        let updatedLatestUpdate = null;
+                        if (editForm.value.adminTempNotice && editForm.value.adminTempNotice.trim() !== '') {
+                            const todayStr = new Date().toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                            updatedLatestUpdate = {
+                                text: { it: editForm.value.adminTempNotice.trim() },
+                                date: todayStr
+                            };
+                        }
+
+                        const servicePayload = {
                             status: editForm.value.status,
                             address: String(editForm.value.address || '').trim(),
                             phone: String(editForm.value.phone || '').trim(),
                             email: String(editForm.value.email || '').trim(),
-                            name: buildManualMultilangObj(editForm.value.name_it, editForm.value.name_en),
-                            hours: buildManualMultilangObj(editForm.value.hours_it, editForm.value.hours_en),
-                            description: buildManualMultilangObj(editForm.value.description_it, editForm.value.description_en),
+                            name: updatedName,
+                            hours: updatedHours,
+                            description: updatedDescription,
+                            latestUpdate: updatedLatestUpdate,
                             organization: String(editForm.value.organization || '').trim(),
                             category: editForm.value.category,
-                            image: String(editForm.value.image || '').trim()
+                            image: String(editForm.value.image || '').trim() || 'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=600&auto=format&fit=crop&q=80'
                         };
 
-                        if (editForm.value.noticeTemplate !== 'none') {
-                            payload.latestUpdate = {
-                                date: new Date().toLocaleDateString('it-IT'),
-                                text: buildMultilangObjFromTemplate(editForm.value.noticeTemplate, editForm.value.noticeParams, false)
-                            };
-                        } else if (editForm.value.status === 'active') {
-                            payload.latestUpdate = null;
-                        }
-
                         if (editForm.value.id) {
-                            const { data, error } = await supabase.from('services').update(payload).eq('id', editForm.value.id).select();
+                            const { data, error } = await supabase.from('services').update(servicePayload).eq('id', editForm.value.id).select();
                             if (error) throw error;
-                            Object.assign(editingService.value, payload); // Update locale
+                            Object.assign(targetService, servicePayload);
+                            await maybeCreateNewsFromServiceUpdate({ id: editForm.value.id, ...servicePayload }, previousNoticeText);
                             alert("✅ Modifiche salvate con successo online!");
                         } else {
-                            const { data, error } = await supabase.from('services').insert([payload]).select();
+                            const { data, error } = await supabase.from('services').insert([servicePayload]).select();
                             if (error) throw error;
                             services.value.push(data[0]);
-                            alert("✨ Nuovo servizio registrato e pubblicato!");
+                            alert("✨ Nuovo servizio registrato e pubblicato sulla mappa!");
                         }
                         cancelEditing();
-                    } catch (err) { alert("❌ Errore salvataggio: " + err.message); } 
-                    finally { savingServiceId.value = false; }
+                    } catch (err) {
+                        console.error("Errore salvataggio:", err.message);
+                        alert("❌ Operazione non riuscita.\n\nDettaglio errore: " + err.message);
+                    } finally {
+                        savingServiceId.value = null;
+                    }
                 };
 
                 const globalNews = ref([]);
 
+                // Definisce icona e colore per ciascuna tipologia di notizia/allerta
                 const NEWS_TYPES = {
                     general: { icon: 'fa-solid fa-circle-info', badgeClass: 'bg-blue-100 text-blue-700' },
                     service_update: { icon: 'fa-solid fa-arrows-rotate', badgeClass: 'bg-amber-100 text-amber-700' },
@@ -1514,94 +1617,196 @@
                 };
                 const getNewsTypeStyle = (type) => NEWS_TYPES[type] || NEWS_TYPES.general;
 
+                // Formatta una data ISO in un formato leggibile in italiano (es. "12 luglio 2026, 14:30")
                 const formatNewsDate = (isoDate) => {
                     if (!isoDate) return '';
                     try {
                         return new Date(isoDate).toLocaleString('it-IT', {
                             day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
                         });
-                    } catch (e) { return isoDate; }
+                    } catch (e) {
+                        return isoDate;
+                    }
                 };
 
+                // Se l'avviso di un servizio è nuovo o è cambiato rispetto a prima, pubblica automaticamente
+                // una notizia corrispondente in Notizie & Allerta. Se l'avviso è vuoto o identico a quello
+                // già presente, non fa nulla (per evitare notizie duplicate ad ogni salvataggio).
+                const maybeCreateNewsFromServiceUpdate = async (service, previousNoticeText) => {
+                    if (!supabase) return;
+
+                    const currentNoticeText = extractText(service.latestUpdate && service.latestUpdate.text);
+                    if (!currentNoticeText || !currentNoticeText.trim()) return;
+                    if (currentNoticeText.trim() === String(previousNoticeText || '').trim()) return;
+
+                    const newsType = service.status === 'suspended' ? 'emergency' : 'service_update';
+                    const newsPriority = service.status === 'suspended' ? 'high' : 'normal';
+                    const statusLabel = service.status === 'suspended'
+                        ? 'Servizio Sospeso'
+                        : (service.status === 'notice' ? 'Variazione Servizio' : 'Aggiornamento Servizio');
+                    const serviceName = extractText(service.name) || 'Servizio';
+
+                    const newsPayload = {
+                        type: newsType,
+                        priority: newsPriority,
+                        association: service.organization || '',
+                        related_service_id: service.id,
+                        title: { it: `${statusLabel}: ${serviceName}` },
+                        content: { it: currentNoticeText.trim() }
+                    };
+
+                    try {
+                        const { data, error } = await supabase.from('news').insert([newsPayload]).select();
+                        if (error) throw error;
+                        if (data && data[0]) {
+                            globalNews.value.unshift(data[0]);
+                        }
+                    } catch (err) {
+                        // Non blocchiamo il salvataggio del servizio se la creazione della notizia fallisce:
+                        // il servizio è comunque salvato correttamente, si segnala solo in console.
+                        console.error('Errore nella creazione automatica della notizia dal servizio:', err.message);
+                    }
+                };
+
+                // SCARICAMENTO NOTIZIE DAL CLOUD
                 const fetchNews = async () => {
                     if (!supabase) { isLoadingNews.value = false; return; }
                     isLoadingNews.value = true;
                     try {
-                        const { data, error } = await supabase.from('news').select('*').order('created_at', { ascending: false });
+                        const { data, error } = await supabase
+                            .from('news')
+                            .select('*')
+                            .order('created_at', { ascending: false });
+
                         if (error) throw error;
                         globalNews.value = data || [];
-                    } catch (error) { console.error(error.message); } 
-                    finally { isLoadingNews.value = false; }
+                    } catch (error) {
+                        console.error("Errore nel caricamento delle notizie da Supabase:", error.message);
+                    } finally {
+                        isLoadingNews.value = false;
+                    }
                 };
 
+                // Seleziona la tipologia di notizia; se "emergency", forza automaticamente la priorità su "high"
                 const selectNewsType = (type) => {
                     newsForm.value.type = type;
-                    if (type === 'emergency') newsForm.value.priority = 'high';
+                    if (type === 'emergency') {
+                        newsForm.value.priority = 'high';
+                    }
                 };
 
+                // AVVIA LA MODIFICA DI UNA NOTIZIA ESISTENTE
                 const startEditingNews = (news) => {
                     editingNews.value = news;
                     newsForm.value = {
-                        id: news.id, type: news.type || 'general', priority: news.priority || 'normal',
-                        association: news.association || '', related_service_id: news.related_service_id || null,
-                        template: 'weather_closure', templateParams: {}
+                        id: news.id,
+                        type: news.type || 'general',
+                        priority: news.priority || 'normal',
+                        association: news.association || '',
+                        related_service_id: news.related_service_id || null,
+                        title_it: extractText(news.title),
+                        content_it: extractText(news.content)
                     };
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                 };
 
+                // AVVIA LA CREAZIONE DI UNA NUOVA NOTIZIA
                 const startCreatingNews = () => {
                     editingNews.value = { id: null };
                     newsForm.value = {
-                        id: null, type: 'general', priority: 'normal', association: '', related_service_id: null,
-                        template: 'weather_closure', templateParams: {}
+                        id: null,
+                        type: 'general',
+                        priority: 'normal',
+                        association: '',
+                        related_service_id: null,
+                        title_it: '',
+                        content_it: ''
                     };
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                 };
 
+                // ANNULLA/CHIUDE LA MODIFICA DI UNA NOTIZIA
                 const cancelEditingNews = () => {
                     editingNews.value = null;
                     newsForm.value = { id: null };
                 };
 
+                // SALVATAGGIO NOTIZIA SU SUPABASE (CREAZIONE O MODIFICA)
                 const saveNewsChanges = async () => {
                     if (!supabase || !editingNews.value) return;
-                    savingNewsId.value = true;
+
+                    if (!newsForm.value.title_it || !newsForm.value.title_it.trim()) {
+                        alert('⚠️ Il titolo è obbligatorio.');
+                        return;
+                    }
+                    if (!newsForm.value.content_it || !newsForm.value.content_it.trim()) {
+                        alert('⚠️ Il messaggio è obbligatorio.');
+                        return;
+                    }
+
+                    savingNewsId.value = newsForm.value.id || 'new_record';
+
                     try {
-                        const payload = {
+                        const newsPayload = {
                             type: newsForm.value.type,
                             priority: newsForm.value.priority,
                             association: String(newsForm.value.association || '').trim(),
                             related_service_id: newsForm.value.related_service_id || null,
-                            title: buildMultilangObjFromTemplate(newsForm.value.template, newsForm.value.templateParams, true),
-                            content: buildMultilangObjFromTemplate(newsForm.value.template, newsForm.value.templateParams, false)
+                            title: { it: String(newsForm.value.title_it || '').trim() },
+                            content: { it: String(newsForm.value.content_it || '').trim() }
                         };
 
                         if (newsForm.value.id) {
-                            const { data, error } = await supabase.from('news').update(payload).eq('id', newsForm.value.id).select();
+                            const { data, error } = await supabase
+                                .from('news')
+                                .update(newsPayload)
+                                .eq('id', newsForm.value.id)
+                                .select();
+
                             if (error) throw error;
+                            if (!data || data.length === 0) throw new Error("Nessuna notizia modificata. Controlla le policy RLS.");
+
                             const idx = globalNews.value.findIndex(n => n.id === newsForm.value.id);
                             if (idx !== -1) globalNews.value[idx] = data[0];
-                            alert("✅ Notizia aggiornata!");
+
+                            alert("✅ Notizia aggiornata con successo!");
                         } else {
-                            const { data, error } = await supabase.from('news').insert([payload]).select();
+                            const { data, error } = await supabase
+                                .from('news')
+                                .insert([newsPayload])
+                                .select();
+
                             if (error) throw error;
+                            if (!data || data.length === 0) throw new Error("Notizia non pubblicata. Controlla le policy RLS di INSERT.");
+
                             globalNews.value.unshift(data[0]);
-                            alert("📢 Notizia pubblicata in multilingua!");
+                            alert("📢 Notizia pubblicata con successo!");
                         }
+
                         cancelEditingNews();
-                    } catch (err) { alert("❌ Errore pubblicazione: " + err.message); } 
-                    finally { savingNewsId.value = false; }
+
+                    } catch (err) {
+                        console.error("Errore salvataggio notizia:", err.message);
+                        alert("❌ Pubblicazione non riuscita.\n\nDettaglio errore: " + err.message);
+                    } finally {
+                        savingNewsId.value = null;
+                    }
                 };
 
+                // ELIMINAZIONE NOTIZIA
                 const deleteNewsItem = async (news) => {
                     if (!supabase) return;
-                    const confirmed = confirm("Eliminare definitivamente questa notizia?");
+                    const confirmed = confirm(`Eliminare definitivamente la notizia "${news.title.it || ''}"? L'operazione non è reversibile.`);
                     if (!confirmed) return;
+
                     try {
                         const { error } = await supabase.from('news').delete().eq('id', news.id);
                         if (error) throw error;
                         globalNews.value = globalNews.value.filter(n => n.id !== news.id);
-                    } catch (err) { alert("❌ Eliminazione non riuscita: " + err.message); }
+                    } catch (err) {
+                        console.error("Errore eliminazione notizia:", err.message);
+                        alert("❌ Eliminazione non riuscita.\n\nDettaglio errore: " + err.message);
+                    }
                 };
 
                 onMounted(() => {
@@ -1626,6 +1831,7 @@
                 });
 
                 const getServiceCount = (catId) => services.value.filter(s => s.category === catId).length;
+                
                 const getServiceName = (serviceId) => {
                     const s = services.value.find(item => item.id === serviceId);
                     return s ? translateField(s, 'name') : '';
@@ -1640,15 +1846,14 @@
                     }
                 };
 
-                const openContactModal = (service) => { activeModalService.value = service; };
+                const openContactModal = (service) => {
+                    activeModalService.value = service;
+                };
 
                 const getNavigationUrl = (address) => {
                     const query = encodeURIComponent(`${address}, Como, Italy`);
                     return `https://www.google.com/maps/search/?api=1&query=${query}`;
                 };
-                
-                const selectedNoticeTemplate = computed(() => templates.find(t => t.id === editForm.value.noticeTemplate));
-                const selectedNewsTemplate = computed(() => templates.find(t => t.id === newsForm.value.template));
 
                 return {
                     activeTab, selectedCategory, searchQuery, showLangMenu, activeModalService,
@@ -1662,11 +1867,11 @@
                     handleLogin, handleLogout, 
                     editingService, editForm, startEditing, startCreating, cancelEditing, saveServiceChanges, savingServiceId,
                     uploadingImage, imageUploadError, handleImageUpload,
+                    translatingContent, translationError,
                     adminSection,
                     editingNews, newsForm, savingNewsId,
                     startEditingNews, startCreatingNews, cancelEditingNews, saveNewsChanges, deleteNewsItem,
-                    selectNewsType, getNewsTypeStyle, formatNewsDate,
-                    templates, selectedNoticeTemplate, selectedNewsTemplate, generateTemplateText
+                    selectNewsType, getNewsTypeStyle, formatNewsDate
                 };
             }
         }).mount('#app');
