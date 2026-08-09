@@ -124,6 +124,7 @@
                     <h3 class="font-bold text-slate-700 text-sm uppercase tracking-wider">{{ t('categories_title') }}</h3>
                     <button v-if="selectedCategory !== 'all'" @click="selectedCategory = 'all'" class="text-xs font-semibold text-brand-600 hover:underline">{{ t('show_all') }}</button>
                 </div>
+                
                 <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
                     <button @click="selectedCategory = 'all'" class="p-3.5 rounded-2xl border transition text-center flex flex-col items-center justify-center gap-1.5 min-h-[85px]" :class="selectedCategory === 'all' ? 'bg-brand-600 border-brand-600 text-white font-bold shadow-md scale-[1.02]' : 'bg-white border-slate-200 text-slate-600 hover:border-brand-300 hover:bg-brand-50/50'"><span class="text-2xl">🌍</span><span class="text-xs leading-tight">{{ t('cat_all') }}</span></button>
                     <button v-for="cat in categories" :key="cat.id" @click="selectedCategory = cat.id" class="p-3.5 rounded-2xl border transition text-center flex flex-col items-center justify-center gap-1.5 min-h-[85px] relative overflow-hidden" :class="selectedCategory === cat.id ? 'bg-brand-600 border-brand-600 text-white font-bold shadow-md scale-[1.02]' : 'bg-white border-slate-200 text-slate-600 hover:border-brand-300 hover:bg-brand-50/50'">
@@ -234,6 +235,7 @@
             </div>
         </main>
 
+        <!-- Emergenze Pubblica -->
         <main v-if="activeTab === 'emergency'" class="p-4 sm:p-6 space-y-6 animate-fadeIn max-w-4xl mx-auto">
             <div class="bg-red-600 text-white rounded-3xl p-6 sm:p-8 shadow-md">
                 <h2 class="text-2xl sm:text-3xl font-bold flex items-center gap-3 mb-2"><i class="fa-solid fa-phone-volume animate-bounce"></i><span>{{ t('emergency_title') }}</span></h2>
@@ -266,14 +268,15 @@
             </div>
         </main>
 
+        <!-- DASHBOARD OPERATORI -->
         <main v-if="activeTab === 'admin_dashboard' && user" class="p-4 sm:p-6 space-y-6 animate-fadeIn max-w-4xl mx-auto">
             <div class="flex gap-1.5 bg-white p-1.5 rounded-2xl border border-slate-200 shadow-sm w-fit">
                 <button @click="adminSection = 'services'; cancelEditing()" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition" :class="adminSection === 'services' ? 'bg-emerald-600 text-white shadow' : 'text-slate-500 hover:bg-slate-100'"><i class="fa-solid fa-layer-group"></i><span>Servizi</span></button>
                 <button @click="adminSection = 'news'; cancelEditingNews()" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition" :class="adminSection === 'news' ? 'bg-amber-500 text-white shadow' : 'text-slate-500 hover:bg-slate-100'"><i class="fa-solid fa-bell"></i><span>Notizie & Allerta</span></button>
             </div>
 
-            <!-- GESTIONE SERVIZI ADMIN -->
             <template v-if="adminSection === 'services'">
+            
             <div v-if="!editingService" class="space-y-6">
                 <div class="bg-gradient-to-r from-emerald-600 to-teal-800 rounded-3xl p-6 sm:p-8 text-white shadow-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div>
@@ -305,7 +308,6 @@
                 </div>
             </div>
             
-            <!-- EDITOR SERVIZIO -->
             <div v-else class="space-y-6 animate-fadeIn">
                 <div class="flex items-center justify-between bg-white p-4 rounded-2xl border border-slate-200 card-shadow sticky top-20 z-30">
                     <button @click="cancelEditing()" class="flex items-center gap-2 text-slate-600 hover:text-brand-600 font-bold text-xs sm:text-sm bg-slate-100 hover:bg-brand-50 px-3.5 py-2 rounded-xl transition active:scale-95"><i class="fa-solid fa-arrow-left" :class="{'rtl-flip': isRTL}"></i><span>Indietro</span></button>
@@ -380,10 +382,13 @@
                             </div>
                             
                             <div v-for="(text, lang) in editForm.customNotice" :key="'notice_'+lang" class="relative">
-                                <label class="block text-[10px] font-bold text-brand-700 mb-1 uppercase flex items-center gap-1"><span class="flag-emoji">{{ languages[lang]?.flag }}</span> {{ languages[lang]?.name }} <span v-if="lang === 'it'">(Predefinito)</span></label>
+                                <label class="block text-[10px] font-bold text-brand-700 mb-1 uppercase flex items-center gap-1">
+                                    <span class="flag-emoji">{{ languages[lang]?.flag }}</span> {{ languages[lang]?.name }} <span v-if="lang === 'it'">(Predefinito)</span>
+                                </label>
                                 <textarea v-model="editForm.customNotice[lang]" rows="2" class="w-full text-sm py-2 px-3 rounded-lg border border-brand-200 text-slate-800 focus:ring-2 focus:ring-brand-500 outline-none"></textarea>
                                 <button v-if="lang !== 'it'" @click="delete editForm.customNotice[lang]" type="button" class="absolute top-6 right-2 text-red-500 hover:text-red-700 p-1.5 bg-white rounded-md shadow-sm"><i class="fa-solid fa-trash text-xs"></i></button>
                             </div>
+                            <p class="text-[10px] text-brand-600 mt-1 font-medium"><i class="fa-solid fa-info-circle mr-1"></i>Fallback automatico all'Inglese o Italiano per le lingue mancanti.</p>
                         </div>
 
                         <div v-if="editForm.noticeTemplate !== 'none' && editForm.noticeTemplate !== 'custom'" class="mt-2 p-3 bg-slate-100 rounded-xl border border-slate-200 text-xs text-slate-700">
@@ -474,6 +479,7 @@
                                     </label>
                                     <button v-if="editForm.image" @click="editForm.image = ''" type="button" class="bg-slate-100 hover:bg-red-50 text-slate-500 hover:text-red-600 w-9 h-9 rounded-xl flex items-center justify-center transition shrink-0"><i class="fa-solid fa-trash text-xs"></i></button>
                                 </div>
+                                <p v-if="imageUploadError" class="text-[11px] text-red-600 font-medium">{{ imageUploadError }}</p>
                             </div>
                         </div>
                     </div>
@@ -483,7 +489,7 @@
                     <input type="checkbox" v-model="editForm.generateAutoNotice" id="autoNoticeCheck" class="mt-1 w-5 h-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500 cursor-pointer">
                     <label for="autoNoticeCheck" class="cursor-pointer">
                         <span class="block text-sm font-bold text-blue-900">Pubblica avviso automatico in bacheca Notizie</span>
-                        <span class="block text-xs text-blue-700 mt-0.5">Verrà pubblicata automaticamente una notizia "Aggiornamento Servizio" nella pagina Notizie & Allerta.</span>
+                        <span class="block text-xs text-blue-700 mt-0.5">Selezionando l'opzione, verrà pubblicata automaticamente una notizia "Aggiornamento Servizio" visibile a tutti nella sezione Notizie.</span>
                     </label>
                 </div>
 
@@ -501,7 +507,6 @@
             </div>
             </template>
 
-            <!-- GESTIONE NOTIZIE ADMIN -->
             <template v-if="adminSection === 'news'">
             <div v-if="!editingNews" class="space-y-6">
                 <div class="bg-gradient-to-r from-amber-500 to-warm-600 rounded-3xl p-6 sm:p-8 text-white shadow-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -567,9 +572,15 @@
                 <div class="bg-white rounded-3xl border border-slate-200 p-5 sm:p-6 card-shadow">
                     <div class="flex items-center gap-3 border-b border-slate-100 pb-3 mb-4"><div class="w-8 h-8 rounded-xl bg-slate-700 text-white flex items-center justify-center text-sm shadow-sm">2</div><h3 class="font-bold text-slate-800 text-base">Livello di Urgenza</h3></div>
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        <button @click="setNewsUrgency('info')" type="button" class="py-4 px-3 rounded-2xl border text-sm font-bold flex flex-col items-center justify-center gap-2 transition active:scale-95" :class="isUrgency('info') ? 'bg-blue-500 border-blue-600 text-white shadow-md' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-blue-50'"><i class="fa-solid fa-circle-info text-xl"></i><span class="text-center leading-tight">Informativa<br><span class="text-[10px] font-normal opacity-80">Avvisi e Raccolte</span></span></button>
-                        <button @click="setNewsUrgency('update')" type="button" class="py-4 px-3 rounded-2xl border text-sm font-bold flex flex-col items-center justify-center gap-2 transition active:scale-95" :class="isUrgency('update') ? 'bg-amber-500 border-amber-600 text-white shadow-md' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-amber-50'"><i class="fa-solid fa-arrows-rotate text-xl"></i><span class="text-center leading-tight">Variazione<br><span class="text-[10px] font-normal opacity-80">Orari e Sedi</span></span></button>
-                        <button @click="setNewsUrgency('emergency')" type="button" class="py-4 px-3 rounded-2xl border text-sm font-bold flex flex-col items-center justify-center gap-2 transition active:scale-95" :class="isUrgency('emergency') ? 'bg-red-600 border-red-700 text-white shadow-md' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-red-50'"><i class="fa-solid fa-triangle-exclamation text-xl"></i><span class="text-center leading-tight">Emergenza<br><span class="text-[10px] font-normal opacity-80">Chiusure urgenti</span></span></button>
+                        <button @click="setNewsUrgency('info')" type="button" class="py-4 px-3 rounded-2xl border text-sm font-bold flex flex-col items-center justify-center gap-2 transition active:scale-95" :class="isUrgency('info') ? 'bg-blue-500 border-blue-600 text-white shadow-md' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-blue-50'">
+                            <i class="fa-solid fa-circle-info text-xl"></i><span class="text-center leading-tight">Informativa<br><span class="text-[10px] font-normal opacity-80">Avvisi e Raccolte</span></span>
+                        </button>
+                        <button @click="setNewsUrgency('update')" type="button" class="py-4 px-3 rounded-2xl border text-sm font-bold flex flex-col items-center justify-center gap-2 transition active:scale-95" :class="isUrgency('update') ? 'bg-amber-500 border-amber-600 text-white shadow-md' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-amber-50'">
+                            <i class="fa-solid fa-arrows-rotate text-xl"></i><span class="text-center leading-tight">Variazione<br><span class="text-[10px] font-normal opacity-80">Orari e Sedi</span></span>
+                        </button>
+                        <button @click="setNewsUrgency('emergency')" type="button" class="py-4 px-3 rounded-2xl border text-sm font-bold flex flex-col items-center justify-center gap-2 transition active:scale-95" :class="isUrgency('emergency') ? 'bg-red-600 border-red-700 text-white shadow-md' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-red-50'">
+                            <i class="fa-solid fa-triangle-exclamation text-xl"></i><span class="text-center leading-tight">Emergenza<br><span class="text-[10px] font-normal opacity-80">Chiusure urgenti</span></span>
+                        </button>
                     </div>
                 </div>
 
@@ -659,6 +670,7 @@
 
         </main>
 
+        <!-- Modals -->
         <div v-if="activeModalService" @click.self="activeModalService = null" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fadeIn">
             <div class="bg-white w-full max-w-lg rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl space-y-5 transform transition-transform" :class="{'text-right': isRTL}">
                 <div class="flex items-center justify-between border-b border-slate-100 pb-3">
@@ -1468,7 +1480,6 @@
                         if (!initCustomNotice.it) initCustomNotice.it = '';
                     }
 
-                    // Se non ci sono orari nel db (array vuoto o mancante), preimpostiamo una riga vuota
                     let dbHoursList = Array.isArray(service.hours) && service.hours.length > 0 ? [...service.hours] : [{ day: 1, open: '', close: '' }];
 
                     editForm.value = {
@@ -1531,7 +1542,6 @@
                         const { error } = await supabase.from('services').upsert([payload]).select();
                         if (error) throw error;
                         
-                        // Aggiorna local array per immediata visualizzazione
                         const dbIdx = dbServices.value.findIndex(s => s.id === payload.id);
                         if (dbIdx >= 0) {
                             dbServices.value[dbIdx] = payload;
@@ -1539,7 +1549,6 @@
                             dbServices.value.push(payload);
                         }
 
-                        // Pubblicazione Notizia Automatica in bacheca
                         if (editForm.value.generateAutoNotice) {
                             const payloadNews = {
                                 type: 'service_update', 
@@ -1562,7 +1571,6 @@
                     }
                 };
 
-                // --- GESTIONE NOTIZIE ---
                 const globalNews = ref([]);
                 const NEWS_TYPES = {
                     general: { icon: 'fa-solid fa-circle-info', badgeClass: 'bg-blue-100 text-blue-700' },
@@ -1610,7 +1618,6 @@
                         const { data, error } = await supabase.from('news').select('*').order('created_at', { ascending: false });
                         if (error) throw error;
                         
-                        // Map organization names
                         globalNews.value = (data || []).map(n => {
                             const org = fixedOrganizations.find(o => o.id === n.association_id);
                             return { ...n, association: org ? org.name : (n.association_id === 'generale' ? 'Coordinamento Vicini di Strada' : '') };
@@ -1700,7 +1707,7 @@
                             if (error) throw error;
                         }
                         
-                        await fetchNews(); // Reload to get mapped names
+                        await fetchNews();
                         alert(newsForm.value.id ? "✅ Notizia aggiornata!" : "📢 Notizia pubblicata!");
                         cancelEditingNews();
                     } catch (err) { 
