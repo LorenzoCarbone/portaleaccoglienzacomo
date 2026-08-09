@@ -125,6 +125,7 @@
 
         <div v-if="showLangMenu" @click="showLangMenu = false" class="fixed inset-0 z-40 bg-black/10 backdrop-blur-[1px]"></div>
 
+        <!-- Mappa Servizi (Invariata) -->
         <main v-if="activeTab === 'services'" class="p-4 sm:p-6 space-y-6 animate-fadeIn">
             <div class="bg-gradient-to-r from-brand-700 to-brand-900 rounded-3xl p-6 sm:p-8 text-white shadow-md relative overflow-hidden">
                 <div class="relative z-10 max-w-2xl">
@@ -419,6 +420,7 @@
 
             <template v-if="adminSection === 'services'">
             <div v-if="!editingService" class="space-y-6">
+                <!-- Sezione Servizi invariata... -->
                 <div class="bg-gradient-to-r from-emerald-600 to-teal-800 rounded-3xl p-6 sm:p-8 text-white shadow-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div>
                         <span class="bg-white/20 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-2 inline-block">Pannello Operatori</span>
@@ -429,10 +431,6 @@
                         <button @click="startCreating()" class="bg-emerald-500 hover:bg-emerald-400 text-white font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm shadow flex items-center gap-2 transition active:scale-95 border border-emerald-400">
                             <i class="fa-solid fa-plus"></i>
                             <span>Aggiungi Servizio</span>
-                        </button>
-                        <button @click="activeTab = 'services'" class="bg-white text-emerald-800 hover:bg-emerald-50 font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm shadow flex items-center gap-2 shrink-0 transition active:scale-95">
-                            <i class="fa-solid fa-eye"></i>
-                            <span>Vedi Mappa Pubblica</span>
                         </button>
                     </div>
                 </div>
@@ -446,7 +444,6 @@
                     <div v-for="service in services" :key="service.id"
                          @click="startEditing(service)"
                          class="p-4 sm:p-5 hover:bg-brand-50/60 transition cursor-pointer flex items-center justify-between gap-4 group active:bg-brand-100/50">
-                        
                         <div class="flex items-center gap-3.5 overflow-hidden">
                             <div class="w-12 h-12 rounded-2xl bg-slate-100 group-hover:bg-brand-100 text-slate-700 group-hover:text-brand-700 flex items-center justify-center text-2xl shrink-0 transition shadow-sm">
                                 <span>{{ getCategoryIcon(service.category) }}</span>
@@ -468,7 +465,6 @@
                                 <span class="w-1.5 h-1.5 rounded-full" :class="service.status === 'active' ? 'bg-emerald-500' : (service.status === 'notice' ? 'bg-amber-500' : 'bg-red-500')"></span>
                                 <span class="hidden sm:inline">{{ service.status === 'active' ? 'Regolare' : (service.status === 'notice' ? 'Variazione' : 'Sospeso') }}</span>
                             </span>
-
                             <div class="w-8 h-8 rounded-full bg-slate-100 group-hover:bg-brand-600 text-slate-400 group-hover:text-white flex items-center justify-center text-xs transition">
                                 <i class="fa-solid fa-chevron-right" :class="{'rtl-flip': isRTL}"></i>
                             </div>
@@ -476,15 +472,15 @@
                     </div>
                 </div>
             </div>
-
+            
             <div v-else class="space-y-6 animate-fadeIn">
+                <!-- Sezione Editor Servizi (Rimasta inalterata per stabilità) -->
                 <div class="flex items-center justify-between bg-white p-4 rounded-2xl border border-slate-200 card-shadow sticky top-20 z-30">
                     <button @click="cancelEditing()" 
                             class="flex items-center gap-2 text-slate-600 hover:text-brand-600 font-bold text-xs sm:text-sm bg-slate-100 hover:bg-brand-50 px-3.5 py-2 rounded-xl transition active:scale-95">
                         <i class="fa-solid fa-arrow-left" :class="{'rtl-flip': isRTL}"></i>
                         <span>Torna alla lista servizi</span>
                     </button>
-
                     <div class="text-right overflow-hidden pr-2">
                         <span class="text-[10px] uppercase font-bold text-brand-600 tracking-wider block truncate">Stato Operazione:</span>
                         <span class="font-bold text-slate-800 text-xs sm:text-sm truncate block">{{ editForm.id ? 'Modifica: ' + editForm.name_it : 'Nuovo Inserimento' }}</span>
@@ -532,20 +528,20 @@
                     </div>
 
                     <div class="mt-4">
-                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Seleziona un Template per l'Avviso Rapido:</label>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Seleziona un Modello per l'Avviso Rapido:</label>
                         <select v-model="editForm.noticeTemplate" @change="editForm.noticeParams = {}" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-800 text-sm focus:ring-2 focus:ring-brand-500 transition">
+                            <option value="none">Nessun avviso speciale</option>
+                            <option value="custom">-- TESTO LIBERO (Manuale) --</option>
                             <option v-for="tpl in templates" :key="tpl.id" :value="tpl.id">{{ tpl.label }}</option>
                         </select>
 
-                        <!-- Input dinamici per template predefiniti -->
-                        <div v-if="selectedNoticeTemplate && selectedNoticeTemplate.id !== 'custom' && selectedNoticeTemplate.params.length > 0" class="mt-3 space-y-2 p-3 bg-brand-50 border border-brand-100 rounded-xl">
+                        <div v-if="selectedNoticeTemplate && editForm.noticeTemplate !== 'custom' && selectedNoticeTemplate.params.length > 0" class="mt-3 space-y-2 p-3 bg-brand-50 border border-brand-100 rounded-xl">
                             <div v-for="param in selectedNoticeTemplate.params" :key="param">
                                 <label class="block text-[11px] font-bold text-brand-700 mb-1 capitalize">{{ param }}</label>
                                 <input v-model="editForm.noticeParams[param]" type="text" :placeholder="'Inserisci ' + param" class="w-full text-sm py-1.5 px-3 rounded-lg border border-brand-200 text-slate-800">
                             </div>
                         </div>
 
-                        <!-- Interfaccia per TEMPLATE LIBERO (Manuale Multilingua) -->
                         <div v-if="editForm.noticeTemplate === 'custom'" class="mt-3 p-3 bg-brand-50 border border-brand-100 rounded-xl space-y-3">
                             <div class="flex items-center justify-between border-b border-brand-200 pb-2">
                                 <h4 class="text-xs font-bold uppercase text-brand-800">Testo Avviso Libero</h4>
@@ -570,7 +566,6 @@
                             <p class="text-[10px] text-brand-600 mt-1">Le lingue non inserite faranno un fallback automatico all'Inglese o all'Italiano.</p>
                         </div>
 
-                        <!-- Anteprima dell'avviso (solo per template non custom) -->
                         <div v-if="editForm.noticeTemplate !== 'none' && editForm.noticeTemplate !== 'custom'" class="mt-2 p-3 bg-slate-100 rounded-xl border border-slate-200 text-xs text-slate-700">
                             <span class="block text-[10px] uppercase font-bold text-slate-400 mb-1">Anteprima Avviso (IT)</span>
                             <strong>{{ generateTemplateText(editForm.noticeTemplate, editForm.noticeParams, 'it') }}</strong>
@@ -607,7 +602,6 @@
                             </div>
                         </div>
 
-                        <!-- SEZIONE IMMAGINE -->
                         <div>
                             <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">Immagine Copertina</label>
 
@@ -735,22 +729,19 @@
             </div>
             </template>
 
+            <!-- NUOVA SEZIONE NOTIZIE RIORGANIZZATA -->
             <template v-if="adminSection === 'news'">
             <div v-if="!editingNews" class="space-y-6">
                 <div class="bg-gradient-to-r from-amber-500 to-warm-600 rounded-3xl p-6 sm:p-8 text-white shadow-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div>
                         <span class="bg-white/20 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-2 inline-block">Pannello Operatori</span>
                         <h2 class="text-2xl sm:text-3xl font-bold leading-tight">Gestione Notizie & Allerta</h2>
-                        <p class="text-white/90 text-sm mt-1">Pubblica aggiornamenti, variazioni di servizio o allerte di emergenza visibili a tutti sulla mappa.</p>
+                        <p class="text-white/90 text-sm mt-1">Pubblica aggiornamenti, variazioni di servizio o allerte visibili a tutti.</p>
                     </div>
                     <div class="flex flex-wrap gap-2 shrink-0 w-full sm:w-auto justify-end">
                         <button @click="startCreatingNews()" class="bg-white text-amber-700 hover:bg-amber-50 font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm shadow flex items-center gap-2 transition active:scale-95">
                             <i class="fa-solid fa-plus"></i>
-                            <span>Nuova Notizia/Allerta</span>
-                        </button>
-                        <button @click="activeTab = 'news'" class="bg-amber-700/40 hover:bg-amber-700/60 text-white font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm shadow flex items-center gap-2 shrink-0 transition active:scale-95 border border-white/20">
-                            <i class="fa-solid fa-eye"></i>
-                            <span>Vedi Pagina Pubblica</span>
+                            <span>Nuova Notizia</span>
                         </button>
                     </div>
                 </div>
@@ -758,13 +749,10 @@
                 <div v-if="isLoadingNews" class="text-center py-16">
                     <i class="fa-solid fa-circle-notch fa-spin text-4xl text-amber-500 mb-4 inline-block"></i>
                 </div>
-
                 <div v-else-if="globalNews.length === 0" class="text-center py-16 bg-white rounded-3xl border border-slate-200 p-6 shadow-sm">
                     <span class="text-6xl block mb-4">📭</span>
                     <h4 class="font-bold text-slate-700 text-lg mb-1">Nessuna notizia pubblicata</h4>
-                    <p class="text-sm text-slate-500 max-w-sm mx-auto">Crea la prima notizia o allerta con il pulsante qui sopra.</p>
                 </div>
-
                 <div v-else class="bg-white rounded-3xl border border-slate-200 overflow-hidden card-shadow divide-y divide-slate-100">
                     <div class="p-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between text-xs font-bold text-slate-500 uppercase tracking-wider">
                         <span>Notizie pubblicate ({{ globalNews.length }})</span>
@@ -773,7 +761,6 @@
 
                     <div v-for="news in globalNews" :key="news.id"
                          class="p-4 sm:p-5 hover:bg-amber-50/50 transition flex items-center justify-between gap-4 group">
-
                         <div @click="startEditingNews(news)" class="flex items-center gap-3.5 overflow-hidden cursor-pointer flex-1">
                             <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-xl shrink-0 shadow-sm"
                                  :class="getNewsTypeStyle(news.type).badgeClass">
@@ -804,153 +791,178 @@
                 </div>
             </div>
 
+            <!-- EDITOR NOTIZIE RIORGANIZZATO -->
             <div v-else class="space-y-6 animate-fadeIn">
                 <div class="flex items-center justify-between bg-white p-4 rounded-2xl border border-slate-200 card-shadow sticky top-20 z-30">
                     <button @click="cancelEditingNews()" 
                             class="flex items-center gap-2 text-slate-600 hover:text-amber-600 font-bold text-xs sm:text-sm bg-slate-100 hover:bg-amber-50 px-3.5 py-2 rounded-xl transition active:scale-95">
                         <i class="fa-solid fa-arrow-left" :class="{'rtl-flip': isRTL}"></i>
-                        <span>Torna alla lista notizie</span>
+                        <span>Torna alla lista</span>
                     </button>
                     <div class="text-right overflow-hidden pr-2">
                         <span class="text-[10px] uppercase font-bold text-amber-600 tracking-wider block truncate">Stato Operazione:</span>
-                        <span class="font-bold text-slate-800 text-xs sm:text-sm truncate block">{{ newsForm.id ? 'Modifica notizia' : 'Nuova notizia/allerta' }}</span>
+                        <span class="font-bold text-slate-800 text-xs sm:text-sm truncate block">{{ newsForm.id ? 'Modifica notizia' : 'Nuova notizia' }}</span>
                     </div>
                 </div>
 
-                <div class="bg-white rounded-3xl border border-slate-200 p-5 sm:p-6 card-shadow space-y-5">
-                    <div class="flex items-center gap-3 border-b border-slate-100 pb-3">
-                        <div class="w-8 h-8 rounded-xl bg-amber-500 text-white flex items-center justify-center text-sm shadow-sm">
-                            <i class="fa-solid fa-bullhorn"></i>
+                <!-- 1. Chi e Dove -->
+                <div class="bg-white rounded-3xl border border-slate-200 p-5 sm:p-6 card-shadow">
+                    <div class="flex items-center gap-3 border-b border-slate-100 pb-3 mb-4">
+                        <div class="w-8 h-8 rounded-xl bg-slate-700 text-white flex items-center justify-center text-sm shadow-sm">
+                            1
                         </div>
-                        <div>
-                            <h3 class="font-bold text-slate-800 text-base">Componi Notizia con Template</h3>
-                            <p class="text-xs text-slate-500">Scegli la tipologia e usa i modelli per generare avvisi in tutte le lingue (o usa il Testo Libero).</p>
-                        </div>
+                        <h3 class="font-bold text-slate-800 text-base">Contesto e Riferimenti</h3>
                     </div>
-
-                    <div>
-                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Tipologia Allerta:</label>
-                        <div class="grid grid-cols-3 gap-2">
-                            <button @click="selectNewsType('general')" type="button"
-                                    class="py-3 px-2 rounded-xl text-xs font-bold border flex flex-col items-center justify-center gap-1.5 transition active:scale-95"
-                                    :class="newsForm.type === 'general' ? 'bg-blue-500 border-blue-600 text-white shadow-md' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'">
-                                <i class="fa-solid fa-circle-info"></i>
-                                <span>Informazione</span>
-                            </button>
-                            <button @click="selectNewsType('service_update')" type="button"
-                                    class="py-3 px-2 rounded-xl text-xs font-bold border flex flex-col items-center justify-center gap-1.5 transition active:scale-95"
-                                    :class="newsForm.type === 'service_update' ? 'bg-amber-500 border-amber-600 text-white shadow-md' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'">
-                                <i class="fa-solid fa-arrows-rotate"></i>
-                                <span>Variazione Servizio</span>
-                            </button>
-                            <button @click="selectNewsType('emergency')" type="button"
-                                    class="py-3 px-2 rounded-xl text-xs font-bold border flex flex-col items-center justify-center gap-1.5 transition active:scale-95"
-                                    :class="newsForm.type === 'emergency' ? 'bg-red-600 border-red-700 text-white shadow-md' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'">
-                                <i class="fa-solid fa-triangle-exclamation"></i>
-                                <span>Emergenza</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Priorità:</label>
-                        <div class="grid grid-cols-2 gap-2">
-                            <button @click="newsForm.priority = 'normal'" type="button"
-                                    class="py-2.5 px-2 rounded-xl text-xs font-bold border flex items-center justify-center gap-1.5 transition active:scale-95"
-                                    :class="newsForm.priority === 'normal' ? 'bg-blue-500 border-blue-600 text-white shadow-md' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'">
-                                <span>Informativa</span>
-                            </button>
-                            <button @click="newsForm.priority = 'high'" type="button"
-                                    class="py-2.5 px-2 rounded-xl text-xs font-bold border flex items-center justify-center gap-1.5 transition active:scale-95"
-                                    :class="newsForm.priority === 'high' ? 'bg-red-600 border-red-700 text-white shadow-md' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'">
-                                <span>Urgente</span>
-                            </button>
-                        </div>
-                    </div>
-
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Associazione / Ente</label>
-                            <input v-model="newsForm.association" type="text" placeholder="Es. Caritas Como, Coordinamento Unità di Strada..."
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Ente / Associazione</label>
+                            <input v-model="newsForm.association" type="text" placeholder="Es. Legàmi, We For The Planet..."
                                    class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-800 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 transition">
                         </div>
                         <div>
                             <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Servizio Collegato (opzionale)</label>
                             <select v-model="newsForm.related_service_id"
                                     class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-800 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 transition">
-                                <option :value="null">Nessuno / non collegata a un servizio</option>
+                                <option :value="null">Nessuno / Avviso generico</option>
                                 <option v-for="s in services" :key="s.id" :value="s.id">{{ getCategoryIcon(s.category) }} {{ translateField(s, 'name') }}</option>
                             </select>
                         </div>
                     </div>
+                </div>
 
-                    <div class="bg-amber-50 rounded-2xl p-4 border border-amber-100">
-                        <label class="block text-sm font-bold uppercase text-amber-800 mb-2">Seleziona Template Notizia</label>
-                        <select v-model="newsForm.template" @change="newsForm.templateParams = {}" class="w-full bg-white border border-amber-200 rounded-xl px-4 py-3 text-sm mb-4 focus:ring-2 focus:ring-amber-500 outline-none">
-                            <option v-for="tpl in templates.filter(t => t.id !== 'none')" :key="tpl.id" :value="tpl.id">{{ tpl.label }}</option>
+                <!-- 2. Urgenza -->
+                <div class="bg-white rounded-3xl border border-slate-200 p-5 sm:p-6 card-shadow">
+                    <div class="flex items-center gap-3 border-b border-slate-100 pb-3 mb-4">
+                        <div class="w-8 h-8 rounded-xl bg-slate-700 text-white flex items-center justify-center text-sm shadow-sm">
+                            2
+                        </div>
+                        <h3 class="font-bold text-slate-800 text-base">Livello di Urgenza</h3>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <button @click="setNewsUrgency('info')" type="button"
+                                class="py-4 px-3 rounded-2xl border text-sm font-bold flex flex-col items-center justify-center gap-2 transition active:scale-95"
+                                :class="isUrgency('info') ? 'bg-blue-500 border-blue-600 text-white shadow-md' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-blue-50'">
+                            <i class="fa-solid fa-circle-info text-xl"></i>
+                            <span class="text-center leading-tight">Informativa<br><span class="text-[10px] font-normal opacity-80">Avviso standard</span></span>
+                        </button>
+                        <button @click="setNewsUrgency('update')" type="button"
+                                class="py-4 px-3 rounded-2xl border text-sm font-bold flex flex-col items-center justify-center gap-2 transition active:scale-95"
+                                :class="isUrgency('update') ? 'bg-amber-500 border-amber-600 text-white shadow-md' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-amber-50'">
+                            <i class="fa-solid fa-arrows-rotate text-xl"></i>
+                            <span class="text-center leading-tight">Variazione<br><span class="text-[10px] font-normal opacity-80">Modifica servizi</span></span>
+                        </button>
+                        <button @click="setNewsUrgency('emergency')" type="button"
+                                class="py-4 px-3 rounded-2xl border text-sm font-bold flex flex-col items-center justify-center gap-2 transition active:scale-95"
+                                :class="isUrgency('emergency') ? 'bg-red-600 border-red-700 text-white shadow-md' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-red-50'">
+                            <i class="fa-solid fa-triangle-exclamation text-xl"></i>
+                            <span class="text-center leading-tight">Emergenza<br><span class="text-[10px] font-normal opacity-80">Urgente / Chiusura</span></span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 3. Composizione Testo -->
+                <div class="bg-white rounded-3xl border border-slate-200 p-5 sm:p-6 card-shadow">
+                    <div class="flex items-center gap-3 border-b border-slate-100 pb-3 mb-4">
+                        <div class="w-8 h-8 rounded-xl bg-slate-700 text-white flex items-center justify-center text-sm shadow-sm">
+                            3
+                        </div>
+                        <h3 class="font-bold text-slate-800 text-base">Contenuto del Messaggio</h3>
+                    </div>
+
+                    <!-- TOGGLE MODE -->
+                    <div class="flex bg-slate-100 p-1.5 rounded-2xl mb-5 w-full">
+                        <button @click="newsForm.useCustomText = false" type="button"
+                                class="flex-1 py-2.5 px-2 rounded-xl text-xs sm:text-sm font-bold transition flex items-center justify-center gap-2"
+                                :class="!newsForm.useCustomText ? 'bg-white text-brand-700 shadow-sm border border-slate-200' : 'text-slate-500 hover:text-slate-700'">
+                            <i class="fa-solid fa-language"></i> <span class="hidden sm:inline">Usa Modello</span><span class="sm:hidden">Modello</span>
+                        </button>
+                        <button @click="newsForm.useCustomText = true" type="button"
+                                class="flex-1 py-2.5 px-2 rounded-xl text-xs sm:text-sm font-bold transition flex items-center justify-center gap-2"
+                                :class="newsForm.useCustomText ? 'bg-white text-brand-700 shadow-sm border border-slate-200' : 'text-slate-500 hover:text-slate-700'">
+                            <i class="fa-solid fa-pen"></i> <span class="hidden sm:inline">Scrivi Testo Libero</span><span class="sm:hidden">Libero</span>
+                        </button>
+                    </div>
+
+                    <!-- MODE 1: MODELLI PREIMPOSTATI -->
+                    <div v-if="!newsForm.useCustomText" class="bg-brand-50 rounded-2xl p-4 border border-brand-100 animate-fadeIn">
+                        <label class="block text-sm font-bold uppercase text-brand-800 mb-2">Seleziona Modello di Avviso</label>
+                        <select v-model="newsForm.template" @change="newsForm.templateParams = {}" class="w-full bg-white border border-brand-200 rounded-xl px-4 py-3 text-sm mb-4 focus:ring-2 focus:ring-brand-500 outline-none shadow-sm">
+                            <option v-for="tpl in templates" :key="tpl.id" :value="tpl.id">{{ tpl.label }}</option>
                         </select>
 
-                        <!-- Input dinamici per template predefiniti -->
-                        <div v-if="selectedNewsTemplate && selectedNewsTemplate.id !== 'custom' && selectedNewsTemplate.params.length > 0" class="space-y-3">
+                        <!-- Parametri Dinamici -->
+                        <div v-if="selectedNewsTemplate && selectedNewsTemplate.params.length > 0" class="space-y-3 mt-4 p-3 bg-white rounded-xl border border-brand-200">
+                            <p class="text-xs text-slate-500 mb-2 font-medium">Compila i dati mancanti per completare il modello:</p>
                             <div v-for="param in selectedNewsTemplate.params" :key="param">
-                                <label class="block text-xs font-bold text-amber-700 mb-1 capitalize">{{ param }}</label>
-                                <input v-model="newsForm.templateParams[param]" type="text" :placeholder="'Inserisci ' + param" class="w-full text-sm py-2 px-3 rounded-lg border border-amber-200">
+                                <label class="block text-xs font-bold text-brand-700 mb-1 capitalize">{{ param }}</label>
+                                <input v-model="newsForm.templateParams[param]" type="text" :placeholder="'Inserisci ' + param" class="w-full text-sm py-2 px-3 rounded-lg border border-slate-200 focus:border-brand-500 outline-none">
                             </div>
                         </div>
 
-                        <!-- Interfaccia per NOTIZIA TEMPLATE LIBERO -->
-                        <div v-if="newsForm.template === 'custom'" class="space-y-4">
-                            <!-- Titoli Multipli -->
-                            <div class="p-3 bg-white border border-amber-200 rounded-xl space-y-3">
-                                <div class="flex items-center justify-between border-b border-amber-100 pb-2">
-                                    <h4 class="text-xs font-bold uppercase text-amber-800">Titolo Libero</h4>
-                                    <div class="flex items-center gap-2">
-                                        <select v-model="selectedNewLangNewsTitle" class="text-xs border border-amber-200 rounded-lg px-2 py-1 bg-slate-50">
-                                            <option value="">Aggiungi lingua...</option>
-                                            <option v-for="(l, code) in availableLangsForNewsTitle" :key="code" :value="code">{{ l.name }}</option>
-                                        </select>
-                                        <button @click="addLangToNewsTitle" type="button" class="bg-amber-100 hover:bg-amber-200 text-amber-800 text-[10px] font-bold px-2 py-1 rounded transition"><i class="fa-solid fa-plus"></i></button>
-                                    </div>
-                                </div>
-                                <div v-for="(text, lang) in newsForm.customTitle" :key="'title_'+lang" class="relative">
-                                    <label class="block text-[10px] font-bold text-amber-700 mb-1 uppercase">{{ languages[lang]?.name }} <span v-if="lang==='it'">(Predefinito)</span></label>
-                                    <input v-model="newsForm.customTitle[lang]" type="text" class="w-full text-sm py-1.5 px-3 rounded-lg border border-amber-200 text-slate-800 focus:ring-2 focus:ring-amber-500">
-                                    <button v-if="lang !== 'it'" @click="delete newsForm.customTitle[lang]" type="button" class="absolute top-5 right-2 text-red-500 hover:text-red-700 p-1"><i class="fa-solid fa-trash text-xs"></i></button>
+                        <!-- Anteprima -->
+                        <div v-if="newsForm.template" class="mt-4 p-4 bg-white rounded-xl border border-brand-100 shadow-sm text-sm">
+                            <div class="flex items-center gap-2 mb-2 border-b border-slate-100 pb-2">
+                                <span class="text-lg flag-emoji">🇮🇹</span>
+                                <span class="text-[10px] uppercase font-bold text-slate-400">Anteprima in Italiano</span>
+                            </div>
+                            <strong class="block text-slate-800 text-base mb-1">{{ generateTemplateText(newsForm.template, newsForm.templateParams, 'it', true) }}</strong>
+                            <p class="text-slate-600 leading-relaxed">{{ generateTemplateText(newsForm.template, newsForm.templateParams, 'it', false) }}</p>
+                            <p class="text-[10px] text-emerald-600 font-bold mt-3"><i class="fa-solid fa-check mr-1"></i>Verrà tradotto automaticamente in tutte le altre lingue.</p>
+                        </div>
+                    </div>
+
+                    <!-- MODE 2: TESTO LIBERO MANUALE -->
+                    <div v-else class="space-y-4 animate-fadeIn">
+                        
+                        <!-- Titoli -->
+                        <div class="p-4 bg-amber-50 border border-amber-200 rounded-2xl space-y-3">
+                            <div class="flex items-center justify-between border-b border-amber-200 pb-2">
+                                <h4 class="text-sm font-bold uppercase text-amber-800">1. Titolo Avviso</h4>
+                                <div class="flex items-center gap-2">
+                                    <select v-model="selectedNewLangNewsTitle" class="text-xs border border-amber-200 rounded-lg px-2 py-1 bg-white outline-none">
+                                        <option value="">Aggiungi lingua...</option>
+                                        <option v-for="(l, code) in availableLangsForNewsTitle" :key="code" :value="code">{{ l.name }}</option>
+                                    </select>
+                                    <button @click="addLangToNewsTitle" type="button" class="bg-amber-600 hover:bg-amber-700 text-white text-[10px] font-bold px-2.5 py-1.5 rounded-lg shadow-sm transition"><i class="fa-solid fa-plus"></i></button>
                                 </div>
                             </div>
-
-                            <!-- Contenuti Multipli -->
-                            <div class="p-3 bg-white border border-amber-200 rounded-xl space-y-3">
-                                <div class="flex items-center justify-between border-b border-amber-100 pb-2">
-                                    <h4 class="text-xs font-bold uppercase text-amber-800">Testo Messaggio Libero</h4>
-                                    <div class="flex items-center gap-2">
-                                        <select v-model="selectedNewLangNewsContent" class="text-xs border border-amber-200 rounded-lg px-2 py-1 bg-slate-50">
-                                            <option value="">Aggiungi lingua...</option>
-                                            <option v-for="(l, code) in availableLangsForNewsContent" :key="code" :value="code">{{ l.name }}</option>
-                                        </select>
-                                        <button @click="addLangToNewsContent" type="button" class="bg-amber-100 hover:bg-amber-200 text-amber-800 text-[10px] font-bold px-2 py-1 rounded transition"><i class="fa-solid fa-plus"></i></button>
-                                    </div>
-                                </div>
-                                <div v-for="(text, lang) in newsForm.customContent" :key="'content_'+lang" class="relative">
-                                    <label class="block text-[10px] font-bold text-amber-700 mb-1 uppercase">{{ languages[lang]?.name }} <span v-if="lang==='it'">(Predefinito)</span></label>
-                                    <textarea v-model="newsForm.customContent[lang]" rows="3" class="w-full text-sm py-2 px-3 rounded-lg border border-amber-200 text-slate-800 focus:ring-2 focus:ring-amber-500"></textarea>
-                                    <button v-if="lang !== 'it'" @click="delete newsForm.customContent[lang]" type="button" class="absolute top-5 right-2 text-red-500 hover:text-red-700 p-1"><i class="fa-solid fa-trash text-xs"></i></button>
-                                </div>
+                            <div v-for="(text, lang) in newsForm.customTitle" :key="'title_'+lang" class="relative">
+                                <label class="block text-[10px] font-bold text-amber-700 mb-1 uppercase flex items-center gap-1">
+                                    <span class="flag-emoji text-sm">{{ languages[lang]?.flag }}</span> {{ languages[lang]?.name }} <span v-if="lang==='it'">(Predefinito)</span>
+                                </label>
+                                <input v-model="newsForm.customTitle[lang]" type="text" class="w-full text-sm py-2 px-3 rounded-lg border border-amber-200 text-slate-800 focus:ring-2 focus:ring-amber-500 outline-none">
+                                <button v-if="lang !== 'it'" @click="delete newsForm.customTitle[lang]" type="button" class="absolute top-6 right-2 text-red-500 hover:text-red-700 p-1.5 bg-white rounded-md shadow-sm"><i class="fa-solid fa-trash text-xs"></i></button>
                             </div>
                         </div>
 
-                        <div v-if="newsForm.template && newsForm.template !== 'custom'" class="mt-4 p-3 bg-white rounded-lg border border-amber-100 text-sm">
-                            <span class="block text-[10px] uppercase font-bold text-slate-400 mb-1">Anteprima Finale (IT)</span>
-                            <strong class="block text-slate-800">{{ generateTemplateText(newsForm.template, newsForm.templateParams, 'it', true) }}</strong>
-                            <p class="text-slate-600 mt-1">{{ generateTemplateText(newsForm.template, newsForm.templateParams, 'it', false) }}</p>
+                        <!-- Testi -->
+                        <div class="p-4 bg-amber-50 border border-amber-200 rounded-2xl space-y-3">
+                            <div class="flex items-center justify-between border-b border-amber-200 pb-2">
+                                <h4 class="text-sm font-bold uppercase text-amber-800">2. Testo Messaggio</h4>
+                                <div class="flex items-center gap-2">
+                                    <select v-model="selectedNewLangNewsContent" class="text-xs border border-amber-200 rounded-lg px-2 py-1 bg-white outline-none">
+                                        <option value="">Aggiungi lingua...</option>
+                                        <option v-for="(l, code) in availableLangsForNewsContent" :key="code" :value="code">{{ l.name }}</option>
+                                    </select>
+                                    <button @click="addLangToNewsContent" type="button" class="bg-amber-600 hover:bg-amber-700 text-white text-[10px] font-bold px-2.5 py-1.5 rounded-lg shadow-sm transition"><i class="fa-solid fa-plus"></i></button>
+                                </div>
+                            </div>
+                            <div v-for="(text, lang) in newsForm.customContent" :key="'content_'+lang" class="relative">
+                                <label class="block text-[10px] font-bold text-amber-700 mb-1 uppercase flex items-center gap-1">
+                                    <span class="flag-emoji text-sm">{{ languages[lang]?.flag }}</span> {{ languages[lang]?.name }} <span v-if="lang==='it'">(Predefinito)</span>
+                                </label>
+                                <textarea v-model="newsForm.customContent[lang]" rows="3" class="w-full text-sm py-2 px-3 rounded-lg border border-amber-200 text-slate-800 focus:ring-2 focus:ring-amber-500 outline-none"></textarea>
+                                <button v-if="lang !== 'it'" @click="delete newsForm.customContent[lang]" type="button" class="absolute top-6 right-2 text-red-500 hover:text-red-700 p-1.5 bg-white rounded-md shadow-sm"><i class="fa-solid fa-trash text-xs"></i></button>
+                            </div>
+                            <p class="text-[10px] text-amber-700 mt-2 font-medium"><i class="fa-solid fa-info-circle mr-1"></i>Le lingue non inserite manualmente mostreranno la versione Inglese o Italiana.</p>
                         </div>
                     </div>
                 </div>
 
                 <div class="bg-slate-900 text-white p-4 rounded-3xl shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div class="flex items-center gap-2">
-                        <i class="fa-solid fa-cloud text-amber-400 text-lg"></i>
-                        <span class="text-xs sm:text-sm font-medium">Notizia pronta per la pubblicazione</span>
+                        <i class="fa-solid fa-cloud-arrow-up text-amber-400 text-lg"></i>
+                        <span class="text-xs sm:text-sm font-medium">Tutto pronto per la pubblicazione</span>
                     </div>
 
                     <div class="flex items-center gap-3 w-full sm:w-auto">
@@ -976,7 +988,7 @@
 
         </main>
 
-        <!-- Modals and Overlay -->
+        <!-- Modals (Invariati) -->
         <div v-if="activeModalService" @click.self="activeModalService = null" 
              class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fadeIn">
             <div class="bg-white w-full max-w-lg rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl space-y-5 transform transition-transform"
@@ -1171,15 +1183,13 @@
                 const editForm = ref({
                     id: null,
                     name_it: '', name_en: '',
-                    address: '',
-                    phone: '',
-                    email: '',
+                    address: '', phone: '', email: '',
                     hours_it: '', hours_en: '',
                     description_it: '', description_en: '',
                     status: 'active',
                     noticeTemplate: 'none',
                     noticeParams: {},
-                    customNotice: { it: '' }, // Contiene le traduzioni del Template Libero
+                    customNotice: { it: '' },
                     organization: '',
                     category: 'showers',
                     image: ''
@@ -1189,6 +1199,7 @@
                 const uploadingImage = ref(false);
                 const imageUploadError = ref('');
 
+                // STATO FORM NOTIZIE RIORGANIZZATO
                 const editingNews = ref(null);
                 const newsForm = ref({
                     id: null,
@@ -1196,10 +1207,11 @@
                     priority: 'normal',
                     association: '',
                     related_service_id: null,
+                    useCustomText: false, // Gestisce il tab Modello / Testo Libero
                     template: 'weather_closure',
                     templateParams: {},
-                    customTitle: { it: '' },   // Contiene i titoli liberi (News)
-                    customContent: { it: '' }  // Contiene i messaggi liberi (News)
+                    customTitle: { it: '' },
+                    customContent: { it: '' }
                 });
                 const savingNewsId = ref(false);
                 const isLoadingNews = ref(true);
@@ -1227,7 +1239,6 @@
                     showLangMenu.value = false;
                 };
 
-                // DIZIONARIO UI E TEMPLATES
                 const i18n = {
                     it: {
                         tab_services: 'Esplora Servizi', tab_news: 'Notizie & Allerta', tab_emergency: 'Emergenze',
@@ -1287,25 +1298,22 @@
                         tpl_desc_time_change: 'New temporary service schedule: {orario}.',
                         tpl_desc_service_suspended: 'Service is suspended until further notice.'
                     }
-                    // Le altre lingue faranno fallback automatico sull'inglese/italiano.
                 };
 
+                // Array pulito solo con modelli veri e propri. 
+                // L'opzione custom/manuale è gestita con il Toggle UI (useCustomText)
                 const templates = [
-                    { id: 'none', label: 'Nessun avviso speciale', params: [] },
                     { id: 'weather_closure', label: 'Chiusura per Maltempo', params: [] },
                     { id: 'temp_closure', label: 'Chiusura Temporanea', params: ['data'] },
                     { id: 'extra_opening', label: 'Apertura Straordinaria', params: ['orario'] },
                     { id: 'time_change', label: 'Variazione Orario', params: ['orario'] },
-                    { id: 'service_suspended', label: 'Servizio Sospeso', params: [] },
-                    { id: 'custom', label: 'Testo Libero (Manuale)', params: [] } // NUOVO TEMPLATE
+                    { id: 'service_suspended', label: 'Servizio Sospeso', params: [] }
                 ];
 
                 const t = (key) => i18n[currentLangCode.value]?.[key] || i18n['en']?.[key] || i18n['it']?.[key] || key;
 
-                // Estrae la traduzione con sistema di Fallback (lingua richiesta -> Inglese -> Italiano)
                 const translateField = (obj, fieldName) => {
                     if (!obj) return '';
-                    // Se passiamo l'oggetto intero invece del campo:
                     const field = fieldName ? obj[fieldName] : obj;
                     if (!field) return '';
                     if (typeof field === 'string') return field;
@@ -1331,9 +1339,8 @@
                 const getCategoryLabelKey = (catId) => categories.find(c => c.id === catId)?.labelKey || 'cat_all';
 
                 // --- FUNZIONI DI GENERAZIONE TEMPLATE E LINGUE ---
-                
                 const generateTemplateText = (templateId, params, langCode, isTitle = false) => {
-                    if (templateId === 'none' || templateId === 'custom') return '';
+                    if (!templateId || templateId === 'none' || templateId === 'custom') return '';
                     const prefix = isTitle ? 'tpl_title_' : 'tpl_desc_';
                     
                     let text = i18n[langCode]?.[prefix + templateId] || i18n['en']?.[prefix + templateId] || i18n['it']?.[prefix + templateId] || '';
@@ -1348,7 +1355,7 @@
 
                 const buildMultilangObjFromTemplate = (templateId, params, isTitle = false) => {
                     const result = {};
-                    if (templateId === 'none' || templateId === 'custom') return result;
+                    if (!templateId || templateId === 'none' || templateId === 'custom') return result;
                     for (const langCode in languages) {
                         result[langCode] = generateTemplateText(templateId, params, langCode, isTitle);
                     }
@@ -1359,10 +1366,8 @@
                     const it = (valIT || '').trim();
                     const en = (valEN || '').trim();
                     const result = { it: it };
-                    
                     if (en !== '') result.en = en;
-                    else result.en = it; // Fallback se manca inglese
-
+                    else result.en = it; 
                     for (const langCode in languages) {
                         if (langCode !== 'it' && langCode !== 'en') {
                             result[langCode] = result.en; 
@@ -1372,7 +1377,6 @@
                 };
 
                 // --- GESTIONE CAMPI MANUALI DINAMICI (Custom) ---
-
                 const selectedNewLangService = ref('');
                 const availableLangsForServiceCustom = computed(() => {
                     const available = {};
@@ -1424,14 +1428,11 @@
                     }
                 };
 
-
                 // --- GESTIONE AUTENTICAZIONE E DATABASE ---
-
                 const checkAuthSession = async () => {
                     if (!supabase) return;
                     const { data: { session } } = await supabase.auth.getSession();
                     user.value = session ? session.user : null;
-
                     supabase.auth.onAuthStateChange((_, session) => {
                         user.value = session ? session.user : null;
                         if (!session && activeTab.value === 'admin_dashboard') {
@@ -1507,7 +1508,7 @@
                     let initCustomNotice = { it: '' };
                     
                     if (service.latestUpdate && service.latestUpdate.text) {
-                        initNoticeTpl = 'custom'; // Consideriamo le vecchie modifiche salvate come Testo Libero
+                        initNoticeTpl = 'custom'; 
                         initCustomNotice = JSON.parse(JSON.stringify(service.latestUpdate.text));
                         if (typeof initCustomNotice === 'string') initCustomNotice = { it: initCustomNotice };
                         if (!initCustomNotice.it) initCustomNotice.it = '';
@@ -1594,6 +1595,7 @@
                     finally { savingServiceId.value = false; }
                 };
 
+                // --- GESTIONE NOTIZIE ---
                 const globalNews = ref([]);
 
                 const NEWS_TYPES = {
@@ -1602,6 +1604,28 @@
                     emergency: { icon: 'fa-solid fa-triangle-exclamation', badgeClass: 'bg-red-100 text-red-700' }
                 };
                 const getNewsTypeStyle = (type) => NEWS_TYPES[type] || NEWS_TYPES.general;
+
+                // Calcola il livello di urgenza basato sulla combinazione tipo/priorità
+                const isUrgency = (level) => {
+                    if (level === 'info' && newsForm.value.type === 'general') return true;
+                    if (level === 'update' && newsForm.value.type === 'service_update') return true;
+                    if (level === 'emergency' && newsForm.value.type === 'emergency') return true;
+                    return false;
+                };
+
+                // Imposta combinatamente type e priority dal tasto UI
+                const setNewsUrgency = (level) => {
+                    if (level === 'info') {
+                        newsForm.value.type = 'general';
+                        newsForm.value.priority = 'normal';
+                    } else if (level === 'update') {
+                        newsForm.value.type = 'service_update';
+                        newsForm.value.priority = 'normal';
+                    } else if (level === 'emergency') {
+                        newsForm.value.type = 'emergency';
+                        newsForm.value.priority = 'high';
+                    }
+                };
 
                 const formatNewsDate = (isoDate) => {
                     if (!isoDate) return '';
@@ -1623,11 +1647,6 @@
                     finally { isLoadingNews.value = false; }
                 };
 
-                const selectNewsType = (type) => {
-                    newsForm.value.type = type;
-                    if (type === 'emergency') newsForm.value.priority = 'high';
-                };
-
                 const startEditingNews = (news) => {
                     editingNews.value = news;
                     
@@ -1639,9 +1658,13 @@
                     if (!initCustomContent.it) initCustomContent.it = '';
 
                     newsForm.value = {
-                        id: news.id, type: news.type || 'general', priority: news.priority || 'normal',
-                        association: news.association || '', related_service_id: news.related_service_id || null,
-                        template: news.id ? 'custom' : 'weather_closure', // Se è un edit, la carichiamo come testolibero (custom)
+                        id: news.id, 
+                        type: news.type || 'general', 
+                        priority: news.priority || 'normal',
+                        association: news.association || '', 
+                        related_service_id: news.related_service_id || null,
+                        useCustomText: !!news.id, // Se è un edit, apri in Testo Libero per non sovrascrivere
+                        template: 'weather_closure', 
                         templateParams: {},
                         customTitle: initCustomTitle,
                         customContent: initCustomContent
@@ -1652,9 +1675,16 @@
                 const startCreatingNews = () => {
                     editingNews.value = { id: null };
                     newsForm.value = {
-                        id: null, type: 'general', priority: 'normal', association: '', related_service_id: null,
-                        template: 'weather_closure', templateParams: {},
-                        customTitle: { it: '' }, customContent: { it: '' }
+                        id: null, 
+                        type: 'general', 
+                        priority: 'normal', 
+                        association: '', 
+                        related_service_id: null,
+                        useCustomText: false,
+                        template: 'weather_closure', 
+                        templateParams: {},
+                        customTitle: { it: '' }, 
+                        customContent: { it: '' }
                     };
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                 };
@@ -1670,7 +1700,7 @@
                     try {
                         let finalTitle, finalContent;
 
-                        if (newsForm.value.template === 'custom') {
+                        if (newsForm.value.useCustomText) {
                             finalTitle = JSON.parse(JSON.stringify(newsForm.value.customTitle));
                             finalContent = JSON.parse(JSON.stringify(newsForm.value.customContent));
                         } else {
@@ -1697,7 +1727,7 @@
                             const { data, error } = await supabase.from('news').insert([payload]).select();
                             if (error) throw error;
                             globalNews.value.unshift(data[0]);
-                            alert("📢 Notizia pubblicata in multilingua!");
+                            alert("📢 Notizia pubblicata!");
                         }
                         cancelEditingNews();
                     } catch (err) { alert("❌ Errore pubblicazione: " + err.message); } 
@@ -1776,7 +1806,7 @@
                     adminSection,
                     editingNews, newsForm, savingNewsId,
                     startEditingNews, startCreatingNews, cancelEditingNews, saveNewsChanges, deleteNewsItem,
-                    selectNewsType, getNewsTypeStyle, formatNewsDate,
+                    getNewsTypeStyle, formatNewsDate, isUrgency, setNewsUrgency,
                     templates, selectedNoticeTemplate, selectedNewsTemplate, generateTemplateText,
                     selectedNewLangService, availableLangsForServiceCustom, addLangToServiceCustom,
                     selectedNewLangNewsTitle, availableLangsForNewsTitle, addLangToNewsTitle,
