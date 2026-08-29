@@ -1,0 +1,20 @@
+name: Keep Supabase Alive
+
+on:
+  schedule:
+    # Esegue la chiamata ogni lunedì e giovedì alle 10:00 UTC
+    - cron: '0 10 * * 1,4'
+  workflow_dispatch: # Questo ti permette di avviare lo script anche manualmente da GitHub
+
+jobs:
+  ping-database:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase API
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          curl -s -X GET "${SUPABASE_URL}/rest/v1/services?select=id&limit=1" \
+          -H "apikey: ${SUPABASE_KEY}" \
+          -H "Authorization: Bearer ${SUPABASE_KEY}"
