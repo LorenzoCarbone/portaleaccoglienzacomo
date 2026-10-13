@@ -172,7 +172,7 @@
                             <div class="p-5 space-y-4">
                                 <div class="flex items-start gap-2.5 text-slate-800 text-sm bg-brand-50/70 p-3 rounded-xl border border-brand-100"><i class="fa-solid fa-location-dot text-brand-600 mt-0.5 text-base shrink-0"></i><span class="font-bold tracking-wide text-brand-900">{{ service.address }}</span></div>
                                 <div>
-                                    <p class="text-slate-600 text-sm leading-relaxed transition-all" :class="isServiceExpanded(service.id) ? '' : 'line-clamp-3'">{{ translateField(service, 'description') }}</p>
+                                    <p class="text-slate-600 text-sm leading-relaxed transition-all whitespace-pre-line" :class="isServiceExpanded(service.id) ? '' : 'line-clamp-3'" v-html="translateField(service, 'description')"></p>
                                     <button @click="toggleServiceExpanded(service.id)" type="button" class="mt-1.5 text-xs font-bold text-brand-600 hover:text-brand-700 flex items-center gap-1 transition"><span>{{ isServiceExpanded(service.id) ? t('show_less') : t('show_more') }}</span><i class="fa-solid fa-chevron-down text-[10px] transition-transform" :class="{'rotate-180': isServiceExpanded(service.id)}"></i></button>
                                 </div>
                                 <div class="bg-slate-50 rounded-2xl p-3 border border-slate-100 text-xs text-slate-600 flex items-start gap-3">
