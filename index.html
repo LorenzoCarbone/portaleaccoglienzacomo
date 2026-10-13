@@ -873,33 +873,7 @@
                     { id: 'org_coordinamento', name: 'Coordinamento Vicini di Strada' }
                 ];
 
-                const fixedServicesBase = [
-                    {
-                        id: 'srv_mensa_legami', org_id: 'org_legami', category: 'food',
-                        name: { it: 'Pranzi Solidali di Quartiere', en: 'Neighborhood Solidarity Lunches', fr: 'Déjeuners Solidaires', es: 'Almuerzos Solidarios' },
-                        desc: { it: 'Mensa solidale per i residenti e le persone in difficoltà, con momenti di aggregazione e condivisione.', en: 'Solidarity kitchen for residents and people in need, with community gathering moments.', fr: 'Cantine solidaire avec moments de partage communautaire.', es: 'Comedor solidario con momentos de encuentro comunitario.' }
-                    },
-                    {
-                        id: 'srv_aula_malgesini', org_id: 'org_malgesini', category: 'shelter',
-                        name: { it: 'Spazio Studio e Comunità', en: 'Study and Community Space', fr: 'Espace d\'Étude et Communauté', es: 'Espacio de Estudio y Comunidad' },
-                        desc: { it: 'Aula studio aperta agli studenti e spazio di ritrovo sicuro per la comunità nel quartiere Camerlata.', en: 'Study room open to students and safe gathering space in the Camerlata neighborhood.', fr: 'Salle d\'étude et espace de rencontre sécurisé dans le quartier Camerlata.', es: 'Sala de estudio y espacio de encuentro seguro en el barrio Camerlata.' }
-                    },
-                    {
-                        id: 'srv_sportello_planet', org_id: 'org_planet', category: 'clothes',
-                        name: { it: 'Sportello Riuso e Sostenibilità', en: 'Reuse and Sustainability Desk', fr: 'Guichet Réemploi et Durabilité', es: 'Punto de Reutilización y Sostenibilidad' },
-                        desc: { it: 'Punto di raccolta e distribuzione di abbigliamento recuperato, con informazioni su pratiche ecologiche.', en: 'Collection and distribution point for recovered clothing, with eco-friendly info.', fr: 'Point de collecte et distribution de vêtements récupérés.', es: 'Punto de recogida y distribución de ropa recuperada.' }
-                    },
-                    {
-                        id: 'srv_dormitorio_invernale', org_id: 'org_caritas', category: 'shelter',
-                        name: { it: 'Dormitorio Emergenza Freddo', en: 'Cold Emergency Shelter', fr: 'Dortoir d\'Urgence Froid', es: 'Albergue de Emergencia por Frío' },
-                        desc: { it: 'Accoglienza notturna straordinaria per persone senza dimora durante il Piano Inverno.', en: 'Extraordinary night shelter for homeless people during the Winter Plan.', fr: 'Accueil de nuit extraordinaire pendant le Plan Hiver.', es: 'Acogida nocturna extraordinaria durante el Plan de Invierno.' }
-                    },
-                    {
-                        id: 'srv_docce_pubbliche', org_id: 'org_coordinamento', category: 'showers',
-                        name: { it: 'Servizio Docce e Igiene Personale', en: 'Showers and Personal Hygiene Service', fr: 'Service Douches et Hygiène', es: 'Servicio de Duchas e Higiene' },
-                        desc: { it: 'Servizio di docce pubbliche gratuite con fornitura di kit igienico base.', en: 'Free public showers service with basic hygiene kit provided.', fr: 'Douches publiques gratuites avec kit d\'hygiène.', es: 'Duchas públicas gratuitas con kit de higiene.' }
-                    }
-                ];
+                const fixedServicesBase = [];
 
                 const formatHours = (hoursArray, langCode) => {
                     if (!hoursArray || !hoursArray.length) return i18n[langCode]?.hours_not_available || 'Orari non inseriti';
