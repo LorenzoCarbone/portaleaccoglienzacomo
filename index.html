@@ -22,11 +22,11 @@
                             200: '#b3f4d1',
                             300: '#7fe8b5',
                             400: '#4cd596',
-                            500: '#26b879', // Verdino freddo principale
-                            600: '#1a9560', // Hover bottoni
+                            500: '#26b879',
+                            600: '#1a9560',
                             700: '#16764d',
                             800: '#145e3f',
-                            900: '#124d35', // Sfondo Header scuro
+                            900: '#124d35',
                         },
                         warm: {
                             50: '#fdf8f6',
@@ -288,9 +288,26 @@
                 </div>
 
                 <div class="bg-white rounded-3xl border border-slate-200 overflow-hidden card-shadow divide-y divide-slate-100">
-                    <div class="p-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between text-xs font-bold text-slate-500 uppercase tracking-wider"><span>Seleziona per modificare ({{ services.length }})</span><span>Stato Attuale</span></div>
+                    <div class="p-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between text-xs font-bold text-slate-500 uppercase tracking-wider">
+                        <div class="flex items-center gap-3">
+                            <input type="checkbox" :checked="isAllSelected" @change="selectAllServices" class="w-4 h-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500 cursor-pointer">
+                            <span>Servizi ({{ services.length }})</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <button v-if="selectedServices.size > 0" @click="deleteSelectedServices" class="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1.5 rounded-lg flex items-center gap-2 transition normal-case font-bold" :disabled="isDeleting">
+                                <i class="fa-solid" :class="isDeleting ? 'fa-circle-notch fa-spin' : 'fa-trash'"></i>
+                                <span class="hidden sm:inline">Elimina ({{ selectedServices.size }})</span>
+                                <span class="sm:hidden">({{ selectedServices.size }})</span>
+                            </button>
+                            <span v-else>Stato Attuale</span>
+                        </div>
+                    </div>
+                    
                     <div v-for="service in services" :key="service.id" @click="startEditing(service)" class="p-4 sm:p-5 hover:bg-brand-50/60 transition cursor-pointer flex items-center justify-between gap-4 group active:bg-brand-100/50">
-                        <div class="flex items-center gap-3.5 overflow-hidden">
+                        <div class="flex items-center gap-3.5 overflow-hidden flex-1">
+                            <div class="shrink-0" @click.stop>
+                                <input type="checkbox" :checked="selectedServices.has(service.id)" @change="toggleServiceSelection(service.id, $event)" class="w-4 h-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500 cursor-pointer">
+                            </div>
                             <div class="w-12 h-12 rounded-2xl bg-slate-100 group-hover:bg-brand-100 text-slate-700 group-hover:text-brand-700 flex items-center justify-center text-2xl shrink-0 transition shadow-sm"><span>{{ getCategoryIcon(service.category) }}</span></div>
                             <div class="overflow-hidden">
                                 <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block truncate">{{ service.organization }}</span>
@@ -298,12 +315,13 @@
                                 <p class="text-xs text-slate-500 truncate mt-0.5"><i class="fa-solid fa-location-dot text-slate-400 mr-1"></i>{{ service.address }}</p>
                             </div>
                         </div>
-                        <div class="flex items-center gap-3 shrink-0">
+                        <div class="flex items-center gap-2 sm:gap-3 shrink-0">
                             <span class="px-2.5 py-1 rounded-full text-[11px] font-bold shadow-sm flex items-center gap-1.5" :class="[ service.status === 'active' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : service.status === 'notice' ? 'bg-amber-100 text-amber-800 border border-amber-300' : 'bg-red-100 text-red-800 border border-red-300' ]">
                                 <span class="w-1.5 h-1.5 rounded-full" :class="service.status === 'active' ? 'bg-emerald-500' : (service.status === 'notice' ? 'bg-amber-500' : 'bg-red-500')"></span>
                                 <span class="hidden sm:inline">{{ service.status === 'active' ? 'Regolare' : (service.status === 'notice' ? 'Variazione' : 'Sospeso') }}</span>
                             </span>
-                            <div class="w-8 h-8 rounded-full bg-slate-100 group-hover:bg-brand-600 text-slate-400 group-hover:text-white flex items-center justify-center text-xs transition"><i class="fa-solid fa-chevron-right" :class="{'rtl-flip': isRTL}"></i></div>
+                            <button @click.stop="deleteSingleService(service, $event)" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-red-600 text-slate-400 hover:text-white flex items-center justify-center text-xs transition" title="Elimina"><i class="fa-solid fa-trash"></i></button>
+                            <button class="w-8 h-8 rounded-full bg-slate-100 group-hover:bg-brand-600 text-slate-400 group-hover:text-white flex items-center justify-center text-xs transition" title="Modifica"><i class="fa-solid fa-chevron-right" :class="{'rtl-flip': isRTL}"></i></button>
                         </div>
                     </div>
                 </div>
@@ -788,6 +806,75 @@
 
                 const adminSection = ref('services');
                 const importCode = ref('');
+
+                // GESTIONE SELEZIONE ED ELIMINAZIONE SERVIZI
+                const selectedServices = ref(new Set());
+                const isDeleting = ref(false);
+
+                const toggleServiceSelection = (id, event) => {
+                    if(event) event.stopPropagation();
+                    const next = new Set(selectedServices.value);
+                    if (next.has(id)) next.delete(id);
+                    else next.add(id);
+                    selectedServices.value = next;
+                };
+
+                const selectAllServices = (event) => {
+                    if (event.target.checked) {
+                        const allIds = services.value.map(s => s.id);
+                        selectedServices.value = new Set(allIds);
+                    } else {
+                        selectedServices.value = new Set();
+                    }
+                };
+
+                const isAllSelected = computed(() => {
+                    return services.value.length > 0 && selectedServices.value.size === services.value.length;
+                });
+
+                const deleteSelectedServices = async () => {
+                    if (selectedServices.value.size === 0 || !supabase) return;
+                    const confirmed = confirm(`Sei sicuro di voler eliminare ${selectedServices.value.size} servizi? Questa azione è irreversibile.`);
+                    if (!confirmed) return;
+
+                    isDeleting.value = true;
+                    try {
+                        const ids = Array.from(selectedServices.value);
+                        const { error } = await supabase.from('services').delete().in('id', ids);
+                        if (error) throw error;
+
+                        dbServices.value = dbServices.value.filter(s => !ids.includes(s.id));
+                        selectedServices.value = new Set();
+                        alert("✅ Servizi eliminati con successo!");
+                    } catch (err) {
+                        alert("❌ Errore durante l'eliminazione: " + err.message);
+                    } finally {
+                        isDeleting.value = false;
+                    }
+                };
+
+                const deleteSingleService = async (service, event) => {
+                    if (event) event.stopPropagation();
+                    if (!supabase) return;
+                    const confirmed = confirm(`Sei sicuro di voler eliminare il servizio "${translateField(service, 'name')}"?`);
+                    if (!confirmed) return;
+
+                    isDeleting.value = true;
+                    try {
+                        const { error } = await supabase.from('services').delete().eq('id', service.id);
+                        if (error) throw error;
+
+                        dbServices.value = dbServices.value.filter(s => s.id !== service.id);
+                        const next = new Set(selectedServices.value);
+                        next.delete(service.id);
+                        selectedServices.value = next;
+                    } catch (err) {
+                        alert("❌ Errore durante l'eliminazione: " + err.message);
+                    } finally {
+                        isDeleting.value = false;
+                    }
+                };
+                // FINE GESTIONE SELEZIONE
 
                 const editingService = ref(null);
                 const editForm = ref({
@@ -1593,7 +1680,6 @@
                             category: editForm.value.category, 
                             image: String(editForm.value.image || '').trim(),
                             hours: validHours,
-                            // Usa oggetti JSON invece di colonne separate
                             name: { it: editForm.value.name_it, en: editForm.value.name_en },
                             description: { it: editForm.value.description_it, en: editForm.value.description_en }
                         };
@@ -1933,7 +2019,16 @@
                     addLangToNewsContent,
                     daysOfWeek,
                     formatHours,
-                    fixedOrganizations
+                    fixedOrganizations,
+                    
+                    // Nuovi metodi esportati per l'eliminazione
+                    selectedServices,
+                    isDeleting,
+                    toggleServiceSelection,
+                    selectAllServices,
+                    isAllSelected,
+                    deleteSelectedServices,
+                    deleteSingleService
                 };
             }
         }).mount('#app');
