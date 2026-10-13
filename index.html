@@ -840,8 +840,13 @@
                     isDeleting.value = true;
                     try {
                         const ids = Array.from(selectedServices.value);
-                        const { error } = await supabase.from('services').delete().in('id', ids);
+                        
+                        const { data, error } = await supabase.from('services').delete().in('id', ids).select();
+                        
                         if (error) throw error;
+                        if (!data || data.length === 0) {
+                            throw new Error("Il database ha bloccato l'operazione. Verifica le policy RLS (DELETE) su Supabase.");
+                        }
 
                         dbServices.value = dbServices.value.filter(s => !ids.includes(s.id));
                         selectedServices.value = new Set();
@@ -861,8 +866,12 @@
 
                     isDeleting.value = true;
                     try {
-                        const { error } = await supabase.from('services').delete().eq('id', service.id);
+                        const { data, error } = await supabase.from('services').delete().eq('id', service.id).select();
+                        
                         if (error) throw error;
+                        if (!data || data.length === 0) {
+                            throw new Error("Il database ha bloccato l'operazione. Verifica le policy RLS (DELETE) su Supabase.");
+                        }
 
                         dbServices.value = dbServices.value.filter(s => s.id !== service.id);
                         const next = new Set(selectedServices.value);
@@ -1925,8 +1934,11 @@
                     const confirmed = confirm("Eliminare definitivamente questa notizia?");
                     if (!confirmed) return;
                     try {
-                        const { error } = await supabase.from('news').delete().eq('id', news.id);
+                        const { data, error } = await supabase.from('news').delete().eq('id', news.id).select();
                         if (error) throw error;
+                        if (!data || data.length === 0) {
+                            throw new Error("Il database ha bloccato l'operazione. Verifica le policy RLS (DELETE) su Supabase.");
+                        }
                         globalNews.value = globalNews.value.filter(n => n.id !== news.id);
                     } catch (err) { 
                         alert("❌ Eliminazione non riuscita: " + err.message); 
@@ -2057,7 +2069,6 @@
                     formatHours,
                     fixedOrganizations,
                     
-                    // Nuovi metodi esportati per l'eliminazione
                     selectedServices,
                     isDeleting,
                     toggleServiceSelection,
