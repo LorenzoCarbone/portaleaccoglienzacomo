@@ -17,12 +17,16 @@
                     fontFamily: { sans: ['Inter', 'sans-serif'] },
                     colors: {
                         brand: {
-                            50: '#f0f9ff',
-                            100: '#e0f2fe',
-                            500: '#0ea5e9',
-                            600: '#0284c7',
-                            700: '#0369a1',
-                            900: '#0c4a6e',
+                            50: '#f4faeb',
+                            100: '#e6f4d3',
+                            200: '#cce9a7',
+                            300: '#abda71',
+                            400: '#8ec947',
+                            500: '#80c340',
+                            600: '#5c9625',
+                            700: '#46721f',
+                            800: '#385a1b',
+                            900: '#304c19',
                         },
                         warm: {
                             50: '#fdf8f6',
@@ -266,9 +270,10 @@
         </main>
 
         <main v-if="activeTab === 'admin_dashboard' && user" class="p-4 sm:p-6 space-y-6 animate-fadeIn max-w-4xl mx-auto">
-            <div class="flex gap-1.5 bg-white p-1.5 rounded-2xl border border-slate-200 shadow-sm w-fit">
-                <button @click="adminSection = 'services'; cancelEditing()" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition" :class="adminSection === 'services' ? 'bg-emerald-600 text-white shadow' : 'text-slate-500 hover:bg-slate-100'"><i class="fa-solid fa-layer-group"></i><span>Servizi</span></button>
-                <button @click="adminSection = 'news'; cancelEditingNews()" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition" :class="adminSection === 'news' ? 'bg-amber-500 text-white shadow' : 'text-slate-500 hover:bg-slate-100'"><i class="fa-solid fa-bell"></i><span>Notizie & Allerta</span></button>
+            <div class="flex gap-1.5 bg-white p-1.5 rounded-2xl border border-slate-200 shadow-sm w-fit overflow-x-auto no-scrollbar mb-4">
+                <button @click="adminSection = 'services'; cancelEditing()" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition whitespace-nowrap" :class="adminSection === 'services' ? 'bg-emerald-600 text-white shadow' : 'text-slate-500 hover:bg-slate-100'"><i class="fa-solid fa-layer-group"></i><span>Servizi</span></button>
+                <button @click="adminSection = 'news'; cancelEditingNews()" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition whitespace-nowrap" :class="adminSection === 'news' ? 'bg-amber-500 text-white shadow' : 'text-slate-500 hover:bg-slate-100'"><i class="fa-solid fa-bell"></i><span>Notizie & Allerta</span></button>
+                <button @click="adminSection = 'import'; cancelEditing(); cancelEditingNews()" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition whitespace-nowrap" :class="adminSection === 'import' ? 'bg-brand-600 text-white shadow' : 'text-slate-500 hover:bg-slate-100'"><i class="fa-solid fa-code"></i><span>Importa Dati</span></button>
             </div>
 
             <!-- GESTIONE SERVIZI ADMIN -->
@@ -488,6 +493,7 @@
             </div>
             </template>
 
+            <!-- GESTIONE NOTIZIE ADMIN -->
             <template v-if="adminSection === 'news'">
             <div v-if="!editingNews" class="space-y-6">
                 <div class="bg-gradient-to-r from-amber-500 to-warm-600 rounded-3xl p-6 sm:p-8 text-white shadow-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -649,6 +655,36 @@
             </div>
             </template>
 
+            <!-- IMPORT CODICE ADMIN -->
+            <template v-if="adminSection === 'import'">
+            <div class="space-y-6 animate-fadeIn">
+                <div class="bg-gradient-to-r from-brand-600 to-brand-800 rounded-3xl p-6 sm:p-8 text-white shadow-md">
+                    <span class="bg-white/20 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-2 inline-block">Strumenti Avanzati</span>
+                    <h2 class="text-2xl sm:text-3xl font-bold leading-tight mt-2">Importazione Codice</h2>
+                    <p class="text-brand-100 text-sm mt-1">Incolla qui lo snippet di codice per creare o aggiornare automaticamente la lista dei servizi.</p>
+                </div>
+
+                <div class="bg-white rounded-3xl border border-slate-200 p-5 sm:p-6 card-shadow space-y-4">
+                    <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-start gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center text-xl shrink-0"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                        <div>
+                            <h3 class="font-bold text-amber-900 text-sm">Attenzione</h3>
+                            <p class="text-xs text-amber-800 mt-1">L'esecuzione di codice in quest'area ha accesso diretto al database. Usa solo script verificati.</p>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Codice JavaScript AI</label>
+                        <textarea v-model="importCode" rows="10" placeholder="// Incolla qui il codice di aggiornamento preparato dall'AI..." class="w-full bg-slate-900 text-emerald-400 font-mono text-xs sm:text-sm p-4 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none shadow-inner"></textarea>
+                    </div>
+                    <div class="flex justify-end pt-2">
+                        <button @click="executeImportCode" class="bg-brand-600 hover:bg-brand-700 active:scale-95 text-white font-bold py-3 px-6 rounded-2xl text-sm shadow-md transition flex items-center gap-2">
+                            <i class="fa-solid fa-play"></i><span>Esegui Snippet</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            </template>
+
         </main>
         
         <div v-if="activeModalService" @click.self="activeModalService = null" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fadeIn">
@@ -751,6 +787,7 @@
                 const authForm = ref({ email: '', password: '' });
 
                 const adminSection = ref('services');
+                const importCode = ref('');
 
                 const editingService = ref(null);
                 const editForm = ref({
@@ -874,16 +911,33 @@
                 };
 
                 const services = computed(() => {
-                    return fixedServicesBase.map(fs => {
-                        const dbRecord = dbServices.value.find(db => db.id === fs.id) || {};
+                    const combined = [...fixedServicesBase];
+                    
+                    dbServices.value.forEach(db => {
+                        if (!combined.find(fs => fs.id === db.id)) {
+                            combined.push({
+                                id: db.id,
+                                org_id: db.org_id,
+                                category: db.category || 'showers'
+                            });
+                        }
+                    });
+
+                    return combined.map(item => {
+                        const dbRecord = dbServices.value.find(db => db.id === item.id) || {};
+                        const itName = dbRecord.name_it || (item.name ? item.name.it : '');
+                        const enName = dbRecord.name_en || (item.name ? item.name.en : '');
+                        const itDesc = dbRecord.description_it || (item.desc ? item.desc.it : '');
+                        const enDesc = dbRecord.description_en || (item.desc ? item.desc.en : '');
+                        
                         return {
-                            ...fs,
+                            ...item,
                             ...dbRecord,
-                            name: fs.name,
-                            description: fs.desc,
-                            organization: fixedOrganizations.find(o => o.id === (dbRecord.org_id || fs.org_id))?.name || 'Ente Sconosciuto',
-                            org_id: dbRecord.org_id || fs.org_id,
-                            hours: dbRecord.hours || []
+                            name: { it: itName, en: enName },
+                            description: { it: itDesc, en: enDesc },
+                            organization: fixedOrganizations.find(o => o.id === (dbRecord.org_id || item.org_id))?.name || 'Ente Sconosciuto',
+                            org_id: dbRecord.org_id || item.org_id,
+                            hours: dbRecord.hours || item.hours || []
                         };
                     });
                 });
@@ -1087,7 +1141,7 @@
                         tpl_title_emergenza_freddo: 'Plan Grand Froid',
                         tpl_desc_emergenza_freddo: 'Ouverture exceptionnelle (Plan Grand Froid).',
                         tpl_title_guasto_tecnico: 'Problème Technique',
-                        tpl_desc_guasto_tecnico: 'Service suspendu suite à un problème technique.',
+                        tpl_desc_guasto_tecnico: 'Service suspendido suite à un problème technique.',
                         tpl_title_raccolta_urgente: 'Collecte Urgente',
                         tpl_desc_raccolta_urgente: 'Nous avons un besoin urgent de : {oggetto}.',
                         tpl_title_distribuzione_speciale: 'Distribution Spéciale',
@@ -1534,6 +1588,21 @@
                     imageUploadError.value = ''; 
                 };
 
+                const executeImportCode = async () => {
+                    if (!importCode.value.trim()) return;
+                    const confirmed = confirm("Vuoi eseguire questo snippet nel database?");
+                    if (!confirmed) return;
+                    try {
+                        const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
+                        const executor = new AsyncFunction('supabase', 'dbServices', 'fixedOrganizations', 'fetchServices', importCode.value);
+                        await executor(supabase, dbServices.value, fixedOrganizations, fetchServices);
+                        alert('Codice eseguito con successo e dati aggiornati!');
+                        importCode.value = '';
+                    } catch (e) {
+                        alert('Errore durante l\'esecuzione:\n' + e.message);
+                    }
+                };
+
                 const saveServiceChanges = async () => {
                     if (!supabase || !editingService.value) return;
                     savingServiceId.value = true;
@@ -1549,7 +1618,11 @@
                             org_id: editForm.value.organization_id, 
                             category: editForm.value.category, 
                             image: String(editForm.value.image || '').trim(),
-                            hours: validHours
+                            hours: validHours,
+                            name_it: editForm.value.name_it,
+                            name_en: editForm.value.name_en,
+                            description_it: editForm.value.description_it,
+                            description_en: editForm.value.description_en
                         };
 
                         if (editForm.value.noticeTemplate === 'custom') {
@@ -1572,13 +1645,11 @@
                             const { error } = await supabase.from('services').update(payload).eq('id', editForm.value.id).select();
                             if (error) throw error;
                         } else {
-                            // Rimosso, la creazione non è permessa dalla modalità ibrida, ma mantenuto se abilitata altrove
                             const { data, error } = await supabase.from('services').insert([payload]).select();
                             if (error) throw error;
                             savedServiceId = data[0].id;
                         }
 
-                        // Aggiorna local array per immediata visualizzazione
                         const dbIdx = dbServices.value.findIndex(s => s.id === payload.id);
                         if (dbIdx >= 0) {
                             dbServices.value[dbIdx] = payload;
@@ -1850,7 +1921,9 @@
                     handleLogin, 
                     handleLogout, 
                     editingService, 
-                    editForm, 
+                    editForm,
+                    importCode,
+                    executeImportCode,
                     startEditing, 
                     startCreating, 
                     cancelEditing, 
