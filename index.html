@@ -128,7 +128,7 @@
                     <button v-if="selectedCategory !== 'all'" @click="selectedCategory = 'all'" class="text-xs font-semibold text-brand-600 hover:underline">{{ t('show_all') }}</button>
                 </div>
                 
-                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
                     <button @click="selectedCategory = 'all'" class="p-3.5 rounded-2xl border transition text-center flex flex-col items-center justify-center gap-1.5 min-h-[85px]" :class="selectedCategory === 'all' ? 'bg-brand-600 border-brand-600 text-white font-bold shadow-md scale-[1.02]' : 'bg-white border-slate-200 text-slate-600 hover:border-brand-300 hover:bg-brand-50/50'"><span class="text-2xl">🌍</span><span class="text-xs leading-tight">{{ t('cat_all') }}</span></button>
                     <button v-for="cat in categories" :key="cat.id" @click="selectedCategory = cat.id" class="p-3.5 rounded-2xl border transition text-center flex flex-col items-center justify-center gap-1.5 min-h-[85px] relative overflow-hidden" :class="selectedCategory === cat.id ? 'bg-brand-600 border-brand-600 text-white font-bold shadow-md scale-[1.02]' : 'bg-white border-slate-200 text-slate-600 hover:border-brand-300 hover:bg-brand-50/50'">
                         <span class="text-2xl">{{ cat.icon }}</span><span class="text-xs leading-tight">{{ t(cat.labelKey) }}</span>
@@ -951,12 +951,17 @@
                 ];
 
                 const fixedOrganizations = [
-                    { id: 'org_legami', name: 'Gruppo Giovani Legàmi' },
-                    { id: 'org_malgesini', name: 'Aula Studio R. Malgesini (Camerlata)' },
-                    { id: 'org_planet', name: 'We For The Planet' },
-                    { id: 'org_italo', name: 'Associazione Italo' },
                     { id: 'org_caritas', name: 'Caritas Como' },
-                    { id: 'org_crocerossa', name: 'Croce Rossa Italiana' },
+                    { id: 'org_incroci', name: 'Incroci ODV / Casa Nazareth' },
+                    { id: 'org_ozanam', name: 'Piccola Casa Federico Ozanam' },
+                    { id: 'org_rebbio', name: 'Parrocchia di Rebbio' },
+                    { id: 'org_guanella', name: 'ASCI Don Guanella / Suore Vincenziane' },
+                    { id: 'org_ossmig', name: 'Osservatorio Giuridico Diritti Migranti' },
+                    { id: 'org_lachesi', name: 'Associazione Lachesi' },
+                    { id: 'org_comoaccoglie', name: 'Como Accoglie' },
+                    { id: 'org_legami', name: 'Legàmi' },
+                    { id: 'org_symploke', name: 'Coop. Sociale Symploké' },
+                    { id: 'org_somaschi', name: 'Fondazione Somaschi' },
                     { id: 'org_coordinamento', name: 'Coordinamento Vicini di Strada' }
                 ];
 
@@ -1020,6 +1025,9 @@
                         cat_health: 'Medici & Salute',
                         cat_legal: 'Legale & Doc.',
                         cat_clothes: 'Vestiario',
+                        cat_day_center: 'Centri Diurni',
+                        cat_info: 'Sportelli & Info',
+                        cat_street: 'Unità di Strada',
                         services_found: 'servizi disponibili',
                         no_results_title: 'Nessun servizio trovato',
                         no_results_sub: 'Prova a cercare con altre parole o azzera i filtri della categoria.',
@@ -1106,6 +1114,9 @@
                         cat_health: 'Medical Care',
                         cat_legal: 'Legal & Docs',
                         cat_clothes: 'Clothing',
+                        cat_day_center: 'Day Centers',
+                        cat_info: 'Info Desks',
+                        cat_street: 'Street Outreach',
                         services_found: 'services available',
                         no_results_title: 'No services found',
                         no_results_sub: 'Try searching with different words or reset the category filters.',
@@ -1177,6 +1188,17 @@
                         tpl_desc_assenza_medico: 'Medical desk is suspended on {data} due to staff absence.'
                     },
                     fr: {
+                        cat_all: 'Tous les services',
+                        cat_showers: 'Douches & Hygiène',
+                        cat_food: 'Cantines & Repas',
+                        cat_shelter: 'Dortoirs',
+                        cat_health: 'Médecins & Santé',
+                        cat_legal: 'Légal & Docs',
+                        cat_clothes: 'Vêtements',
+                        cat_day_center: 'Centres de Jour',
+                        cat_info: 'Guichets Info',
+                        cat_street: 'Unités de Rue',
+                        
                         tpl_title_summer_closure: 'Fermeture Estivale',
                         tpl_desc_summer_closure: 'Le service sera fermé pour l\'été du {data_inizio} au {data_fine}.',
                         tpl_title_holiday_closure: 'Fermeture pour Jours Fériés',
@@ -1211,6 +1233,17 @@
                         tpl_desc_assenza_medico: 'Permanence médicale suspendue le {data}.'
                     },
                     es: {
+                        cat_all: 'Todos los servicios',
+                        cat_showers: 'Duchas e Higiene',
+                        cat_food: 'Comedores y Comida',
+                        cat_shelter: 'Dormitorios',
+                        cat_health: 'Médicos y Salud',
+                        cat_legal: 'Legal y Documentos',
+                        cat_clothes: 'Ropa',
+                        cat_day_center: 'Centros de Día',
+                        cat_info: 'Ventanillas Info',
+                        cat_street: 'Unidades de Calle',
+                        
                         tpl_title_summer_closure: 'Cierre de Verano',
                         tpl_desc_summer_closure: 'Cerrado por vacaciones del {data_inizio} al {data_fine}.',
                         tpl_title_holiday_closure: 'Cierre por Festivos',
@@ -1385,11 +1418,14 @@
                 };
 
                 const categories = [
-                    { id: 'showers', icon: '🚿', labelKey: 'cat_showers' },
                     { id: 'food', icon: '🍲', labelKey: 'cat_food' },
                     { id: 'shelter', icon: '🛏️', labelKey: 'cat_shelter' },
                     { id: 'health', icon: '🩺', labelKey: 'cat_health' },
                     { id: 'legal', icon: '⚖️', labelKey: 'cat_legal' },
+                    { id: 'day_center', icon: '☀️', labelKey: 'cat_day_center' },
+                    { id: 'info', icon: 'ℹ️', labelKey: 'cat_info' },
+                    { id: 'street', icon: '🚶‍♂️', labelKey: 'cat_street' },
+                    { id: 'showers', icon: '🚿', labelKey: 'cat_showers' },
                     { id: 'clothes', icon: '👕', labelKey: 'cat_clothes' }
                 ];
 
