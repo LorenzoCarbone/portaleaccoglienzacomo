@@ -1593,10 +1593,9 @@
                             category: editForm.value.category, 
                             image: String(editForm.value.image || '').trim(),
                             hours: validHours,
-                            name_it: editForm.value.name_it,
-                            name_en: editForm.value.name_en,
-                            description_it: editForm.value.description_it,
-                            description_en: editForm.value.description_en
+                            // Usa oggetti JSON invece di colonne separate
+                            name: { it: editForm.value.name_it, en: editForm.value.name_en },
+                            description: { it: editForm.value.description_it, en: editForm.value.description_en }
                         };
 
                         if (editForm.value.noticeTemplate === 'custom') {
