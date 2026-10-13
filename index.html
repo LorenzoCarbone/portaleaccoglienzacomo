@@ -1034,17 +1034,17 @@
 
                     return combined.map(item => {
                         const dbRecord = dbServices.value.find(db => db.id === item.id) || {};
-                        const itName = dbRecord.name_it || (item.name ? item.name.it : '');
-                        const enName = dbRecord.name_en || (item.name ? item.name.en : '');
-                        const itDesc = dbRecord.description_it || (item.desc ? item.desc.it : '');
-                        const enDesc = dbRecord.description_en || (item.desc ? item.desc.en : '');
+                        const itName = extractText(dbRecord.name, 'it') || (item.name ? item.name.it : '');
+                        const enName = extractText(dbRecord.name, 'en') || (item.name ? item.name.en : '');
+                        const itDesc = extractText(dbRecord.description, 'it') || (item.desc ? item.desc.it : '');
+                        const enDesc = extractText(dbRecord.description, 'en') || (item.desc ? item.desc.en : '');
                         
                         return {
                             ...item,
                             ...dbRecord,
                             name: { it: itName, en: enName },
                             description: { it: itDesc, en: enDesc },
-                            organization: fixedOrganizations.find(o => o.id === (dbRecord.org_id || item.org_id))?.name || dbRecord.organization || 'Ente Sconosciuto',
+                            organization: dbRecord.organization || fixedOrganizations.find(o => o.id === (dbRecord.org_id || item.org_id))?.name || 'Ente Sconosciuto',
                             org_id: dbRecord.org_id || item.org_id,
                             hours: dbRecord.hours || item.hours || []
                         };
