@@ -6,13 +6,13 @@
     <title>Vicini di Strada Como - Mappa Interattiva Servizi</title>
     <!-- Favicon (Icona URL del sito) -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 512 512%22><path fill=%22%2326b879%22 d=%22M105.1 202.6c7.7-21.8 20.2-42.3 37.8-59.8c62.5-62.5 163.8-62.5 226.3 0L386.3 160H336c-17.7 0-32 14.3-32 32s14.3 32 32 32H464c17.7 0 32-14.3 32-32V64c0-17.7-14.3-32-32-32s-32 14.3-32 32v51.2L414.4 97.6c-87.5-87.5-229.3-87.5-316.8 0C73.2 122 55.6 150.7 44.8 181.4c-5.9 16.7 2.9 34.9 19.5 40.8s34.9-2.9 40.8-19.5zM39 289.3c-26.2 14.6-52.6 13.7-73.3-4.3c-22.9-19.9-26.1-54.9-10.7-81.5c15.2-26.1 46.3-33.3 75.3-21.6c31.8 12.8 72.5 47.5 106.1 69.8c34.2 22.7 75.8 45.8 119.8 45.8c32.7 0 56.8-14.4 75-35.3c14.2-16.3 22-35.2 27.5-54.4c4.1-14.5 16.7-24.1 31.6-24.1h.7c19.1 .7 33.7 17.5 30.7 36.3c-4.9 30.8-16.7 63-39.3 89.2c-26.3 30.5-63.5 52.3-126.3 52.3c-58.6 0-108.7-27.7-144.5-51.4c-28.9-19.1-66.2-44-82.5-49.8z%22/></svg>">
-    
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Color+Emoji&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+
     <script>
         tailwind.config = {
             theme: {
@@ -53,7 +53,7 @@
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen">
     <div id="app" :dir="isRTL ? 'rtl' : 'ltr'" class="pb-24 max-w-7xl mx-auto px-2 sm:px-4 lg:px-8">
-        
+
         <header class="bg-brand-900 text-white shadow-lg sticky top-0 z-50 rounded-b-2xl sm:rounded-b-3xl mx-0 sm:-mx-2 lg:-mx-4">
             <div class="px-4 py-3 flex items-center justify-between gap-2 border-b border-brand-700/50">
                 <div class="flex items-center space-x-3" :class="{'space-x-reverse': isRTL}">
@@ -130,7 +130,7 @@
                     <h3 class="font-bold text-slate-700 text-sm uppercase tracking-wider">{{ t('categories_title') }}</h3>
                     <button v-if="selectedCategory !== 'all'" @click="selectedCategory = 'all'" class="text-xs font-semibold text-brand-600 hover:underline">{{ t('show_all') }}</button>
                 </div>
-                
+
                 <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
                     <button @click="selectedCategory = 'all'" class="p-3.5 rounded-2xl border transition text-center flex flex-col items-center justify-center gap-1.5 min-h-[85px]" :class="selectedCategory === 'all' ? 'bg-brand-600 border-brand-600 text-white font-bold shadow-md scale-[1.02]' : 'bg-white border-slate-200 text-slate-600 hover:border-brand-300 hover:bg-brand-50/50'"><span class="text-2xl">🌍</span><span class="text-xs leading-tight">{{ t('cat_all') }}</span></button>
                     <button v-for="cat in categories" :key="cat.id" @click="selectedCategory = cat.id" class="p-3.5 rounded-2xl border transition text-center flex flex-col items-center justify-center gap-1.5 min-h-[85px] relative overflow-hidden" :class="selectedCategory === cat.id ? 'bg-brand-600 border-brand-600 text-white font-bold shadow-md scale-[1.02]' : 'bg-white border-slate-200 text-slate-600 hover:border-brand-300 hover:bg-brand-50/50'">
@@ -181,16 +181,16 @@
                                     </div>
                                     <span class="font-bold tracking-wide text-brand-900 leading-snug">{{ service.address }}</span>
                                 </div>
-                                
+
                                 <!-- Descrizione Espandibile -->
                                 <div>
                                     <p class="text-slate-600 text-sm leading-relaxed transition-all whitespace-pre-line" :class="isServiceExpanded(service.id) ? '' : 'line-clamp-3'" v-html="translateField(service, 'description')"></p>
-                                    <button @click="toggleServiceExpanded(service.id)" type="button" class="mt-1.5 text-xs font-bold text-brand-600 hover:text-brand-700 flex items-center gap-1 transition">
+                                    <button v-if="needsExpansion(service)" @click="toggleServiceExpanded(service.id)" type="button" class="mt-1.5 text-xs font-bold text-brand-600 hover:text-brand-700 flex items-center gap-1 transition">
                                         <span>{{ isServiceExpanded(service.id) ? t('show_less') : t('show_more') }}</span>
                                         <i class="fa-solid fa-chevron-down text-[10px] transition-transform" :class="{'rotate-180': isServiceExpanded(service.id)}"></i>
                                     </button>
                                 </div>
-                                
+
                                 <!-- Orari Collassabili per non ingombrare la scheda -->
                                 <div class="bg-slate-50 rounded-2xl border border-slate-100 text-xs text-slate-600 overflow-hidden">
                                     <button @click="toggleHoursExpanded(service.id)" class="w-full flex items-center justify-between p-3 bg-slate-100/50 hover:bg-slate-100 transition font-bold text-slate-700">
@@ -322,7 +322,7 @@
                             <span v-else>Stato Attuale</span>
                         </div>
                     </div>
-                    
+
                     <div v-for="service in services" :key="service.id" @click="startEditing(service)" class="p-4 sm:p-5 hover:bg-brand-50/60 transition cursor-pointer flex items-center justify-between gap-4 group active:bg-brand-100/50">
                         <div class="flex items-center gap-3.5 overflow-hidden flex-1">
                             <div class="shrink-0" @click.stop>
@@ -346,7 +346,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <div v-else class="space-y-6 animate-fadeIn">
                 <div class="flex items-center justify-between bg-white p-4 rounded-2xl border border-slate-200 card-shadow sticky top-20 z-30">
                     <button @click="cancelEditing()" class="flex items-center gap-2 text-slate-600 hover:text-brand-600 font-bold text-xs sm:text-sm bg-slate-100 hover:bg-brand-50 px-3.5 py-2 rounded-xl transition active:scale-95"><i class="fa-solid fa-arrow-left" :class="{'rtl-flip': isRTL}"></i><span>Indietro</span></button>
@@ -419,7 +419,7 @@
                                     <button @click="addLangToServiceCustom" type="button" class="bg-brand-600 hover:bg-brand-700 text-white text-[10px] font-bold px-2 py-1.5 rounded-lg shadow-sm transition"><i class="fa-solid fa-plus"></i></button>
                                 </div>
                             </div>
-                            
+
                             <div v-for="(text, lang) in editForm.customNotice" :key="'notice_'+lang" class="relative">
                                 <label class="block text-[10px] font-bold text-brand-700 mb-1 uppercase flex items-center gap-1">
                                     <span class="flag-emoji">{{ languages[lang]?.flag }}</span> {{ languages[lang]?.name }} <span v-if="lang === 'it'">(Predefinito)</span>
@@ -576,20 +576,14 @@
 
                 <div class="bg-white rounded-3xl border border-slate-200 p-5 sm:p-6 card-shadow">
                     <div class="flex items-center gap-3 border-b border-slate-100 pb-3 mb-4"><div class="w-8 h-8 rounded-xl bg-slate-700 text-white flex items-center justify-center text-sm shadow-sm">1</div><h3 class="font-bold text-slate-800 text-base">Contesto e Riferimenti</h3></div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Ente / Associazione</label>
-                            <select v-model="newsForm.association_id" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-800 text-sm focus:ring-2 focus:ring-amber-500 transition">
-                                <option value="generale">Coordinamento Vicini di Strada</option>
-                                <option v-for="org in fixedOrganizations" :key="org.id" :value="org.id">{{ org.name }}</option>
-                            </select>
-                        </div>
+                    <div class="grid grid-cols-1 gap-4">
                         <div>
                             <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Servizio Collegato (opzionale)</label>
                             <select v-model="newsForm.related_service_id" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-800 text-sm focus:ring-2 focus:ring-amber-500 transition">
                                 <option :value="null">Nessuno / Avviso generico</option>
-                                <option v-for="s in services" :key="s.id" :value="s.id">{{ getCategoryIcon(s.category) }} {{ translateField(s, 'name') }}</option>
+                                <option v-for="s in services" :key="s.id" :value="s.id">{{ getCategoryIcon(s.category) }} {{ translateField(s, 'name') }} ({{ s.organization }})</option>
                             </select>
+                            <p class="text-[11px] text-slate-500 mt-1">Seleziona un servizio se l'avviso riguarda una struttura specifica. L'avviso verrà inviato a nome del Coordinamento.</p>
                         </div>
                     </div>
                 </div>
@@ -724,7 +718,7 @@
             </template>
 
         </main>
-        
+
         <div v-if="activeModalService" @click.self="activeModalService = null" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fadeIn">
             <div class="bg-white w-full max-w-lg rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl space-y-5 transform transition-transform" :class="{'text-right': isRTL}">
                 <div class="flex items-center justify-between border-b border-slate-100 pb-3">
@@ -818,7 +812,6 @@
                     expandedServiceIds.value = next;
                 };
 
-                // Aggiunta gestione degli orari espandibili
                 const expandedHoursIds = ref(new Set());
                 const isHoursExpanded = (serviceId) => expandedHoursIds.value.has(serviceId);
                 const toggleHoursExpanded = (serviceId) => {
@@ -873,9 +866,8 @@
                     isDeleting.value = true;
                     try {
                         const ids = Array.from(selectedServices.value);
-                        
                         const { data, error } = await supabase.from('services').delete().in('id', ids).select();
-                        
+
                         if (error) throw error;
                         if (!data || data.length === 0) {
                             throw new Error("Il database ha bloccato l'operazione. Verifica le policy RLS (DELETE) su Supabase.");
@@ -900,7 +892,7 @@
                     isDeleting.value = true;
                     try {
                         const { data, error } = await supabase.from('services').delete().eq('id', service.id).select();
-                        
+
                         if (error) throw error;
                         if (!data || data.length === 0) {
                             throw new Error("Il database ha bloccato l'operazione. Verifica le policy RLS (DELETE) su Supabase.");
@@ -938,7 +930,7 @@
                     description_it: '',
                     description_en: ''
                 });
-                
+
                 const savingServiceId = ref(false);
                 const uploadingImage = ref(false);
                 const imageUploadError = ref('');
@@ -948,7 +940,7 @@
                     id: null,
                     type: 'general',
                     priority: 'normal',
-                    association_id: 'generale',
+                    association_id: 'org_coordinamento',
                     related_service_id: null,
                     useCustomText: false,
                     template: 'posti_esauriti',
@@ -956,7 +948,7 @@
                     customTitle: { it: '' },
                     customContent: { it: '' }
                 });
-                
+
                 const savingNewsId = ref(false);
                 const isLoadingNews = ref(true);
 
@@ -1010,7 +1002,7 @@
                 const fixedServicesBase = [];
 
                 const formatHours = (hoursArray, langCode) => {
-                    const code = langCode || 'it'; // Fallback aggiunto per sicurezza su mobile
+                    const code = langCode || 'it'; 
                     if (!hoursArray || !hoursArray.length) return i18n[code]?.hours_not_available || 'Orari non inseriti';
                     return hoursArray.map(h => {
                         const dayObj = daysOfWeek.find(d => d.id === h.day);
@@ -1021,7 +1013,7 @@
 
                 const services = computed(() => {
                     const combined = [...fixedServicesBase];
-                    
+
                     dbServices.value.forEach(db => {
                         if (!combined.find(fs => fs.id === db.id)) {
                             combined.push({
@@ -1038,7 +1030,7 @@
                         const enName = extractText(dbRecord.name, 'en') || (item.name ? item.name.en : '');
                         const itDesc = extractText(dbRecord.description, 'it') || (item.desc ? item.desc.it : '');
                         const enDesc = extractText(dbRecord.description, 'en') || (item.desc ? item.desc.en : '');
-                        
+
                         return {
                             ...item,
                             ...dbRecord,
@@ -1050,6 +1042,12 @@
                         };
                     });
                 });
+
+                const needsExpansion = (service) => {
+                    const text = translateField(service, 'description');
+                    if (!text) return false;
+                    return text.length > 120 || (text.match(/\n/g) || []).length >= 2;
+                };
 
                 const i18n = {
                     it: {
@@ -1106,7 +1104,6 @@
                         send_email: 'Invia una mail',
                         open_maps: 'Apri navigatore GPS',
                         close: 'Chiudi finestra',
-                        
                         // TEMPLATES
                         tpl_title_summer_closure: 'Chiusura Estiva',
                         tpl_desc_summer_closure: 'Il servizio chiuderà per il periodo estivo dal {data_inizio} al {data_fine}.',
@@ -1195,7 +1192,6 @@
                         send_email: 'Send an email',
                         open_maps: 'Open GPS navigation',
                         close: 'Close window',
-                        
                         // TEMPLATES
                         tpl_title_summer_closure: 'Summer Closure',
                         tpl_desc_summer_closure: 'The service will be closed for the summer from {data_inizio} to {data_fine}.',
@@ -1231,6 +1227,14 @@
                         tpl_desc_assenza_medico: 'Medical desk is suspended on {data} due to staff absence.'
                     },
                     fr: {
+                        tab_services: 'Explorer',
+                        tab_news: 'Actualités & Alertes',
+                        tab_emergency: 'Urgences',
+                        welcome_title: 'Carte de l\'Accueil',
+                        welcome_sub: 'Trouvez douches, cantines, dortoirs et guichets d\'assistance à Côme en temps réel.',
+                        search_placeholder: 'Rechercher par nom, rue ou quartier...',
+                        categories_title: 'Catégories',
+                        show_all: 'Tout afficher',
                         cat_all: 'Tous les services',
                         cat_showers: 'Douches & Hygiène',
                         cat_food: 'Cantines & Repas',
@@ -1241,7 +1245,41 @@
                         cat_day_center: 'Centres de Jour',
                         cat_info: 'Guichets Info',
                         cat_street: 'Unités de Rue',
-                        
+                        services_found: 'services disponibles',
+                        no_results_title: 'Aucun service trouvé',
+                        no_results_sub: 'Essayez de chercher avec d\'autres mots ou réinitialisez les filtres.',
+                        reset_filters: 'Réinitialiser les filtres',
+                        status_active: 'Actif',
+                        status_notice: 'Changement',
+                        status_suspended: 'Suspendu',
+                        hours_label: 'Voir Horaires',
+                        hours_not_available: 'Horaires non disponibles ou 24/7',
+                        service_update_label: 'Alerte en temps réel',
+                        service_suspended_label: 'Service Suspendu',
+                        btn_contact: 'Contacter',
+                        btn_directions: 'Itinéraire GPS',
+                        show_more: 'Voir plus',
+                        show_less: 'Voir moins',
+                        news_page_title: 'Mises à jour',
+                        news_page_sub: 'Alertes en temps réel sur les horaires, les urgences ou les avis des associations.',
+                        priority_urgent: 'Urgent',
+                        priority_info: 'Info',
+                        related_service: 'Service concerné',
+                        go_to_card: 'Voir le service',
+                        emergency_title: 'Numéros d\'Urgence',
+                        emergency_sub: 'Numéros gratuits 24/7 pour toute urgence de santé ou de sécurité.',
+                        em_112_title: '112 - Urgences Générales',
+                        em_112_desc: 'Police, Pompiers, Urgences graves.',
+                        em_118_title: '118 - Urgence Médicale',
+                        em_118_desc: 'Ambulance et aide médicale immédiate.',
+                        em_street_unit_title: 'Unité de Rue',
+                        em_street_unit_desc: 'Si vous voyez une personne en grave difficulté dans la rue la nuit, signalez-le.',
+                        call_coordination: 'Signaler aux volontaires',
+                        choose_contact_method: 'Choisissez comment contacter',
+                        call_now: 'Appeler le numéro',
+                        send_email: 'Envoyer un email',
+                        open_maps: 'Ouvrir le GPS',
+                        close: 'Fermer',
                         tpl_title_summer_closure: 'Fermeture Estivale',
                         tpl_desc_summer_closure: 'Le service sera fermé pour l\'été du {data_inizio} au {data_fine}.',
                         tpl_title_holiday_closure: 'Fermeture pour Jours Fériés',
@@ -1267,7 +1305,7 @@
                         tpl_title_emergenza_freddo: 'Plan Grand Froid',
                         tpl_desc_emergenza_freddo: 'Ouverture exceptionnelle (Plan Grand Froid).',
                         tpl_title_guasto_tecnico: 'Problème Technique',
-                        tpl_desc_guasto_tecnico: 'Service suspendido suite à un problème technique.',
+                        tpl_desc_guasto_tecnico: 'Service suspendu suite à un problème technique.',
                         tpl_title_raccolta_urgente: 'Collecte Urgente',
                         tpl_desc_raccolta_urgente: 'Nous avons un besoin urgent de : {oggetto}.',
                         tpl_title_distribuzione_speciale: 'Distribution Spéciale',
@@ -1276,6 +1314,14 @@
                         tpl_desc_assenza_medico: 'Permanence médicale suspendue le {data}.'
                     },
                     es: {
+                        tab_services: 'Servicios',
+                        tab_news: 'Noticias y Alertas',
+                        tab_emergency: 'Emergencia',
+                        welcome_title: 'Mapa de Acogida',
+                        welcome_sub: 'Encuentra duchas, comedores, dormitorios y asistencia en Como en tiempo real.',
+                        search_placeholder: 'Buscar por nombre, calle o barrio...',
+                        categories_title: 'Categorías',
+                        show_all: 'Mostrar todo',
                         cat_all: 'Todos los servicios',
                         cat_showers: 'Duchas e Higiene',
                         cat_food: 'Comedores y Comida',
@@ -1286,7 +1332,41 @@
                         cat_day_center: 'Centros de Día',
                         cat_info: 'Ventanillas Info',
                         cat_street: 'Unidades de Calle',
-                        
+                        services_found: 'servicios disponibles',
+                        no_results_title: 'No se encontraron servicios',
+                        no_results_sub: 'Intenta buscar con otras palabras o limpia los filtros.',
+                        reset_filters: 'Limpiar filtros',
+                        status_active: 'Activo',
+                        status_notice: 'Aviso',
+                        status_suspended: 'Suspendido',
+                        hours_label: 'Ver Horarios',
+                        hours_not_available: 'Horarios no disponibles o 24/7',
+                        service_update_label: 'Alerta en tiempo real',
+                        service_suspended_label: 'Servicio Suspendido',
+                        btn_contact: 'Contactar',
+                        btn_directions: 'GPS',
+                        show_more: 'Mostrar más',
+                        show_less: 'Mostrar menos',
+                        news_page_title: 'Actualizaciones',
+                        news_page_sub: 'Alertas en tiempo real sobre cambios de horario, emergencias o avisos.',
+                        priority_urgent: 'Urgente',
+                        priority_info: 'Info',
+                        related_service: 'Servicio relacionado',
+                        go_to_card: 'Ver el servicio',
+                        emergency_title: 'Números de Emergencia',
+                        emergency_sub: 'Números gratuitos 24/7 para cualquier emergencia de salud o seguridad.',
+                        em_112_title: '112 - Emergencia General',
+                        em_112_desc: 'Policía, Bomberos, Emergencias graves.',
+                        em_118_title: '118 - Emergencia Médica',
+                        em_118_desc: 'Ambulancia y ayuda médica inmediata.',
+                        em_street_unit_title: 'Unidad de Calle',
+                        em_street_unit_desc: 'Si ves a alguien en grave dificultad en la calle por la noche, avísanos.',
+                        call_coordination: 'Avisar a voluntarios',
+                        choose_contact_method: 'Elige cómo contactar',
+                        call_now: 'Llamar',
+                        send_email: 'Enviar email',
+                        open_maps: 'Abrir GPS',
+                        close: 'Cerrar',
                         tpl_title_summer_closure: 'Cierre de Verano',
                         tpl_desc_summer_closure: 'Cerrado por vacaciones del {data_inizio} al {data_fine}.',
                         tpl_title_holiday_closure: 'Cierre por Festivos',
@@ -1319,6 +1399,441 @@
                         tpl_desc_distribuzione_speciale: 'Hoy hay distribución especial de: {oggetto}.',
                         tpl_title_assenza_medico: 'Servicio Médico Suspendido',
                         tpl_desc_assenza_medico: 'Servicio médico suspendido el {data}.'
+                    },
+                    ar: {
+                        tab_services: 'الخدمات',
+                        tab_news: 'أخبار وتنبيهات',
+                        tab_emergency: 'طوارئ',
+                        welcome_title: 'خريطة الاستقبال',
+                        welcome_sub: 'ابحث عن حمامات، مطاعم، ملاجئ ومكاتب مساعدة في كومو في الوقت الفعلي.',
+                        search_placeholder: 'ابحث بالاسم، الشارع أو الحي...',
+                        categories_title: 'فئات الخدمات',
+                        show_all: 'عرض الكل',
+                        cat_all: 'كل الخدمات',
+                        cat_showers: 'حمامات ونظافة',
+                        cat_food: 'طعام ومطاعم',
+                        cat_shelter: 'ملاجئ ونوم',
+                        cat_health: 'طبيب وصحة',
+                        cat_legal: 'قانون ووثائق',
+                        cat_clothes: 'ملابس',
+                        cat_day_center: 'مراكز نهارية',
+                        cat_info: 'مكاتب معلومات',
+                        cat_street: 'وحدات الشارع',
+                        services_found: 'خدمات متاحة',
+                        no_results_title: 'لم يتم العثور على خدمات',
+                        no_results_sub: 'حاول البحث بكلمات أخرى أو أعد ضبط الفلاتر.',
+                        reset_filters: 'إعادة ضبط',
+                        status_active: 'متاح',
+                        status_notice: 'تغيير',
+                        status_suspended: 'مغلق',
+                        hours_label: 'عرض الأوقات',
+                        hours_not_available: 'الأوقات غير متوفرة أو 24/7',
+                        service_update_label: 'تنبيه مباشر',
+                        service_suspended_label: 'الخدمة معلقة',
+                        btn_contact: 'اتصال',
+                        btn_directions: 'اتجاهات GPS',
+                        show_more: 'عرض المزيد',
+                        show_less: 'عرض أقل',
+                        news_page_title: 'تحديثات',
+                        news_page_sub: 'تنبيهات فورية حول تغييرات الأوقات وحالات الطوارئ.',
+                        priority_urgent: 'عاجل',
+                        priority_info: 'معلومة',
+                        related_service: 'الخدمة المعنية',
+                        go_to_card: 'عرض الخدمة',
+                        emergency_title: 'أرقام الطوارئ',
+                        emergency_sub: 'أرقام مجانية على مدار 24 ساعة لأي طوارئ صحية أو أمنية.',
+                        em_112_title: '112 - طوارئ عامة',
+                        em_112_desc: 'شرطة، إطفاء، طوارئ خطيرة.',
+                        em_118_title: '118 - إسعاف طبي',
+                        em_118_desc: 'إسعاف ومساعدة طبية فورية.',
+                        em_street_unit_title: 'وحدة الشارع',
+                        em_street_unit_desc: 'إذا رأيت شخصاً في خطر شديد في الشارع ليلاً، أبلغنا.',
+                        call_coordination: 'إبلاغ المتطوعين',
+                        choose_contact_method: 'اختر طريقة الاتصال',
+                        call_now: 'اتصل الآن',
+                        send_email: 'إرسال بريد',
+                        open_maps: 'فتح GPS',
+                        close: 'إغلاق',
+                        tpl_title_summer_closure: 'إغلاق صيفي',
+                        tpl_desc_summer_closure: 'ستكون الخدمة مغلقة للصيف من {data_inizio} إلى {data_fine}.',
+                        tpl_title_holiday_closure: 'إغلاق للعطلة',
+                        tpl_desc_holiday_closure: 'الخدمة مغلقة في {data}.',
+                        tpl_title_address_change: 'تغيير العنوان',
+                        tpl_desc_address_change: 'تنتقل الخدمة مؤقتاً إلى {indirizzo} بدءاً من {data}.',
+                        tpl_title_service_resumed: 'استئناف الخدمة',
+                        tpl_desc_service_resumed: 'ستُستأنف الأنشطة في {data}.',
+                        tpl_title_weather_closure: 'إغلاق بسبب الطقس',
+                        tpl_desc_weather_closure: 'الخدمة مغلقة مؤقتاً بسبب سوء الأحوال الجوية.',
+                        tpl_title_temp_closure: 'إغلاق مؤقت',
+                        tpl_desc_temp_closure: 'ستكون الخدمة مغلقة في {data}.',
+                        tpl_title_extra_opening: 'افتتاح استثنائي',
+                        tpl_desc_extra_opening: 'افتتاح استثنائي في {data} الساعة {orario}.',
+                        tpl_title_time_change: 'تغيير الوقت',
+                        tpl_desc_time_change: 'الوقت الجديد: {orario}.',
+                        tpl_title_service_suspended: 'تعليق الخدمة',
+                        tpl_desc_service_suspended: 'الخدمة معلقة حتى إشعار آخر.',
+                        tpl_title_service_updated: 'تحديث الخدمة',
+                        tpl_desc_service_updated: 'تم تحديث معلومات هذه الخدمة للتو.',
+                        tpl_title_posti_esauriti: 'الأسرة ممتلئة',
+                        tpl_desc_posti_esauriti: 'جميع الأسرة مشغولة لهذه الليلة.',
+                        tpl_title_emergenza_freddo: 'خطة الشتاء',
+                        tpl_desc_emergenza_freddo: 'افتتاح استثنائي بسبب البرد الشديد.',
+                        tpl_title_guasto_tecnico: 'عطل فني',
+                        tpl_desc_guasto_tecnico: 'الخدمة معلقة مؤقتاً بسبب عطل فني.',
+                        tpl_title_raccolta_urgente: 'جمع تبرعات عاجل',
+                        tpl_desc_raccolta_urgente: 'نحتاج بشكل عاجل إلى: {oggetto}.',
+                        tpl_title_distribuzione_speciale: 'توزيع خاص',
+                        tpl_desc_distribuzione_speciale: 'يوجد اليوم توزيع خاص لـ: {oggetto}.',
+                        tpl_title_assenza_medico: 'الخدمة الطبية معلقة',
+                        tpl_desc_assenza_medico: 'الخدمة الطبية معلقة في {data}.'
+                    },
+                    ur: {
+                        tab_services: 'خدمات',
+                        tab_news: 'خبریں اور الرٹس',
+                        tab_emergency: 'ہنگامی حالت',
+                        welcome_title: 'رہنمائی کا نقشہ',
+                        welcome_sub: 'کومو میں شاورز، کچن، شیلٹرز اور امدادی ڈیسک تلاش کریں۔',
+                        search_placeholder: 'نام، سڑک یا محلے سے تلاش کریں...',
+                        categories_title: 'کیٹیگریز',
+                        show_all: 'سب دکھائیں',
+                        cat_all: 'تمام خدمات',
+                        cat_showers: 'شاورز اور صفائی',
+                        cat_food: 'کھانا اور کچن',
+                        cat_shelter: 'پناہ گاہیں',
+                        cat_health: 'صحت اور ڈاکٹر',
+                        cat_legal: 'قانونی اور دستاویزات',
+                        cat_clothes: 'کپڑے',
+                        cat_day_center: 'ڈے سینٹرز',
+                        cat_info: 'معلوماتی ڈیسک',
+                        cat_street: 'اسٹریٹ آؤٹ ریچ',
+                        services_found: 'دستیاب خدمات',
+                        no_results_title: 'کوئی سروس نہیں ملی',
+                        no_results_sub: 'الفاظ تبدیل کریں یا فلٹرز ری سیٹ کریں۔',
+                        reset_filters: 'فلٹرز ری سیٹ کریں',
+                        status_active: 'فعال',
+                        status_notice: 'تبدیلی',
+                        status_suspended: 'معطل',
+                        hours_label: 'اوقات دیکھیں',
+                        hours_not_available: 'اوقات دستیاب نہیں یا 24/7',
+                        service_update_label: 'تازہ ترین الرٹ',
+                        service_suspended_label: 'سروس معطل',
+                        btn_contact: 'رابطہ کریں',
+                        btn_directions: 'راستہ (GPS)',
+                        show_more: 'مزید دیکھیں',
+                        show_less: 'کم دیکھیں',
+                        news_page_title: 'تازہ ترین خبریں',
+                        news_page_sub: 'اوقات میں تبدیلی یا ہنگامی حالات پر فوری الرٹس۔',
+                        priority_urgent: 'اہم',
+                        priority_info: 'معلومات',
+                        related_service: 'متعلقہ سروس',
+                        go_to_card: 'سروس دیکھیں',
+                        emergency_title: 'ایمرجنسی نمبرز',
+                        emergency_sub: 'صحت یا سیکیورٹی کی ایمرجنسی کے لیے 24/7 فری نمبرز۔',
+                        em_112_title: '112 - جنرل ایمرجنسی',
+                        em_112_desc: 'پولیس، فائر بریگیڈ، شدید ایمرجنسی۔',
+                        em_118_title: '118 - میڈیکل ایمرجنسی',
+                        em_118_desc: 'ایمبولینس اور فوری طبی امداد۔',
+                        em_street_unit_title: 'اسٹریٹ کوآرڈینیشن',
+                        em_street_unit_desc: 'اگر آپ رات کو کسی کو سڑک پر مشکل میں دیکھیں تو رضاکاروں کو بتائیں۔',
+                        call_coordination: 'رضاکاروں کو کال کریں',
+                        choose_contact_method: 'رابطے کا طریقہ منتخب کریں',
+                        call_now: 'کال کریں',
+                        send_email: 'ای میل بھیجیں',
+                        open_maps: 'GPS کھولیں',
+                        close: 'بند کریں',
+                        tpl_title_summer_closure: 'گرمیوں کی چھٹیاں',
+                        tpl_desc_summer_closure: 'سروس {data_inizio} سے {data_fine} تک بند رہے گی۔',
+                        tpl_title_holiday_closure: 'چھٹی',
+                        tpl_desc_holiday_closure: 'سروس {data} کو بند رہے گی۔',
+                        tpl_title_address_change: 'پتہ تبدیل ہو گیا',
+                        tpl_desc_address_change: 'سروس عارضی طور پر {data} سے {indirizzo} منتقل ہو گئی ہے۔',
+                        tpl_title_service_resumed: 'سروس بحال',
+                        tpl_desc_service_resumed: 'سروس {data} سے معمول کے مطابق کام کرے گی۔',
+                        tpl_title_weather_closure: 'موسم کی خرابی',
+                        tpl_desc_weather_closure: 'خراب موسم کی وجہ سے سروس عارضی طور پر بند ہے۔',
+                        tpl_title_temp_closure: 'عارضی بندش',
+                        tpl_desc_temp_closure: 'سروس {data} کو بند رہے گی۔',
+                        tpl_title_extra_opening: 'خصوصی اوقات',
+                        tpl_desc_extra_opening: '{data} کو {orario} بجے خصوصی طور پر کھلے گی۔',
+                        tpl_title_time_change: 'اوقات میں تبدیلی',
+                        tpl_desc_time_change: 'نئے اوقات کار: {orario}۔',
+                        tpl_title_service_suspended: 'سروس معطل',
+                        tpl_desc_service_suspended: 'سروس اگلے نوٹس تک معطل ہے۔',
+                        tpl_title_service_updated: 'سروس اپڈیٹ',
+                        tpl_desc_service_updated: 'اس سروس کی معلومات ابھی اپڈیٹ کی گئی ہیں۔',
+                        tpl_title_posti_esauriti: 'بستر بھر گئے',
+                        tpl_desc_posti_esauriti: 'آج رات کے لیے تمام بستر بک ہو چکے ہیں۔',
+                        tpl_title_emergenza_freddo: 'سردی کی ایمرجنسی',
+                        tpl_desc_emergenza_freddo: 'شدید سردی کی وجہ سے خصوصی انتظامات۔',
+                        tpl_title_guasto_tecnico: 'تکنیکی خرابی',
+                        tpl_desc_guasto_tecnico: 'تکنیکی خرابی کی وجہ سے سروس عارضی طور پر معطل ہے۔',
+                        tpl_title_raccolta_urgente: 'فوری ضرورت',
+                        tpl_desc_raccolta_urgente: 'ہمیں فوری طور پر ضرورت ہے: {oggetto}۔',
+                        tpl_title_distribuzione_speciale: 'خصوصی تقسیم',
+                        tpl_desc_distribuzione_speciale: 'آج خصوصی تقسیم ہوگی: {oggetto}۔',
+                        tpl_title_assenza_medico: 'طبی ڈیسک بند',
+                        tpl_desc_assenza_medico: 'ڈاکٹر کی غیر موجودگی کی وجہ سے {data} کو میڈیکل ڈیسک بند ہے۔'
+                    },
+                    hi: {
+                        tab_services: 'सेवाएं खोजें',
+                        tab_news: 'समाचार और अलर्ट',
+                        tab_emergency: 'आपातकाल',
+                        welcome_title: 'सहायता मानचित्र',
+                        welcome_sub: 'कोमो में शावर, रसोई, आश्रय और सहायता डेस्क खोजें।',
+                        search_placeholder: 'नाम, सड़क या मोहल्ले से खोजें...',
+                        categories_title: 'श्रेणियाँ',
+                        show_all: 'सभी दिखाएं',
+                        cat_all: 'सभी सेवाएं',
+                        cat_showers: 'शावर और स्वच्छता',
+                        cat_food: 'भोजन और रसोई',
+                        cat_shelter: 'आश्रय',
+                        cat_health: 'चिकित्सा देखभाल',
+                        cat_legal: 'कानूनी और दस्तावेज़',
+                        cat_clothes: 'कपड़े',
+                        cat_day_center: 'डे सेंटर',
+                        cat_info: 'जानकारी डेस्क',
+                        cat_street: 'स्ट्रीट आउटरीच',
+                        services_found: 'सेवाएं उपलब्ध',
+                        no_results_title: 'कोई सेवा नहीं मिली',
+                        no_results_sub: 'अन्य शब्दों से खोजें या फ़िल्टर रीसेट करें।',
+                        reset_filters: 'फ़िल्टर रीसेट करें',
+                        status_active: 'सक्रिय',
+                        status_notice: 'परिवर्तन',
+                        status_suspended: 'निलंबित',
+                        hours_label: 'समय देखें',
+                        hours_not_available: 'समय उपलब्ध नहीं या 24/7',
+                        service_update_label: 'ताज़ा अलर्ट',
+                        service_suspended_label: 'सेवा निलंबित',
+                        btn_contact: 'संपर्क करें',
+                        btn_directions: 'जीपीएस दिशा-निर्देश',
+                        show_more: 'और देखें',
+                        show_less: 'कम देखें',
+                        news_page_title: 'ताज़ा अपडेट',
+                        news_page_sub: 'समय में बदलाव या आपात स्थिति पर रीयल-टाइम अलर्ट।',
+                        priority_urgent: 'जरूरी',
+                        priority_info: 'जानकारी',
+                        related_service: 'संबंधित सेवा',
+                        go_to_card: 'सेवा देखें',
+                        emergency_title: 'आपातकालीन नंबर',
+                        emergency_sub: 'स्वास्थ्य या सुरक्षा आपातकाल के लिए 24/7 टोल-फ्री नंबर।',
+                        em_112_title: '112 - सामान्य आपातकाल',
+                        em_112_desc: 'पुलिस, फायर ब्रिगेड, गंभीर आपात स्थिति।',
+                        em_118_title: '118 - चिकित्सा आपातकाल',
+                        em_118_desc: 'एम्बुलेंस और तत्काल चिकित्सा सहायता।',
+                        em_street_unit_title: 'स्ट्रीट समन्वय',
+                        em_street_unit_desc: 'यदि आप रात में सड़क पर किसी को गंभीर संकट में देखते हैं, तो रिपोर्ट करें।',
+                        call_coordination: 'स्वयंसेवकों को कॉल करें',
+                        choose_contact_method: 'संपर्क का तरीका चुनें',
+                        call_now: 'कॉल करें',
+                        send_email: 'ईमेल भेजें',
+                        open_maps: 'जीपीएस खोलें',
+                        close: 'बंद करें',
+                        tpl_title_summer_closure: 'गर्मी की छुट्टी',
+                        tpl_desc_summer_closure: 'सेवा {data_inizio} से {data_fine} तक गर्मियों के लिए बंद रहेगी।',
+                        tpl_title_holiday_closure: 'छुट्टी',
+                        tpl_desc_holiday_closure: 'सेवा {data} को बंद रहेगी।',
+                        tpl_title_address_change: 'पता परिवर्तन',
+                        tpl_desc_address_change: 'सेवा अस्थायी रूप से {data} से {indirizzo} में स्थानांतरित हो रही है।',
+                        tpl_title_service_resumed: 'सेवा फिर से शुरू',
+                        tpl_desc_service_resumed: 'नियमित गतिविधियाँ {data} को फिर से शुरू होंगी।',
+                        tpl_title_weather_closure: 'मौसम के कारण बंद',
+                        tpl_desc_weather_closure: 'खराब मौसम के कारण सेवा अस्थायी रूप से बंद है।',
+                        tpl_title_temp_closure: 'अस्थायी रूप से बंद',
+                        tpl_desc_temp_closure: 'सेवा {data} को बंद रहेगी।',
+                        tpl_title_extra_opening: 'विशेष उद्घाटन',
+                        tpl_desc_extra_opening: '{data} को {orario} बजे विशेष उद्घाटन।',
+                        tpl_title_time_change: 'समय में परिवर्तन',
+                        tpl_desc_time_change: 'नया अस्थायी समय: {orario}।',
+                        tpl_title_service_suspended: 'सेवा निलंबित',
+                        tpl_desc_service_suspended: 'सेवा अगली सूचना तक निलंबित है।',
+                        tpl_title_service_updated: 'सेवा अपडेट की गई',
+                        tpl_desc_service_updated: 'इस सेवा की जानकारी अभी अपडेट की गई है।',
+                        tpl_title_posti_esauriti: 'बिस्तर भर गए',
+                        tpl_desc_posti_esauriti: 'कृपया ध्यान दें कि आज रात के लिए सभी बिस्तर भर चुके हैं।',
+                        tpl_title_emergenza_freddo: 'शीतकालीन योजना',
+                        tpl_desc_emergenza_freddo: 'भीषण ठंड के कारण विशेष उद्घाटन।',
+                        tpl_title_guasto_tecnico: 'तकनीकी खराबी',
+                        tpl_desc_guasto_tecnico: 'तकनीकी समस्याओं के कारण सेवा अस्थायी रूप से निलंबित है।',
+                        tpl_title_raccolta_urgente: 'तत्काल आवश्यकता',
+                        tpl_desc_raccolta_urgente: 'हमें तत्काल आवश्यकता है: {oggetto}।',
+                        tpl_title_distribuzione_speciale: 'विशेष वितरण',
+                        tpl_desc_distribuzione_speciale: 'आज {oggetto} का विशेष वितरण है।',
+                        tpl_title_assenza_medico: 'मेडिकल डेस्क बंद',
+                        tpl_desc_assenza_medico: 'कर्मचारियों की अनुपस्थिति के कारण मेडिकल डेस्क {data} को निलंबित है।'
+                    },
+                    sw: {
+                        tab_services: 'Huduma',
+                        tab_news: 'Habari & Arifa',
+                        tab_emergency: 'Dharura',
+                        welcome_title: 'Ramani ya Msaada',
+                        welcome_sub: 'Tafuta sehemu za kuoga, chakula, malazi na msaada huko Como.',
+                        search_placeholder: 'Tafuta kwa jina au barabara...',
+                        categories_title: 'Kategoria',
+                        show_all: 'Onyesha zote',
+                        cat_all: 'Huduma zote',
+                        cat_showers: 'Kuoga & Usafi',
+                        cat_food: 'Chakula',
+                        cat_shelter: 'Malazi',
+                        cat_health: 'Afya & Madaktari',
+                        cat_legal: 'Sheria & Nyaraka',
+                        cat_clothes: 'Nguo',
+                        cat_day_center: 'Vituo vya Mchana',
+                        cat_info: 'Taarifa',
+                        cat_street: 'Wasaidizi wa Mitaani',
+                        services_found: 'huduma zinapatikana',
+                        no_results_title: 'Hakuna huduma iliyopatikana',
+                        no_results_sub: 'Jaribu kutafuta kwa maneno mengine.',
+                        reset_filters: 'Weka upya',
+                        status_active: 'Inafanya kazi',
+                        status_notice: 'Mabadiliko',
+                        status_suspended: 'Imesimamishwa',
+                        hours_label: 'Onyesha Saa',
+                        hours_not_available: 'Saa hazipatikani au 24/7',
+                        service_update_label: 'Arifa mpya',
+                        service_suspended_label: 'Imesimamishwa',
+                        btn_contact: 'Wasiliana',
+                        btn_directions: 'Maelekezo GPS',
+                        show_more: 'Onyesha zaidi',
+                        show_less: 'Onyesha kidogo',
+                        news_page_title: 'Sasisho za Hivi Punde',
+                        news_page_sub: 'Arifa muhimu na mabadiliko ya ratiba.',
+                        priority_urgent: 'Muhimu',
+                        priority_info: 'Taarifa',
+                        related_service: 'Huduma inayohusika',
+                        go_to_card: 'Tazama huduma',
+                        emergency_title: 'Namba za Dharura',
+                        emergency_sub: 'Piga simu bure 24/7 kwa dharura yoyote ya afya au usalama.',
+                        em_112_title: '112 - Dharura Kuu',
+                        em_112_desc: 'Polisi, Moto, Dharura mbaya.',
+                        em_118_title: '118 - Dharura ya Kimatibabu',
+                        em_118_desc: 'Ambulansi na msaada wa matibabu.',
+                        em_street_unit_title: 'Usaidizi wa Mitaani',
+                        em_street_unit_desc: 'Ukiona mtu anahitaji msaada mitaani usiku, wajulishe.',
+                        call_coordination: 'Piga simu usaidizi',
+                        choose_contact_method: 'Chagua jinsi ya kuwasiliana',
+                        call_now: 'Piga simu',
+                        send_email: 'Tuma barua pepe',
+                        open_maps: 'Fungua GPS',
+                        close: 'Funga',
+                        tpl_title_summer_closure: 'Kufungwa kwa Majira ya Joto',
+                        tpl_desc_summer_closure: 'Huduma itafungwa kuanzia {data_inizio} hadi {data_fine}.',
+                        tpl_title_holiday_closure: 'Kufungwa kwa Sikukuu',
+                        tpl_desc_holiday_closure: 'Huduma itafungwa tarehe {data}.',
+                        tpl_title_address_change: 'Mabadiliko ya Anwani',
+                        tpl_desc_address_change: 'Huduma imehamia {indirizzo} kuanzia tarehe {data}.',
+                        tpl_title_service_resumed: 'Huduma Imeanza Tena',
+                        tpl_desc_service_resumed: 'Huduma zitaendelea kama kawaida tarehe {data}.',
+                        tpl_title_weather_closure: 'Kufungwa kwa Sababu ya Hali ya Hewa',
+                        tpl_desc_weather_closure: 'Huduma imefungwa kwa muda kutokana na hali mbaya ya hewa.',
+                        tpl_title_temp_closure: 'Kufungwa kwa Muda',
+                        tpl_desc_temp_closure: 'Huduma itafungwa tarehe {data}.',
+                        tpl_title_extra_opening: 'Ufunguzi Maalum',
+                        tpl_desc_extra_opening: 'Kutakuwa na ufunguzi maalum tarehe {data} saa {orario}.',
+                        tpl_title_time_change: 'Mabadiliko ya Saa',
+                        tpl_desc_time_change: 'Saa mpya za huduma: {orario}.',
+                        tpl_title_service_suspended: 'Huduma Imesimamishwa',
+                        tpl_desc_service_suspended: 'Huduma imesimamishwa mpaka taarifa itakapotolewa.',
+                        tpl_title_service_updated: 'Taarifa Mpya',
+                        tpl_desc_service_updated: 'Taarifa za huduma hii zimesasishwa.',
+                        tpl_title_posti_esauriti: 'Vitanda Vimejaa',
+                        tpl_desc_posti_esauriti: 'Vitanda vyote vimejaa kwa usiku wa leo.',
+                        tpl_title_emergenza_freddo: 'Mpango wa Baridi',
+                        tpl_desc_emergenza_freddo: 'Ufunguzi maalum kutokana na baridi kali.',
+                        tpl_title_guasto_tecnico: 'Tatizo la Kiufundi',
+                        tpl_desc_guasto_tecnico: 'Huduma imesimamishwa kwa muda kutokana na tatizo la kiufundi.',
+                        tpl_title_raccolta_urgente: 'Ukusanyaji wa Dharura',
+                        tpl_desc_raccolta_urgente: 'Tunahitaji kwa dharura: {oggetto}.',
+                        tpl_title_distribuzione_speciale: 'Ugawaji Maalum',
+                        tpl_desc_distribuzione_speciale: 'Leo kuna ugawaji maalum wa: {oggetto}.',
+                        tpl_title_assenza_medico: 'Huduma ya Daktari Imesimamishwa',
+                        tpl_desc_assenza_medico: 'Daktari hayupo, huduma imesimamishwa tarehe {data}.'
+                    },
+                    tr: {
+                        tab_services: 'Hizmetler',
+                        tab_news: 'Haberler & Uyarılar',
+                        tab_emergency: 'Acil Durum',
+                        welcome_title: 'Yardım Haritası',
+                        welcome_sub: 'Como\'daki duşlar, yemekhaneler, barınaklar ve yardım masalarını bulun.',
+                        search_placeholder: 'İsim, sokak veya mahalle ara...',
+                        categories_title: 'Kategoriler',
+                        show_all: 'Tümünü göster',
+                        cat_all: 'Tüm hizmetler',
+                        cat_showers: 'Duş & Hijyen',
+                        cat_food: 'Yemek & Mutfak',
+                        cat_shelter: 'Barınaklar',
+                        cat_health: 'Sağlık & Doktor',
+                        cat_legal: 'Hukuk & Belgeler',
+                        cat_clothes: 'Giysi',
+                        cat_day_center: 'Gündüz Merkezleri',
+                        cat_info: 'Bilgi Masaları',
+                        cat_street: 'Sokak Yardımı',
+                        services_found: 'hizmet bulundu',
+                        no_results_title: 'Hizmet bulunamadı',
+                        no_results_sub: 'Farklı kelimelerle arayın veya filtreleri sıfırlayın.',
+                        reset_filters: 'Sıfırla',
+                        status_active: 'Açık',
+                        status_notice: 'Değişiklik',
+                        status_suspended: 'Kapalı',
+                        hours_label: 'Saatleri Göster',
+                        hours_not_available: 'Saatler belirtilmemiş veya 24/7',
+                        service_update_label: 'Anlık uyarı',
+                        service_suspended_label: 'Hizmet Askıya Alındı',
+                        btn_contact: 'İletişim',
+                        btn_directions: 'GPS Yol Tarifi',
+                        show_more: 'Daha fazla göster',
+                        show_less: 'Daha az göster',
+                        news_page_title: 'Son Güncellemeler',
+                        news_page_sub: 'Saat değişiklikleri veya acil durumlar hakkında anlık bildirimler.',
+                        priority_urgent: 'Acil',
+                        priority_info: 'Bilgi',
+                        related_service: 'İlgili hizmet',
+                        go_to_card: 'Hizmeti gör',
+                        emergency_title: 'Acil Numaralar',
+                        emergency_sub: 'Sağlık veya güvenlik acil durumları için 7/24 ücretsiz numaralar.',
+                        em_112_title: '112 - Genel Acil Durum',
+                        em_112_desc: 'Polis, İtfaiye, Ciddi acil durumlar.',
+                        em_118_title: '118 - Tıbbi Acil Durum',
+                        em_118_desc: 'Ambulans ve acil tıbbi yardım.',
+                        em_street_unit_title: 'Sokak Yardımı',
+                        em_street_unit_desc: 'Gece sokakta zor durumda birini görürseniz gönüllülere bildirin.',
+                        call_coordination: 'Gönüllüleri Ara',
+                        choose_contact_method: 'Nasıl iletişime geçmek istersiniz?',
+                        call_now: 'Hemen Ara',
+                        send_email: 'E-posta Gönder',
+                        open_maps: 'Haritayı Aç',
+                        close: 'Kapat',
+                        tpl_title_summer_closure: 'Yaz Kapanışı',
+                        tpl_desc_summer_closure: 'Hizmet {data_inizio} ile {data_fine} tarihleri arasında kapalı olacaktır.',
+                        tpl_title_holiday_closure: 'Tatil Kapanışı',
+                        tpl_desc_holiday_closure: 'Hizmet {data} tarihinde kapalıdır.',
+                        tpl_title_address_change: 'Adres Değişikliği',
+                        tpl_desc_address_change: 'Hizmet geçici olarak {data} tarihinden itibaren {indirizzo} adresine taşınıyor.',
+                        tpl_title_service_resumed: 'Hizmet Yeniden Başladı',
+                        tpl_desc_service_resumed: 'Normal faaliyetler {data} tarihinde yeniden başlayacaktır.',
+                        tpl_title_weather_closure: 'Hava Durumu Nedeniyle Kapalı',
+                        tpl_desc_weather_closure: 'Hizmet kötü hava koşulları nedeniyle geçici olarak kapalıdır.',
+                        tpl_title_temp_closure: 'Geçici Kapanış',
+                        tpl_desc_temp_closure: 'Hizmet {data} tarihinde kapalı olacaktır.',
+                        tpl_title_extra_opening: 'Özel Açılış',
+                        tpl_desc_extra_opening: '{data} tarihinde saat {orario}\'da özel açılış.',
+                        tpl_title_time_change: 'Saat Değişikliği',
+                        tpl_desc_time_change: 'Yeni geçici hizmet saatleri: {orario}.',
+                        tpl_title_service_suspended: 'Hizmet Askıya Alındı',
+                        tpl_desc_service_suspended: 'Hizmet bir sonraki duyuruya kadar askıya alınmıştır.',
+                        tpl_title_service_updated: 'Hizmet Güncellendi',
+                        tpl_desc_service_updated: 'Bu hizmetin bilgileri az önce güncellendi.',
+                        tpl_title_posti_esauriti: 'Yataklar Dolu',
+                        tpl_desc_posti_esauriti: 'Lütfen bu gece için tüm yatakların dolu olduğunu unutmayın.',
+                        tpl_title_emergenza_freddo: 'Kış Planı / Soğuk Acil Durumu',
+                        tpl_desc_emergenza_freddo: 'Aşırı soğuklar nedeniyle özel açılış.',
+                        tpl_title_guasto_tecnico: 'Teknik Arıza',
+                        tpl_desc_guasto_tecnico: 'Hizmet teknik sorunlar nedeniyle geçici olarak askıya alındı.',
+                        tpl_title_raccolta_urgente: 'Acil İhtiyaç',
+                        tpl_desc_raccolta_urgente: 'Acil olarak şuna ihtiyacımız var: {oggetto}.',
+                        tpl_title_distribuzione_speciale: 'Özel Dağıtım',
+                        tpl_desc_distribuzione_speciale: 'Bugün {oggetto} için özel bir dağıtım var.',
+                        tpl_title_assenza_medico: 'Tıbbi Masa Kapalı',
+                        tpl_desc_assenza_medico: 'Personel eksikliği nedeniyle {data} tarihinde doktor hizmeti yoktur.'
                     }
                 };
 
@@ -1465,7 +1980,7 @@
                     { id: 'shelter', icon: '🛏️', labelKey: 'cat_shelter' },
                     { id: 'health', icon: '🩺', labelKey: 'cat_health' },
                     { id: 'legal', icon: '⚖️', labelKey: 'cat_legal' },
-                    { id: 'day_center', icon: '☀️', labelKey: 'cat_day_center' },
+                    { id: 'day_center', icon: '☕', labelKey: 'cat_day_center' }, // <--- ICONA MODIFICATA
                     { id: 'info', icon: 'ℹ️', labelKey: 'cat_info' },
                     { id: 'street', icon: '🚶‍♂️', labelKey: 'cat_street' },
                     { id: 'showers', icon: '🚿', labelKey: 'cat_showers' },
@@ -1478,9 +1993,9 @@
                 const generateTemplateText = (templateId, params, langCode, isTitle = false) => {
                     if (!templateId || templateId === 'none' || templateId === 'custom') return '';
                     const prefix = isTitle ? 'tpl_title_' : 'tpl_desc_';
-                    
+
                     let text = i18n[langCode]?.[prefix + templateId] || i18n['en']?.[prefix + templateId] || i18n['it']?.[prefix + templateId] || '';
-                    
+
                     if (params) {
                         for (const key in params) {
                             let val = params[key] || `[${key}]`;
@@ -1527,7 +2042,7 @@
                     }
                     return available;
                 });
-                
+
                 const addLangToServiceCustom = () => {
                     if (selectedNewLangService.value) { 
                         editForm.value.customNotice[selectedNewLangService.value] = ''; 
@@ -1545,7 +2060,7 @@
                     }
                     return available;
                 });
-                
+
                 const addLangToNewsTitle = () => {
                     if (selectedNewLangNewsTitle.value) { 
                         newsForm.value.customTitle[selectedNewLangNewsTitle.value] = ''; 
@@ -1563,7 +2078,7 @@
                     }
                     return available;
                 });
-                
+
                 const addLangToNewsContent = () => {
                     if (selectedNewLangNewsContent.value) { 
                         newsForm.value.customContent[selectedNewLangNewsContent.value] = ''; 
@@ -1583,7 +2098,7 @@
                         }
                     });
                 };
-                
+
                 const handleLogin = async () => {
                     if (!supabase) return;
                     authLoading.value = true; 
@@ -1604,7 +2119,7 @@
                         authLoading.value = false; 
                     }
                 };
-                
+
                 const handleLogout = async () => {
                     if (!supabase) return;
                     await supabase.auth.signOut();
@@ -1664,7 +2179,7 @@
                     editingService.value = service;
                     let initNoticeTpl = 'none'; 
                     let initCustomNotice = { it: '' };
-                    
+
                     if (service.latestUpdate && service.latestUpdate.text) {
                         initNoticeTpl = 'custom'; 
                         initCustomNotice = JSON.parse(JSON.stringify(service.latestUpdate.text));
@@ -1721,7 +2236,7 @@
                     imageUploadError.value = ''; 
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                 };
-                
+
                 const cancelEditing = () => { 
                     editingService.value = null; 
                     editForm.value = { id: null }; 
@@ -1863,10 +2378,10 @@
                     try {
                         const { data, error } = await supabase.from('news').select('*').order('created_at', { ascending: false });
                         if (error) throw error;
-                        
+
                         globalNews.value = (data || []).map(n => {
                             const org = fixedOrganizations.find(o => o.id === n.association_id);
-                            return { ...n, association: org ? org.name : (n.association_id === 'generale' ? 'Coordinamento Vicini di Strada' : '') };
+                            return { ...n, association: org ? org.name : 'Coordinamento Vicini di Strada' };
                         });
                     } catch (error) { 
                         console.error(error.message); 
@@ -1879,10 +2394,10 @@
                     editingNews.value = news;
                     let initCustomTitle = news.title ? JSON.parse(JSON.stringify(news.title)) : { it: '' };
                     let initCustomContent = news.content ? JSON.parse(JSON.stringify(news.content)) : { it: '' };
-                    
+
                     if (typeof initCustomTitle === 'string') initCustomTitle = { it: initCustomTitle };
                     if (typeof initCustomContent === 'string') initCustomContent = { it: initCustomContent };
-                    
+
                     if (!initCustomTitle.it) initCustomTitle.it = ''; 
                     if (!initCustomContent.it) initCustomContent.it = '';
 
@@ -1890,7 +2405,7 @@
                         id: news.id, 
                         type: news.type || 'general', 
                         priority: news.priority || 'normal', 
-                        association_id: news.association_id || 'generale', 
+                        association_id: news.association_id || 'org_coordinamento', 
                         related_service_id: news.related_service_id || null,
                         useCustomText: !!news.id, 
                         template: 'posti_esauriti', 
@@ -1907,7 +2422,7 @@
                         id: null, 
                         type: 'general', 
                         priority: 'normal', 
-                        association_id: 'generale', 
+                        association_id: 'org_coordinamento', 
                         related_service_id: null,
                         useCustomText: false, 
                         template: 'posti_esauriti', 
@@ -1917,7 +2432,7 @@
                     };
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                 };
-                
+
                 const cancelEditingNews = () => { 
                     editingNews.value = null; 
                     newsForm.value = { id: null }; 
@@ -1939,7 +2454,7 @@
                         const payload = {
                             type: newsForm.value.type, 
                             priority: newsForm.value.priority, 
-                            association_id: newsForm.value.association_id, 
+                            association_id: 'org_coordinamento', // Centralizzato 
                             related_service_id: newsForm.value.related_service_id || null,
                             title: finalTitle, 
                             content: finalContent
@@ -1952,7 +2467,7 @@
                             const { error } = await supabase.from('news').insert([payload]).select();
                             if (error) throw error;
                         }
-                        
+
                         await fetchNews(); 
                         alert(newsForm.value.id ? "✅ Notizia aggiornata!" : "📢 Notizia pubblicata!");
                         cancelEditingNews();
@@ -1999,12 +2514,12 @@
                 });
 
                 const getServiceCount = (catId) => services.value.filter(s => s.category === catId).length;
-                
+
                 const getServiceName = (serviceId) => { 
                     const s = services.value.find(item => item.id === serviceId); 
                     return s ? translateField(s, 'name') : ''; 
                 };
-                
+
                 const goToService = (serviceId) => {
                     const s = services.value.find(item => item.id === serviceId);
                     if (s) { 
@@ -2013,16 +2528,16 @@
                         setTimeout(() => openContactModal(s), 200); 
                     }
                 };
-                
+
                 const openContactModal = (service) => { 
                     activeModalService.value = service; 
                 };
-                
+
                 const getNavigationUrl = (address) => { 
                     const query = encodeURIComponent(`${address}, Como, Italy`); 
                     return `https://www.google.com/maps/search/?api=1&query=${query}`; 
                 };
-                
+
                 const selectedNoticeTemplate = computed(() => templates.find(t => t.id === editForm.value.noticeTemplate));
                 const selectedNewsTemplate = computed(() => templates.find(t => t.id === newsForm.value.template));
 
@@ -2040,6 +2555,7 @@
                     toggleServiceExpanded, 
                     isHoursExpanded,
                     toggleHoursExpanded,
+                    needsExpansion,
                     t, 
                     translateField, 
                     categories, 
@@ -2104,7 +2620,7 @@
                     daysOfWeek,
                     formatHours,
                     fixedOrganizations,
-                    
+
                     selectedServices,
                     isDeleting,
                     toggleServiceSelection,
