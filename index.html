@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Vicini di Strada Como - Mappa Interattiva Servizi</title>
-    <!-- Favicon (Icona URL del sito) -->
+    <!-- Favicon Aggiornata: Due mani che sorreggono -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 512 512%22><path fill=%22%2326b879%22 d=%22M105.1 202.6c7.7-21.8 20.2-42.3 37.8-59.8c62.5-62.5 163.8-62.5 226.3 0L386.3 160H336c-17.7 0-32 14.3-32 32s14.3 32 32 32H464c17.7 0 32-14.3 32-32V64c0-17.7-14.3-32-32-32s-32 14.3-32 32v51.2L414.4 97.6c-87.5-87.5-229.3-87.5-316.8 0C73.2 122 55.6 150.7 44.8 181.4c-5.9 16.7 2.9 34.9 19.5 40.8s34.9-2.9 40.8-19.5zM39 289.3c-26.2 14.6-52.6 13.7-73.3-4.3c-22.9-19.9-26.1-54.9-10.7-81.5c15.2-26.1 46.3-33.3 75.3-21.6c31.8 12.8 72.5 47.5 106.1 69.8c34.2 22.7 75.8 45.8 119.8 45.8c32.7 0 56.8-14.4 75-35.3c14.2-16.3 22-35.2 27.5-54.4c4.1-14.5 16.7-24.1 31.6-24.1h.7c19.1 .7 33.7 17.5 30.7 36.3c-4.9 30.8-16.7 63-39.3 89.2c-26.3 30.5-63.5 52.3-126.3 52.3c-58.6 0-108.7-27.7-144.5-51.4c-28.9-19.1-66.2-44-82.5-49.8z%22/></svg>">
 
     <script src="https://cdn.tailwindcss.com"></script>
@@ -52,7 +52,8 @@
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen">
-    <div id="app" :dir="isRTL ? 'rtl' : 'ltr'" class="pb-24 max-w-7xl mx-auto px-2 sm:px-4 lg:px-8">
+    <!-- Allargata la max-width per schermi grandi -->
+    <div id="app" :dir="isRTL ? 'rtl' : 'ltr'" class="pb-24 max-w-[1600px] mx-auto px-2 sm:px-4 lg:px-8">
 
         <header class="bg-brand-900 text-white shadow-lg sticky top-0 z-50 rounded-b-2xl sm:rounded-b-3xl mx-0 sm:-mx-2 lg:-mx-4">
             <div class="px-4 py-3 flex items-center justify-between gap-2 border-b border-brand-700/50">
@@ -103,7 +104,11 @@
 
             <div class="flex px-2 pt-2 bg-brand-900/90 gap-1 overflow-x-auto no-scrollbar">
                 <button @click="activeTab = 'services'" class="flex-1 py-2.5 px-3 rounded-t-xl font-medium text-xs sm:text-sm flex items-center justify-center gap-2 whitespace-nowrap transition" :class="activeTab === 'services' ? 'bg-slate-50 text-brand-900 font-bold shadow' : 'text-brand-100 hover:bg-brand-800'"><i class="fa-solid fa-layer-group"></i><span>{{ t('tab_services') }}</span></button>
-                <button @click="activeTab = 'news'" class="flex-1 py-2.5 px-3 rounded-t-xl font-medium text-xs sm:text-sm flex items-center justify-center gap-2 whitespace-nowrap transition relative" :class="activeTab === 'news' ? 'bg-slate-50 text-brand-900 font-bold shadow' : 'text-brand-100 hover:bg-brand-800'"><i class="fa-solid fa-bell"></i><span>{{ t('tab_news') }}</span><span class="w-2 h-2 rounded-full bg-warm-500 animate-pulse"></span></button>
+                <button @click="activeTab = 'news'" class="flex-1 py-2.5 px-3 rounded-t-xl font-medium text-xs sm:text-sm flex items-center justify-center gap-2 whitespace-nowrap transition relative" :class="activeTab === 'news' ? 'bg-slate-50 text-brand-900 font-bold shadow' : 'text-brand-100 hover:bg-brand-800'">
+                    <i class="fa-solid fa-bell"></i><span>{{ t('tab_news') }}</span>
+                    <!-- Pallino condizionale basato su hasUnreadNews -->
+                    <span v-if="hasUnreadNews" class="absolute top-2 right-2 w-2 h-2 rounded-full bg-warm-500 animate-pulse"></span>
+                </button>
                 <button @click="activeTab = 'emergency'" class="flex-1 py-2.5 px-3 rounded-t-xl font-medium text-xs sm:text-sm flex items-center justify-center gap-2 whitespace-nowrap transition" :class="activeTab === 'emergency' ? 'bg-slate-50 text-brand-900 font-bold shadow' : 'text-brand-100 hover:bg-brand-800'"><i class="fa-solid fa-triangle-exclamation text-warm-500"></i><span>{{ t('tab_emergency') }}</span></button>
                 <button v-if="user" @click="activeTab = 'admin_dashboard'; cancelEditing()" class="flex-1 py-2.5 px-3 rounded-t-xl font-medium text-xs sm:text-sm flex items-center justify-center gap-2 whitespace-nowrap transition bg-emerald-600/30 text-emerald-200 hover:bg-emerald-600/50" :class="activeTab === 'admin_dashboard' ? '!bg-emerald-600 !text-white font-bold shadow' : ''"><i class="fa-solid fa-list-check"></i><span class="hidden md:inline">Gestione</span></button>
             </div>
@@ -131,7 +136,7 @@
                     <button v-if="selectedCategory !== 'all'" @click="selectedCategory = 'all'" class="text-xs font-semibold text-brand-600 hover:underline">{{ t('show_all') }}</button>
                 </div>
 
-                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-9 gap-3">
                     <button @click="selectedCategory = 'all'" class="p-3.5 rounded-2xl border transition text-center flex flex-col items-center justify-center gap-1.5 min-h-[85px]" :class="selectedCategory === 'all' ? 'bg-brand-600 border-brand-600 text-white font-bold shadow-md scale-[1.02]' : 'bg-white border-slate-200 text-slate-600 hover:border-brand-300 hover:bg-brand-50/50'"><span class="text-2xl">🌍</span><span class="text-xs leading-tight">{{ t('cat_all') }}</span></button>
                     <button v-for="cat in categories" :key="cat.id" @click="selectedCategory = cat.id" class="p-3.5 rounded-2xl border transition text-center flex flex-col items-center justify-center gap-1.5 min-h-[85px] relative overflow-hidden" :class="selectedCategory === cat.id ? 'bg-brand-600 border-brand-600 text-white font-bold shadow-md scale-[1.02]' : 'bg-white border-slate-200 text-slate-600 hover:border-brand-300 hover:bg-brand-50/50'">
                         <span class="text-2xl">{{ cat.icon }}</span><span class="text-xs leading-tight">{{ t(cat.labelKey) }}</span>
@@ -155,7 +160,8 @@
                     <button @click="selectedCategory = 'all'; searchQuery = ''" class="bg-brand-600 text-white px-6 py-3 rounded-xl text-sm font-semibold shadow hover:bg-brand-700 transition">{{ t('reset_filters') }}</button>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Aumentate le colonne per schermi grandi -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                     <div v-for="service in filteredServices" :key="service.id" class="bg-white rounded-3xl border border-slate-200/90 overflow-hidden card-shadow hover:shadow-xl transition-all duration-300 flex flex-col justify-between">
                         <div>
                             <div class="relative h-48 w-full bg-slate-100 overflow-hidden">
@@ -168,18 +174,24 @@
                                     <span>{{ service.status === 'active' ? t('status_active') : (service.status === 'notice' ? t('status_notice') : t('status_suspended')) }}</span>
                                 </div>
                                 <div class="absolute bottom-3 left-3 right-3 text-white">
-                                    <!-- Separato il nome dell'organizzazione dal nome del servizio per maggiore chiarezza -->
                                     <span class="text-[11px] uppercase tracking-wider font-semibold text-brand-200 block drop-shadow">{{ service.organization }}</span>
                                     <h4 class="text-lg font-bold leading-tight drop-shadow-md mt-0.5">{{ translateField(service, 'name') }}</h4>
                                 </div>
                             </div>
                             <div class="p-5 space-y-4">
-                                <!-- Indirizzo allineato bene con l'icona -->
+                                <!-- Indirizzo correttamente allineato -->
                                 <div class="flex items-start gap-2.5 text-slate-800 text-sm bg-brand-50/70 p-3 rounded-xl border border-brand-100">
-                                    <div class="mt-0.5 w-4 flex justify-center shrink-0">
-                                        <i class="fa-solid fa-location-dot text-brand-600 text-base"></i>
-                                    </div>
+                                    <i class="fa-solid fa-location-dot mt-[3px] text-brand-600 text-base shrink-0"></i>
                                     <span class="font-bold tracking-wide text-brand-900 leading-snug">{{ service.address }}</span>
+                                </div>
+
+                                <!-- Box Informazioni Temporanee (Se presenti) -->
+                                <div v-if="hasTempInfo(service)" class="bg-amber-100 border border-amber-300 rounded-xl p-3 text-sm text-amber-900 shadow-sm flex items-start gap-2.5">
+                                    <i class="fa-solid fa-clock-rotate-left mt-[3px] shrink-0 text-amber-600"></i>
+                                    <div>
+                                        <span class="font-bold text-[10px] uppercase tracking-wider block text-amber-700 mb-0.5">Info / Orari Temporanei</span>
+                                        <span class="font-semibold whitespace-pre-line leading-snug">{{ translateField(service, 'temp_info') }}</span>
+                                    </div>
                                 </div>
 
                                 <!-- Descrizione Espandibile -->
@@ -191,7 +203,7 @@
                                     </button>
                                 </div>
 
-                                <!-- Orari Collassabili per non ingombrare la scheda -->
+                                <!-- Orari Collassabili -->
                                 <div class="bg-slate-50 rounded-2xl border border-slate-100 text-xs text-slate-600 overflow-hidden">
                                     <button @click="toggleHoursExpanded(service.id)" class="w-full flex items-center justify-between p-3 bg-slate-100/50 hover:bg-slate-100 transition font-bold text-slate-700">
                                         <div class="flex items-center gap-2"><i class="fa-regular fa-clock text-slate-400 text-sm"></i><span>{{ t('hours_label') }}</span></div>
@@ -202,12 +214,12 @@
                                     </div>
                                 </div>
 
-                                <div v-if="service.latestUpdate" class="rounded-2xl p-3.5 border text-xs flex items-start gap-2.5 transition" :class="service.status === 'suspended' ? 'bg-red-50 border-red-200 text-red-900' : 'bg-amber-50 border-amber-200/80 text-amber-900'">
-                                    <i class="mt-0.5 text-sm shrink-0" :class="service.status === 'suspended' ? 'fa-solid fa-circle-exclamation text-red-600' : 'fa-solid fa-circle-info text-amber-600'"></i>
+                                <div v-if="service.latestUpdate" class="rounded-2xl p-3.5 border text-xs flex items-start gap-2.5 transition" :class="service.status === 'suspended' ? 'bg-red-50 border-red-200 text-red-900' : 'bg-blue-50 border-blue-200/80 text-blue-900'">
+                                    <i class="mt-0.5 text-sm shrink-0" :class="service.status === 'suspended' ? 'fa-solid fa-circle-exclamation text-red-600' : 'fa-solid fa-circle-info text-blue-600'"></i>
                                     <div>
-                                        <span class="font-bold block text-[11px] uppercase tracking-wider" :class="service.status === 'suspended' ? 'text-red-700' : 'text-amber-700'">{{ service.status === 'suspended' ? t('service_suspended_label') : t('service_update_label') }}:</span>
+                                        <span class="font-bold block text-[11px] uppercase tracking-wider" :class="service.status === 'suspended' ? 'text-red-700' : 'text-blue-700'">{{ service.status === 'suspended' ? t('service_suspended_label') : t('service_update_label') }}:</span>
                                         <p class="font-medium mt-1 leading-relaxed">{{ translateField(service.latestUpdate, 'text') }}</p>
-                                        <span class="text-[10px] block mt-1.5 font-medium" :class="service.status === 'suspended' ? 'text-red-600/80' : 'text-amber-600/80'"><i class="fa-regular fa-calendar text-[9px]"></i> {{ service.latestUpdate.date }}</span>
+                                        <span class="text-[10px] block mt-1.5 font-medium" :class="service.status === 'suspended' ? 'text-red-600/80' : 'text-blue-600/80'"><i class="fa-regular fa-calendar text-[9px]"></i> {{ service.latestUpdate.date }}</span>
                                     </div>
                                 </div>
                             </div>
@@ -360,7 +372,7 @@
                     <div class="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center text-xl shrink-0"><i class="fa-solid fa-info"></i></div>
                     <div>
                         <h3 class="font-bold text-blue-900 text-sm">Modalità Ibrida Attiva</h3>
-                        <p class="text-xs text-blue-800 mt-1">Il nome e la descrizione di questo servizio sono integrati nel codice del portale per garantire traduzioni perfette in 9 lingue. Puoi modificare gli orari, i contatti e aggiungere avvisi di chiusura.</p>
+                        <p class="text-xs text-blue-800 mt-1">Il nome e la descrizione di questo servizio sono integrati nel codice del portale per garantire traduzioni perfette. Puoi modificare gli orari, inserire note temporanee, contatti e aggiungere avvisi di chiusura.</p>
                     </div>
                 </div>
 
@@ -461,6 +473,32 @@
                                 <button @click="editForm.hoursList.push({ day: 1, open: '09:00', close: '12:00' })" type="button" class="text-xs font-bold text-brand-600 hover:text-brand-700 flex items-center gap-1.5 px-2 py-1 transition mt-2"><i class="fa-solid fa-plus-circle"></i> Aggiungi fascia oraria</button>
                             </div>
                         </div>
+
+                        <!-- MODULO INFORMAZIONI TEMPORANEE -->
+                        <div class="border-t border-slate-100 pt-4">
+                            <div class="flex items-center justify-between mb-2">
+                                <label class="block text-xs font-bold uppercase tracking-wider text-amber-600">Info / Orari Temporanei</label>
+                                <div class="flex items-center gap-2">
+                                    <select v-model="selectedNewLangTemp" class="text-xs border border-amber-200 rounded-lg px-2 py-1 bg-white outline-none">
+                                        <option value="">Aggiungi lingua...</option>
+                                        <option v-for="(l, code) in availableLangsForTemp" :key="code" :value="code">{{ l.name }}</option>
+                                    </select>
+                                    <button @click="addLangToTemp" type="button" class="bg-amber-500 hover:bg-amber-600 text-white text-[10px] font-bold px-2 py-1.5 rounded-lg shadow-sm transition"><i class="fa-solid fa-plus"></i></button>
+                                </div>
+                            </div>
+                            <p class="text-[11px] text-slate-500 mb-3">Usa questo campo per indicare chiusure feriali prolungate, orari estivi o note temporanee. Apparirà ben visibile in giallo nella scheda.</p>
+                            
+                            <div class="space-y-3">
+                                <div v-for="(text, lang) in editForm.temp_info" :key="'temp_'+lang" class="relative">
+                                    <label class="block text-[10px] font-bold text-slate-500 mb-1 uppercase flex items-center gap-1">
+                                        <span class="flag-emoji">{{ languages[lang]?.flag }}</span> {{ languages[lang]?.name }}
+                                    </label>
+                                    <textarea v-model="editForm.temp_info[lang]" rows="2" placeholder="Es: Chiuso per ferie dal 10 al 20 Agosto." class="w-full text-sm py-2 px-3 rounded-lg border border-amber-200 bg-amber-50 text-slate-800 focus:ring-2 focus:ring-amber-500 outline-none"></textarea>
+                                    <button v-if="lang !== 'it'" @click="delete editForm.temp_info[lang]" type="button" class="absolute top-6 right-2 text-red-500 hover:text-red-700 p-1.5 bg-white rounded-md shadow-sm"><i class="fa-solid fa-trash text-xs"></i></button>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
 
@@ -489,16 +527,20 @@
                     <div>
                         <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">Immagine Copertina</label>
                         <div class="flex items-start gap-4">
-                            <div class="w-24 h-24 rounded-2xl bg-slate-100 border border-slate-200 overflow-hidden shrink-0 flex items-center justify-center">
+                            <!-- Aggiunto @paste e tabindex per incollare l'immagine -->
+                            <div tabindex="0" @paste="handlePaste" class="w-24 h-24 rounded-2xl bg-slate-100 border-2 border-dashed border-slate-300 hover:border-brand-400 overflow-hidden shrink-0 flex items-center justify-center focus:ring-2 focus:ring-brand-500 cursor-pointer focus:outline-none transition-colors" title="Clicca qui e premi CTRL+V per incollare un'immagine">
                                 <img v-if="editForm.image" :src="editForm.image" alt="Anteprima" class="w-full h-full object-cover">
-                                <i v-else class="fa-solid fa-image text-slate-300 text-2xl"></i>
+                                <div v-else class="text-center">
+                                    <i class="fa-solid fa-image text-slate-300 text-2xl mb-1"></i>
+                                    <span class="block text-[8px] font-bold text-slate-400">CTRL+V</span>
+                                </div>
                             </div>
                             <div class="flex-1 space-y-2 min-w-0">
                                 <input v-model="editForm.image" type="url" placeholder="Incolla link immagine o caricala" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-800 text-sm focus:ring-2 focus:ring-brand-500 transition">
                                 <div class="flex items-center gap-2">
                                     <label class="flex-1 cursor-pointer bg-brand-50 hover:bg-brand-100 border border-brand-200 text-brand-700 font-semibold text-xs py-2.5 px-3 rounded-xl flex items-center justify-center gap-2 transition" :class="{'opacity-60 pointer-events-none': uploadingImage}">
                                         <i v-if="uploadingImage" class="fa-solid fa-circle-notch fa-spin"></i><i v-else class="fa-solid fa-upload"></i>
-                                        <span>{{ uploadingImage ? 'Caricamento...' : 'Carica immagine' }}</span>
+                                        <span>{{ uploadingImage ? 'Caricamento...' : 'Carica file' }}</span>
                                         <input type="file" accept="image/*" class="hidden" @change="handleImageUpload" :disabled="uploadingImage">
                                     </label>
                                     <button v-if="editForm.image" @click="editForm.image = ''" type="button" class="bg-slate-100 hover:bg-red-50 text-slate-500 hover:text-red-600 w-9 h-9 rounded-xl flex items-center justify-center transition shrink-0"><i class="fa-solid fa-trash text-xs"></i></button>
@@ -507,14 +549,6 @@
                             </div>
                         </div>
                     </div>
-                </div>
-
-                <div class="bg-blue-50 border border-blue-200 rounded-2xl p-4 flex items-start gap-3 mt-4">
-                    <input type="checkbox" v-model="editForm.generateAutoNotice" id="autoNoticeCheck" class="mt-1 w-5 h-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500 cursor-pointer">
-                    <label for="autoNoticeCheck" class="cursor-pointer">
-                        <span class="block text-sm font-bold text-blue-900">Pubblica avviso automatico in bacheca Notizie</span>
-                        <span class="block text-xs text-blue-700 mt-0.5">Selezionando l'opzione, verrà pubblicata automaticamente una notizia "Aggiornamento Servizio" visibile a tutti nella sezione Notizie.</span>
-                    </label>
                 </div>
 
                 <div class="bg-slate-900 text-white p-4 rounded-3xl shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4 sticky bottom-4 z-40">
@@ -536,9 +570,9 @@
             <div v-if="!editingNews" class="space-y-6">
                 <div class="bg-gradient-to-r from-amber-500 to-warm-600 rounded-3xl p-6 sm:p-8 text-white shadow-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div>
-                        <span class="bg-white/20 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-2 inline-block">Pannello Operatori</span>
+                        <span class="bg-white/20 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-2 inline-block">Pannello Allerta</span>
                         <h2 class="text-2xl sm:text-3xl font-bold leading-tight">Gestione Notizie & Allerta</h2>
-                        <p class="text-white/90 text-sm mt-1">Pubblica aggiornamenti o allerte visibili a tutti.</p>
+                        <p class="text-white/90 text-sm mt-1">Pubblica aggiornamenti o allerte centralizzate visibili a tutti.</p>
                     </div>
                     <div class="flex flex-wrap gap-2 shrink-0 w-full sm:w-auto justify-end">
                         <button @click="startCreatingNews()" class="bg-white text-amber-700 hover:bg-amber-50 font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm shadow flex items-center gap-2 transition active:scale-95"><i class="fa-solid fa-plus"></i><span>Nuova Notizia</span></button>
@@ -553,7 +587,7 @@
                         <div @click="startEditingNews(news)" class="flex items-center gap-3.5 overflow-hidden cursor-pointer flex-1">
                             <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-xl shrink-0 shadow-sm" :class="getNewsTypeStyle(news.type).badgeClass"><i :class="getNewsTypeStyle(news.type).icon"></i></div>
                             <div class="overflow-hidden">
-                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block truncate">{{ news.association || 'Coordinamento' }} · {{ formatNewsDate(news.created_at) }}</span>
+                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block truncate">{{ formatNewsDate(news.created_at) }}</span>
                                 <h4 class="font-bold text-slate-800 text-sm sm:text-base group-hover:text-amber-700 transition truncate">{{ translateField(news, 'title') || '(senza titolo)' }}</h4>
                                 <p class="text-xs text-slate-500 truncate mt-0.5">{{ translateField(news, 'content') }}</p>
                             </div>
@@ -567,7 +601,7 @@
                 </div>
             </div>
 
-            <!-- EDITOR NOTIZIE -->
+            <!-- EDITOR NOTIZIE CENTRALIZZATO -->
             <div v-else class="space-y-6 animate-fadeIn">
                 <div class="flex items-center justify-between bg-white p-4 rounded-2xl border border-slate-200 card-shadow sticky top-20 z-30">
                     <button @click="cancelEditingNews()" class="flex items-center gap-2 text-slate-600 hover:text-amber-600 font-bold text-xs sm:text-sm bg-slate-100 hover:bg-amber-50 px-3.5 py-2 rounded-xl transition active:scale-95"><i class="fa-solid fa-arrow-left" :class="{'rtl-flip': isRTL}"></i><span>Torna alla lista</span></button>
@@ -575,15 +609,15 @@
                 </div>
 
                 <div class="bg-white rounded-3xl border border-slate-200 p-5 sm:p-6 card-shadow">
-                    <div class="flex items-center gap-3 border-b border-slate-100 pb-3 mb-4"><div class="w-8 h-8 rounded-xl bg-slate-700 text-white flex items-center justify-center text-sm shadow-sm">1</div><h3 class="font-bold text-slate-800 text-base">Contesto e Riferimenti</h3></div>
+                    <div class="flex items-center gap-3 border-b border-slate-100 pb-3 mb-4"><div class="w-8 h-8 rounded-xl bg-slate-700 text-white flex items-center justify-center text-sm shadow-sm">1</div><h3 class="font-bold text-slate-800 text-base">Riferimenti della Notizia</h3></div>
                     <div class="grid grid-cols-1 gap-4">
                         <div>
-                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Servizio Collegato (opzionale)</label>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Servizio Interessato (Opzionale)</label>
                             <select v-model="newsForm.related_service_id" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-800 text-sm focus:ring-2 focus:ring-amber-500 transition">
-                                <option :value="null">Nessuno / Avviso generico</option>
+                                <option :value="null">Nessuno / Avviso generale per tutti</option>
                                 <option v-for="s in services" :key="s.id" :value="s.id">{{ getCategoryIcon(s.category) }} {{ translateField(s, 'name') }} ({{ s.organization }})</option>
                             </select>
-                            <p class="text-[11px] text-slate-500 mt-1">Seleziona un servizio se l'avviso riguarda una struttura specifica. L'avviso verrà inviato a nome del Coordinamento.</p>
+                            <p class="text-[11px] text-slate-500 mt-1">Se l'avviso riguarda una struttura o un servizio specifico, selezionalo qui. Questo creerà un link rapido alla scheda.</p>
                         </div>
                     </div>
                 </div>
@@ -784,7 +818,7 @@
     </div>
 
     <script>
-        const { createApp, ref, computed, onMounted } = Vue;
+        const { createApp, ref, computed, onMounted, watch } = Vue;
 
         createApp({
             setup() {
@@ -908,7 +942,6 @@
                         isDeleting.value = false;
                     }
                 };
-                // FINE GESTIONE SELEZIONE
 
                 const editingService = ref(null);
                 const editForm = ref({
@@ -922,9 +955,9 @@
                     noticeTemplate: 'none',
                     noticeParams: {},
                     customNotice: { it: '' },
+                    temp_info: { it: '' },
                     category: 'showers',
                     image: '',
-                    generateAutoNotice: false,
                     name_it: '',
                     name_en: '',
                     description_it: '',
@@ -1046,7 +1079,13 @@
                 const needsExpansion = (service) => {
                     const text = translateField(service, 'description');
                     if (!text) return false;
-                    return text.length > 120 || (text.match(/\n/g) || []).length >= 2;
+                    // Se supera i 160 caratteri o ha più di 3 andate a capo, serve l'espansione
+                    return text.length > 160 || (text.match(/\n/g) || []).length >= 3;
+                };
+
+                const hasTempInfo = (service) => {
+                    const text = translateField(service, 'temp_info');
+                    return text && text.trim() !== '';
                 };
 
                 const i18n = {
@@ -1980,7 +2019,7 @@
                     { id: 'shelter', icon: '🛏️', labelKey: 'cat_shelter' },
                     { id: 'health', icon: '🩺', labelKey: 'cat_health' },
                     { id: 'legal', icon: '⚖️', labelKey: 'cat_legal' },
-                    { id: 'day_center', icon: '☕', labelKey: 'cat_day_center' }, // <--- ICONA MODIFICATA
+                    { id: 'day_center', icon: '☕', labelKey: 'cat_day_center' },
                     { id: 'info', icon: 'ℹ️', labelKey: 'cat_info' },
                     { id: 'street', icon: '🚶‍♂️', labelKey: 'cat_street' },
                     { id: 'showers', icon: '🚿', labelKey: 'cat_showers' },
@@ -2047,6 +2086,25 @@
                     if (selectedNewLangService.value) { 
                         editForm.value.customNotice[selectedNewLangService.value] = ''; 
                         selectedNewLangService.value = ''; 
+                    }
+                };
+
+                // Nuove funzioni per Temp Info (Info Temporanee)
+                const selectedNewLangTemp = ref('');
+                const availableLangsForTemp = computed(() => {
+                    const available = {};
+                    for(const code in languages) {
+                        if(code !== 'it' && editForm.value.temp_info && editForm.value.temp_info[code] === undefined) {
+                            available[code] = languages[code];
+                        }
+                    }
+                    return available;
+                });
+
+                const addLangToTemp = () => {
+                    if (selectedNewLangTemp.value) { 
+                        editForm.value.temp_info[selectedNewLangTemp.value] = ''; 
+                        selectedNewLangTemp.value = ''; 
                     }
                 };
 
@@ -2171,7 +2229,20 @@
                         imageUploadError.value = 'Errore upload: ' + err.message; 
                     } finally { 
                         uploadingImage.value = false; 
-                        event.target.value = ''; 
+                        if(event.target.value) event.target.value = ''; 
+                    }
+                };
+
+                // Gestione del Copia-Incolla (CTRL+V) per l'immagine
+                const handlePaste = async (event) => {
+                    const items = (event.clipboardData || event.originalEvent.clipboardData).items;
+                    for (let index in items) {
+                        const item = items[index];
+                        if (item.kind === 'file' && item.type.startsWith('image/')) {
+                            const blob = item.getAsFile();
+                            const fileObj = { target: { files: [blob] } };
+                            await handleImageUpload(fileObj);
+                        }
                     }
                 };
 
@@ -2187,6 +2258,10 @@
                         if (!initCustomNotice.it) initCustomNotice.it = '';
                     }
 
+                    let initTempInfo = service.temp_info ? JSON.parse(JSON.stringify(service.temp_info)) : { it: '' };
+                    if (typeof initTempInfo === 'string') initTempInfo = { it: initTempInfo };
+                    if (!initTempInfo.it) initTempInfo.it = '';
+
                     let dbHoursList = Array.isArray(service.hours) && service.hours.length > 0 ? [...service.hours] : [{ day: 1, open: '', close: '' }];
 
                     editForm.value = {
@@ -2200,9 +2275,9 @@
                         noticeTemplate: initNoticeTpl, 
                         noticeParams: {}, 
                         customNotice: initCustomNotice,
+                        temp_info: initTempInfo,
                         category: service.category || 'showers', 
                         image: service.image || '',
-                        generateAutoNotice: false,
                         name_it: extractText(service.name, 'it'),
                         name_en: extractText(service.name, 'en'),
                         description_it: extractText(service.description, 'it'),
@@ -2225,9 +2300,9 @@
                         noticeTemplate: 'none', 
                         noticeParams: {}, 
                         customNotice: { it: '' },
+                        temp_info: { it: '' },
                         category: 'showers', 
                         image: '', 
-                        generateAutoNotice: false,
                         name_it: '',
                         name_en: '',
                         description_it: '',
@@ -2274,6 +2349,7 @@
                             category: editForm.value.category, 
                             image: String(editForm.value.image || '').trim(),
                             hours: validHours,
+                            temp_info: JSON.parse(JSON.stringify(editForm.value.temp_info)),
                             name: { it: editForm.value.name_it, en: editForm.value.name_en },
                             description: { it: editForm.value.description_it, en: editForm.value.description_en }
                         };
@@ -2308,19 +2384,6 @@
                             dbServices.value[dbIdx] = payload;
                         } else {
                             dbServices.value.push(payload);
-                        }
-
-                        if (editForm.value.generateAutoNotice) {
-                            const payloadNews = {
-                                type: 'service_update', 
-                                priority: 'normal',
-                                association_id: payload.org_id,
-                                related_service_id: savedServiceId,
-                                title: buildMultilangObjFromTemplate('service_updated', {}, true),
-                                content: buildMultilangObjFromTemplate('service_updated', {}, false)
-                            };
-                            await supabase.from('news').insert([payloadNews]);
-                            fetchNews(); 
                         }
 
                         alert(editForm.value.id ? "✅ Modifiche salvate con successo online!" : "✨ Nuovo servizio registrato e pubblicato!");
@@ -2368,6 +2431,22 @@
                         return isoDate; 
                     }
                 };
+
+                const lastViewedNewsTime = ref(parseInt(localStorage.getItem('vds_last_news_time')) || 0);
+
+                const hasUnreadNews = computed(() => {
+                    if (globalNews.value.length === 0) return false;
+                    const latestNewsTime = new Date(globalNews.value[0].created_at).getTime();
+                    return latestNewsTime > lastViewedNewsTime.value;
+                });
+
+                watch(activeTab, (newTab) => {
+                    if (newTab === 'news' && globalNews.value.length > 0) {
+                        const latestNewsTime = new Date(globalNews.value[0].created_at).getTime();
+                        lastViewedNewsTime.value = latestNewsTime;
+                        localStorage.setItem('vds_last_news_time', latestNewsTime.toString());
+                    }
+                });
 
                 const fetchNews = async () => {
                     if (!supabase) { 
@@ -2454,7 +2533,7 @@
                         const payload = {
                             type: newsForm.value.type, 
                             priority: newsForm.value.priority, 
-                            association_id: 'org_coordinamento', // Centralizzato 
+                            association_id: 'org_coordinamento', // Forzato centralizzato
                             related_service_id: newsForm.value.related_service_id || null,
                             title: finalTitle, 
                             content: finalContent
@@ -2556,6 +2635,7 @@
                     isHoursExpanded,
                     toggleHoursExpanded,
                     needsExpansion,
+                    hasTempInfo,
                     t, 
                     translateField, 
                     categories, 
@@ -2591,6 +2671,7 @@
                     uploadingImage, 
                     imageUploadError, 
                     handleImageUpload,
+                    handlePaste,
                     adminSection, 
                     editingNews, 
                     newsForm, 
@@ -2602,6 +2683,7 @@
                     deleteNewsItem,
                     getNewsTypeStyle, 
                     formatNewsDate, 
+                    hasUnreadNews,
                     isUrgency, 
                     setNewsUrgency, 
                     templates, 
@@ -2611,6 +2693,9 @@
                     selectedNewLangService, 
                     availableLangsForServiceCustom, 
                     addLangToServiceCustom, 
+                    selectedNewLangTemp,
+                    availableLangsForTemp,
+                    addLangToTemp,
                     selectedNewLangNewsTitle, 
                     availableLangsForNewsTitle, 
                     addLangToNewsTitle,
