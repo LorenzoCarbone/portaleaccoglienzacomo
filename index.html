@@ -1153,11 +1153,12 @@
                 });
 
                const needsExpansion = (service) => {
-    const text = translateField(service, 'description');
-    if (!text) return false;
-    // Soglie abbassate per allinearsi perfettamente con il line-clamp-3 su mobile e desktop
-    return text.length > 120 || (text.match(/\n/g) || []).length >= 2;
-};
+                    let text = translateField(service, 'description');
+                    if (!text) return false;
+                    text = text.trim(); // Rimuove a capo e spazi invisibili alla fine del testo
+                    // Scatta solo se supera i 160 caratteri o ha almeno 3 andate a capo (4 righe)
+                    return text.length > 160 || (text.match(/\n/g) || []).length >= 3;
+                };
 
                 const hasTempInfo = (service) => {
                     const text = translateField(service, 'temp_info');
