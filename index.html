@@ -201,12 +201,9 @@
                                 </div>
 
                                 <!-- Descrizione Espandibile -->
+                                <!-- Descrizione Completa -->
                                 <div>
-                                    <p class="text-slate-600 text-sm leading-relaxed transition-all whitespace-pre-line" :class="isServiceExpanded(service.id) ? '' : 'line-clamp-3'" v-html="translateField(service, 'description')"></p>
-                                    <button v-if="needsExpansion(service)" @click="toggleServiceExpanded(service.id)" type="button" class="mt-1.5 text-xs font-bold text-brand-600 hover:text-brand-700 flex items-center gap-1 transition">
-                                        <span>{{ isServiceExpanded(service.id) ? t('show_less') : t('show_more') }}</span>
-                                        <i class="fa-solid fa-chevron-down text-[10px] transition-transform" :class="{'rotate-180': isServiceExpanded(service.id)}"></i>
-                                    </button>
+                                    <p class="text-slate-600 text-sm leading-relaxed whitespace-pre-line" v-html="translateField(service, 'description')"></p>
                                 </div>
 
                                 <!-- Orari Collassabili -->
