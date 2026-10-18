@@ -52,11 +52,11 @@
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen">
-    <!-- Allargata la max-width per schermi grandi -->
-    <div id="app" :dir="isRTL ? 'rtl' : 'ltr'" class="pb-24 max-w-[1600px] mx-auto px-2 sm:px-4 lg:px-8">
+    <div id="app" :dir="isRTL ? 'rtl' : 'ltr'" class="pb-24 w-full">
 
-        <header class="bg-brand-900 text-white shadow-lg sticky top-0 z-50 rounded-b-2xl sm:rounded-b-3xl mx-0 sm:-mx-2 lg:-mx-4">
-            <div class="px-4 py-3 flex items-center justify-between gap-2 border-b border-brand-700/50">
+        <!-- Header a tutto schermo con contenuto centrato -->
+        <header class="bg-brand-900 text-white shadow-lg sticky top-0 z-50">
+            <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-2 border-b border-brand-700/50">
                 <div class="flex items-center space-x-3" :class="{'space-x-reverse': isRTL}">
                     <div class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center font-bold text-xl backdrop-blur-sm text-brand-100">
                         <i class="fa-solid fa-hands-holding-circle"></i>
@@ -75,6 +75,7 @@
                         <i class="fa-solid text-sm sm:text-base transition-transform active:scale-95" :class="user ? 'fa-user-shield' : 'fa-lock'"></i>
                     </button>
 
+                    <!-- MODIFICA 2 INCLUSA: Risolto overflow Arabo su Mobile -->
                     <div class="relative">
                         <button @click="showLangMenu = !showLangMenu" 
                                 class="flex items-center gap-2 bg-brand-800 hover:bg-brand-700 px-3 py-2 rounded-xl text-sm font-medium transition shadow-inner border border-brand-700">
@@ -83,9 +84,9 @@
                             <i class="fa-solid fa-chevron-down text-xs ml-1 opacity-75 transition-transform duration-200" :class="{'rotate-180': showLangMenu}"></i>
                         </button>
 
+                        <!-- Menu Lingue sicuro su Mobile -->
                         <div v-if="showLangMenu" @click.self="showLangMenu = false"
-                             class="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-2xl border border-slate-100 py-2 z-50 max-h-80 overflow-y-auto no-scrollbar text-slate-800"
-                             :class="{'left-0 right-auto': isRTL}">
+                             class="absolute mt-2 w-56 max-w-[calc(100vw-2rem)] bg-white rounded-2xl shadow-2xl border border-slate-100 py-2 z-50 max-h-80 overflow-y-auto no-scrollbar text-slate-800 origin-top-right right-0 rtl:left-0 rtl:right-auto rtl:origin-top-left">
                             <div class="px-3 py-1 text-xs font-semibold text-slate-400 uppercase tracking-wider">Seleziona Lingua / Language</div>
                             <button v-for="(lang, code) in languages" :key="code"
                                     @click="selectLanguage(code)"
@@ -102,21 +103,23 @@
                 </div>
             </div>
 
-            <div class="flex px-2 pt-2 bg-brand-900/90 gap-1 overflow-x-auto no-scrollbar">
-                <button @click="activeTab = 'services'" class="flex-1 py-2.5 px-3 rounded-t-xl font-medium text-xs sm:text-sm flex items-center justify-center gap-2 whitespace-nowrap transition" :class="activeTab === 'services' ? 'bg-slate-50 text-brand-900 font-bold shadow' : 'text-brand-100 hover:bg-brand-800'"><i class="fa-solid fa-layer-group"></i><span>{{ t('tab_services') }}</span></button>
-                <button @click="activeTab = 'news'" class="flex-1 py-2.5 px-3 rounded-t-xl font-medium text-xs sm:text-sm flex items-center justify-center gap-2 whitespace-nowrap transition relative" :class="activeTab === 'news' ? 'bg-slate-50 text-brand-900 font-bold shadow' : 'text-brand-100 hover:bg-brand-800'">
-                    <i class="fa-solid fa-bell"></i><span>{{ t('tab_news') }}</span>
-                    <!-- Pallino condizionale basato su hasUnreadNews -->
-                    <span v-if="hasUnreadNews" class="absolute top-2 right-2 w-2 h-2 rounded-full bg-warm-500 animate-pulse"></span>
-                </button>
-                <button @click="activeTab = 'emergency'" class="flex-1 py-2.5 px-3 rounded-t-xl font-medium text-xs sm:text-sm flex items-center justify-center gap-2 whitespace-nowrap transition" :class="activeTab === 'emergency' ? 'bg-slate-50 text-brand-900 font-bold shadow' : 'text-brand-100 hover:bg-brand-800'"><i class="fa-solid fa-triangle-exclamation text-warm-500"></i><span>{{ t('tab_emergency') }}</span></button>
-                <button v-if="user" @click="activeTab = 'admin_dashboard'; cancelEditing()" class="flex-1 py-2.5 px-3 rounded-t-xl font-medium text-xs sm:text-sm flex items-center justify-center gap-2 whitespace-nowrap transition bg-emerald-600/30 text-emerald-200 hover:bg-emerald-600/50" :class="activeTab === 'admin_dashboard' ? '!bg-emerald-600 !text-white font-bold shadow' : ''"><i class="fa-solid fa-list-check"></i><span class="hidden md:inline">Gestione</span></button>
+            <!-- Tab centrati -->
+            <div class="bg-brand-900/90">
+                <div class="max-w-7xl mx-auto flex px-2 pt-2 gap-1 overflow-x-auto no-scrollbar">
+                    <button @click="activeTab = 'services'" class="flex-1 py-2.5 px-3 rounded-t-xl font-medium text-xs sm:text-sm flex items-center justify-center gap-2 whitespace-nowrap transition" :class="activeTab === 'services' ? 'bg-slate-50 text-brand-900 font-bold shadow' : 'text-brand-100 hover:bg-brand-800'"><i class="fa-solid fa-layer-group"></i><span>{{ t('tab_services') }}</span></button>
+                    <button @click="activeTab = 'news'" class="flex-1 py-2.5 px-3 rounded-t-xl font-medium text-xs sm:text-sm flex items-center justify-center gap-2 whitespace-nowrap transition relative" :class="activeTab === 'news' ? 'bg-slate-50 text-brand-900 font-bold shadow' : 'text-brand-100 hover:bg-brand-800'">
+                        <i class="fa-solid fa-bell"></i><span>{{ t('tab_news') }}</span>
+                        <span v-if="hasUnreadNews" class="absolute top-2 right-2 w-2 h-2 rounded-full bg-warm-500 animate-pulse"></span>
+                    </button>
+                    <button @click="activeTab = 'emergency'" class="flex-1 py-2.5 px-3 rounded-t-xl font-medium text-xs sm:text-sm flex items-center justify-center gap-2 whitespace-nowrap transition" :class="activeTab === 'emergency' ? 'bg-slate-50 text-brand-900 font-bold shadow' : 'text-brand-100 hover:bg-brand-800'"><i class="fa-solid fa-triangle-exclamation text-warm-500"></i><span>{{ t('tab_emergency') }}</span></button>
+                    <button v-if="user" @click="activeTab = 'admin_dashboard'; cancelEditing()" class="flex-1 py-2.5 px-3 rounded-t-xl font-medium text-xs sm:text-sm flex items-center justify-center gap-2 whitespace-nowrap transition bg-emerald-600/30 text-emerald-200 hover:bg-emerald-600/50" :class="activeTab === 'admin_dashboard' ? '!bg-emerald-600 !text-white font-bold shadow' : ''"><i class="fa-solid fa-list-check"></i><span class="hidden md:inline">Gestione</span></button>
+                </div>
             </div>
         </header>
-
+        
         <div v-if="showLangMenu" @click="showLangMenu = false" class="fixed inset-0 z-40 bg-black/10 backdrop-blur-[1px]"></div>
 
-        <main v-if="activeTab === 'services'" class="p-4 sm:p-6 space-y-6 animate-fadeIn">
+        <main v-if="activeTab === 'services'" class="max-w-7xl mx-auto p-4 sm:p-6 space-y-6 animate-fadeIn">
             <div class="bg-gradient-to-r from-brand-700 to-brand-900 rounded-3xl p-6 sm:p-8 text-white shadow-md relative overflow-hidden">
                 <div class="relative z-10 max-w-2xl">
                     <h2 class="text-2xl sm:text-3xl font-bold mb-2">{{ t('welcome_title') }}</h2>
@@ -138,10 +141,12 @@
 
                 <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-9 gap-3">
                     <button @click="selectedCategory = 'all'" class="p-3.5 rounded-2xl border transition text-center flex flex-col items-center justify-center gap-1.5 min-h-[85px]" :class="selectedCategory === 'all' ? 'bg-brand-600 border-brand-600 text-white font-bold shadow-md scale-[1.02]' : 'bg-white border-slate-200 text-slate-600 hover:border-brand-300 hover:bg-brand-50/50'"><span class="text-2xl">🌍</span><span class="text-xs leading-tight">{{ t('cat_all') }}</span></button>
-                    <button v-for="cat in categories" :key="cat.id" @click="selectedCategory = cat.id" class="p-3.5 rounded-2xl border transition text-center flex flex-col items-center justify-center gap-1.5 min-h-[85px] relative overflow-hidden" :class="selectedCategory === cat.id ? 'bg-brand-600 border-brand-600 text-white font-bold shadow-md scale-[1.02]' : 'bg-white border-slate-200 text-slate-600 hover:border-brand-300 hover:bg-brand-50/50'">
-                        <span class="text-2xl">{{ cat.icon }}</span><span class="text-xs leading-tight">{{ t(cat.labelKey) }}</span>
-                        <span v-if="getServiceCount(cat.id) > 0" class="absolute top-2 right-2 w-5 h-5 rounded-full text-[10px] font-bold flex items-center justify-center" :class="selectedCategory === cat.id ? 'bg-white text-brand-700' : 'bg-slate-100 text-slate-500'">{{ getServiceCount(cat.id) }}</span>
-                    </button>
+<template v-for="cat in categories" :key="cat.id">
+    <button v-if="getServiceCount(cat.id) > 0" @click="selectedCategory = cat.id" class="p-3.5 rounded-2xl border transition text-center flex flex-col items-center justify-center gap-1.5 min-h-[85px] relative overflow-hidden" :class="selectedCategory === cat.id ? 'bg-brand-600 border-brand-600 text-white font-bold shadow-md scale-[1.02]' : 'bg-white border-slate-200 text-slate-600 hover:border-brand-300 hover:bg-brand-50/50'">
+        <span class="text-2xl">{{ cat.icon }}</span><span class="text-xs leading-tight">{{ t(cat.labelKey) }}</span>
+        <span class="absolute top-2 right-2 w-5 h-5 rounded-full text-[10px] font-bold flex items-center justify-center" :class="selectedCategory === cat.id ? 'bg-white text-brand-700' : 'bg-slate-100 text-slate-500'">{{ getServiceCount(cat.id) }}</span>
+    </button>
+</template>
                 </div>
             </div>
 
@@ -180,10 +185,11 @@
                             </div>
                             <div class="p-5 space-y-4">
                                 <!-- Indirizzo correttamente allineato -->
-                                <div class="flex items-start gap-2.5 text-slate-800 text-sm bg-brand-50/70 p-3 rounded-xl border border-brand-100">
-                                    <i class="fa-solid fa-location-dot mt-[3px] text-brand-600 text-base shrink-0"></i>
-                                    <span class="font-bold tracking-wide text-brand-900 leading-snug">{{ service.address }}</span>
-                                </div>
+                                <!-- Indirizzo correttamente allineato -->
+<div class="flex items-center gap-2.5 text-slate-800 text-sm bg-brand-50/70 p-3 rounded-xl border border-brand-100">
+    <i class="fa-solid fa-location-dot text-brand-600 text-base shrink-0"></i>
+    <span class="font-bold tracking-wide text-brand-900 leading-tight">{{ service.address }}</span>
+</div>
 
                                 <!-- Box Informazioni Temporanee (Se presenti) -->
                                 <div v-if="hasTempInfo(service)" class="bg-amber-100 border border-amber-300 rounded-xl p-3 text-sm text-amber-900 shadow-sm flex items-start gap-2.5">
@@ -668,24 +674,44 @@
                     </div>
 
                     <!-- TESTO LIBERO MANUALE -->
-                    <div v-else class="space-y-4 animate-fadeIn">
-                        <div class="p-4 bg-amber-50 border border-amber-200 rounded-2xl space-y-3">
-                            <div class="flex items-center justify-between border-b border-amber-200 pb-2">
-                                <h4 class="text-sm font-bold uppercase text-amber-800">1. Titolo Avviso</h4>
-                                <div class="flex items-center gap-2">
-                                    <select v-model="selectedNewLangNewsTitle" class="text-xs border border-amber-200 rounded-lg px-2 py-1 bg-white outline-none">
-                                        <option value="">Aggiungi lingua...</option>
-                                        <option v-for="(l, code) in availableLangsForNewsTitle" :key="code" :value="code">{{ l.name }}</option>
-                                    </select>
-                                    <button @click="addLangToNewsTitle" type="button" class="bg-amber-600 hover:bg-amber-700 text-white text-[10px] font-bold px-2.5 py-1.5 rounded-lg shadow-sm transition"><i class="fa-solid fa-plus"></i></button>
-                                </div>
-                            </div>
-                            <div v-for="(text, lang) in newsForm.customTitle" :key="'title_'+lang" class="relative">
-                                <label class="block text-[10px] font-bold text-amber-700 mb-1 uppercase flex items-center gap-1"><span class="flag-emoji text-sm">{{ languages[lang]?.flag }}</span> {{ languages[lang]?.name }} <span v-if="lang==='it'">(Predefinito)</span></label>
-                                <input v-model="newsForm.customTitle[lang]" type="text" class="w-full text-sm py-2 px-3 rounded-lg border border-amber-200 text-slate-800 focus:ring-2 focus:ring-amber-500 outline-none">
-                                <button v-if="lang !== 'it'" @click="delete newsForm.customTitle[lang]" type="button" class="absolute top-6 right-2 text-red-500 hover:text-red-700 p-1.5 bg-white rounded-md shadow-sm"><i class="fa-solid fa-trash text-xs"></i></button>
-                            </div>
-                        </div>
+<!-- TESTO LIBERO MANUALE (UNIFICATO) -->
+<div v-else class="space-y-6 animate-fadeIn">
+    <!-- Header Gestione Lingue Unificato -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between bg-amber-100/50 p-3 rounded-xl border border-amber-200 gap-3">
+        <div>
+            <h4 class="text-sm font-bold uppercase text-amber-800">Gestione Lingue (Titolo e Testo)</h4>
+            <p class="text-[10px] text-amber-700 font-medium">Aggiungi una lingua per tradurre manualmente l'annuncio. Se non tradotto, verrà mostrato in Italiano o Inglese.</p>
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+            <select v-model="selectedNewLangNews" class="text-xs border border-amber-300 rounded-lg px-2 py-1.5 bg-white outline-none">
+                <option value="">Aggiungi lingua...</option>
+                <option v-for="(l, code) in availableLangsForNews" :key="code" :value="code">{{ l.name }}</option>
+            </select>
+            <button @click="addLangToNews" type="button" class="bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-sm transition"><i class="fa-solid fa-plus"></i></button>
+        </div>
+    </div>
+
+    <!-- Generazione dinamica dei campi per lingua -->
+    <div v-for="lang in activeNewsLangs" :key="'lang_group_'+lang" class="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-4 relative">
+        
+        <div class="flex items-center gap-2 mb-2 border-b border-slate-200 pb-2">
+            <span class="flag-emoji text-lg">{{ languages[lang]?.flag }}</span>
+            <h5 class="text-xs font-bold text-slate-700 uppercase tracking-wider">{{ languages[lang]?.name }} <span v-if="lang==='it'" class="text-amber-600">(Predefinito)</span></h5>
+        </div>
+        
+        <button v-if="lang !== 'it'" @click="deleteLangFromNews(lang)" type="button" class="absolute top-4 right-4 text-red-500 hover:text-red-700 p-1.5 bg-white rounded-md shadow-sm border border-red-100 transition"><i class="fa-solid fa-trash text-xs"></i></button>
+
+        <div>
+            <label class="block text-[10px] font-bold text-slate-500 mb-1 uppercase">1. Titolo</label>
+            <input v-model="newsForm.customTitle[lang]" type="text" class="w-full text-sm py-2 px-3 rounded-lg border border-slate-300 text-slate-800 focus:ring-2 focus:ring-amber-500 outline-none shadow-sm">
+        </div>
+        <div>
+            <label class="block text-[10px] font-bold text-slate-500 mb-1 uppercase">2. Testo Messaggio</label>
+            <textarea v-model="newsForm.customContent[lang]" rows="3" class="w-full text-sm py-2 px-3 rounded-lg border border-slate-300 text-slate-800 focus:ring-2 focus:ring-amber-500 outline-none shadow-sm"></textarea>
+        </div>
+    </div>
+</div>                     
+                </div>
 
                         <div class="p-4 bg-amber-50 border border-amber-200 rounded-2xl space-y-3">
                             <div class="flex items-center justify-between border-b border-amber-200 pb-2">
@@ -1076,12 +1102,12 @@
                     });
                 });
 
-                const needsExpansion = (service) => {
-                    const text = translateField(service, 'description');
-                    if (!text) return false;
-                    // Se supera i 160 caratteri o ha più di 3 andate a capo, serve l'espansione
-                    return text.length > 160 || (text.match(/\n/g) || []).length >= 3;
-                };
+               const needsExpansion = (service) => {
+    const text = translateField(service, 'description');
+    if (!text) return false;
+    // Soglie abbassate per allinearsi perfettamente con il line-clamp-3 su mobile e desktop
+    return text.length > 120 || (text.match(/\n/g) || []).length >= 2;
+};
 
                 const hasTempInfo = (service) => {
                     const text = translateField(service, 'temp_info');
@@ -2108,41 +2134,36 @@
                     }
                 };
 
-                const selectedNewLangNewsTitle = ref('');
-                const availableLangsForNewsTitle = computed(() => {
-                    const available = {};
-                    for(const code in languages) {
-                        if(code !== 'it' && newsForm.value.customTitle && newsForm.value.customTitle[code] === undefined) {
-                            available[code] = languages[code];
-                        }
-                    }
-                    return available;
-                });
+               const selectedNewLangNews = ref('');
+const availableLangsForNews = computed(() => {
+    const available = {};
+    for(const code in languages) {
+        if(code !== 'it' && newsForm.value.customTitle && newsForm.value.customTitle[code] === undefined) {
+            available[code] = languages[code];
+        }
+    }
+    return available;
+});
 
-                const addLangToNewsTitle = () => {
-                    if (selectedNewLangNewsTitle.value) { 
-                        newsForm.value.customTitle[selectedNewLangNewsTitle.value] = ''; 
-                        selectedNewLangNewsTitle.value = ''; 
-                    }
-                };
+const activeNewsLangs = computed(() => {
+    if (!newsForm.value.customTitle) return ['it'];
+    // Assicuriamoci che l'Italiano sia sempre il primo della lista
+    const langs = Object.keys(newsForm.value.customTitle);
+    return ['it', ...langs.filter(l => l !== 'it')];
+});
 
-                const selectedNewLangNewsContent = ref('');
-                const availableLangsForNewsContent = computed(() => {
-                    const available = {};
-                    for(const code in languages) {
-                        if(code !== 'it' && newsForm.value.customContent && newsForm.value.customContent[code] === undefined) {
-                            available[code] = languages[code];
-                        }
-                    }
-                    return available;
-                });
+const addLangToNews = () => {
+    if (selectedNewLangNews.value) { 
+        newsForm.value.customTitle[selectedNewLangNews.value] = ''; 
+        newsForm.value.customContent[selectedNewLangNews.value] = ''; 
+        selectedNewLangNews.value = ''; 
+    }
+};
 
-                const addLangToNewsContent = () => {
-                    if (selectedNewLangNewsContent.value) { 
-                        newsForm.value.customContent[selectedNewLangNewsContent.value] = ''; 
-                        selectedNewLangNewsContent.value = ''; 
-                    }
-                };
+const deleteLangFromNews = (langCode) => {
+    delete newsForm.value.customTitle[langCode];
+    delete newsForm.value.customContent[langCode];
+};
 
                 const checkAuthSession = async () => {
                     if (!supabase) return;
@@ -2696,12 +2717,11 @@
                     selectedNewLangTemp,
                     availableLangsForTemp,
                     addLangToTemp,
-                    selectedNewLangNewsTitle, 
-                    availableLangsForNewsTitle, 
-                    addLangToNewsTitle,
-                    selectedNewLangNewsContent, 
-                    availableLangsForNewsContent, 
-                    addLangToNewsContent,
+                    selectedNewLangNews,
+availableLangsForNews,
+activeNewsLangs,
+addLangToNews,
+deleteLangFromNews,
                     daysOfWeek,
                     formatHours,
                     fixedOrganizations,
