@@ -1135,20 +1135,16 @@
 
                     return combined.map(item => {
                         const dbRecord = dbServices.value.find(db => db.id === item.id) || {};
-                        const itName = extractText(dbRecord.name, 'it') || (item.name ? item.name.it : '');
-                        const enName = extractText(dbRecord.name, 'en') || (item.name ? item.name.en : '');
-                        const itDesc = extractText(dbRecord.description, 'it') || (item.desc ? item.desc.it : '');
-                        const enDesc = extractText(dbRecord.description, 'en') || (item.desc ? item.desc.en : '');
-
                         return {
-                            ...item,
-                            ...dbRecord,
-                            name: { it: itName, en: enName },
-                            description: { it: itDesc, en: enDesc },
-                            organization: dbRecord.organization || fixedOrganizations.find(o => o.id === (dbRecord.org_id || item.org_id))?.name || 'Ente Sconosciuto',
-                            org_id: dbRecord.org_id || item.org_id,
-                            hours: dbRecord.hours || item.hours || []
-                        };
+    ...item,
+    ...dbRecord,
+    // Passiamo l'intero oggetto intatto per non tagliare fuori le nuove lingue
+    name: dbRecord.name || item.name || {},
+    description: dbRecord.description || item.desc || {},
+    organization: dbRecord.organization || fixedOrganizations.find(o => o.id === (dbRecord.org_id || item.org_id))?.name || 'Ente Sconosciuto',
+    org_id: dbRecord.org_id || item.org_id,
+    hours: dbRecord.hours || item.hours || []
+};
                     });
                 });
 
@@ -2350,6 +2346,8 @@ const deleteLangFromNews = (langCode) => {
                         temp_info: initTempInfo,
                         category: service.category || 'showers', 
                         image: service.image || '',
+                        originalName: service.name || {},          // AGGIUNGI QUESTA
+originalDesc: service.description || {},   // AGGIUNGI QUESTA
                         name_it: extractText(service.name, 'it'),
                         name_en: extractText(service.name, 'en'),
                         description_it: extractText(service.description, 'it'),
@@ -2422,8 +2420,8 @@ const deleteLangFromNews = (langCode) => {
                             image: String(editForm.value.image || '').trim(),
                             hours: validHours,
                             temp_info: JSON.parse(JSON.stringify(editForm.value.temp_info)),
-                            name: { it: editForm.value.name_it, en: editForm.value.name_en },
-                            description: { it: editForm.value.description_it, en: editForm.value.description_en }
+                            name: { ...editForm.value.originalName, it: editForm.value.name_it, en: editForm.value.name_en },
+                            description: { ...editForm.value.originalDesc, it: editForm.value.description_it, en: editForm.value.description_en }
                         };
 
                         if (editForm.value.noticeTemplate === 'custom') {
