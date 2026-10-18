@@ -534,6 +534,7 @@
                                     <textarea v-model="editForm.temp_info[lang]" rows="2" placeholder="Es: Chiuso per ferie dal 10 al 20 Agosto." class="w-full text-sm py-2 px-3 rounded-lg border border-amber-200 bg-amber-50 text-slate-800 focus:ring-2 focus:ring-amber-500 outline-none"></textarea>
                                     <button v-if="lang !== 'it'" @click="delete editForm.temp_info[lang]" type="button" class="absolute top-6 right-2 text-red-500 hover:text-red-700 p-1.5 bg-white rounded-md shadow-sm"><i class="fa-solid fa-trash text-xs"></i></button>
                                 </div>
+                                
                             </div>
                         </div>
 
@@ -884,6 +885,17 @@
                         <div class="flex items-center gap-3.5"><div class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center text-lg shadow-sm"><i class="fa-solid fa-map-location-dot"></i></div><div><span class="text-xs text-emerald-700 block font-normal">{{ t('open_maps') }}</span><span class="text-sm font-bold">{{ activeModalService.address }}</span></div></div>
                         <i class="fa-solid fa-arrow-up-right-from-square text-emerald-500"></i>
                     </a>
+                    <button @click="shareOnWhatsApp(activeModalService)" class="w-full flex items-center justify-between p-4 rounded-2xl bg-[#25D366]/10 hover:bg-[#25D366]/20 border border-[#25D366]/30 text-[#128C7E] font-semibold transition group mt-2">
+                        <div class="flex items-center gap-3.5">
+                            <div class="w-10 h-10 rounded-xl bg-[#25D366] text-white flex items-center justify-center text-xl shadow-sm">
+                                <i class="fa-brands fa-whatsapp"></i>
+                            </div>
+                            <div>
+                                <span class="text-sm font-bold">{{ t('btn_share_wa') }}</span>
+                            </div>
+                        </div>
+                        <i class="fa-solid fa-share-nodes text-[#25D366] group-hover:scale-110 transition-transform"></i>
+                    </button>
                 </div>
                 <button @click="activeModalService = null" class="w-full py-3 text-center text-xs font-bold text-slate-400 hover:text-slate-600">{{ t('close') }}</button>
             </div>
@@ -1246,6 +1258,13 @@
                         send_email: 'Invia una mail',
                         open_maps: 'Apri navigatore GPS',
                         close: 'Chiudi finestra',
+                        btn_share_wa: 'Condividi su WhatsApp',
+                        share_text_intro: 'Ecco le informazioni per:',
+                        share_text_address: '📍 Indirizzo:',
+                        share_text_hours: '🕒 Orari:',
+                        share_text_phone: '📞 Tel:',
+                        share_text_email: '✉️ Email:',
+                        share_text_map: '🗺️ Mappa:',
                         // TEMPLATES
                         tpl_title_summer_closure: 'Chiusura Estiva',
                         tpl_desc_summer_closure: 'Il servizio chiuderà per il periodo estivo dal {data_inizio} al {data_fine}.',
@@ -1334,6 +1353,13 @@
                         send_email: 'Send an email',
                         open_maps: 'Open GPS navigation',
                         close: 'Close window',
+                        btn_share_wa: 'Share on WhatsApp',
+                        share_text_intro: 'Here is the information for:',
+                        share_text_address: '📍 Address:',
+                        share_text_hours: '🕒 Hours:',
+                        share_text_phone: '📞 Phone:',
+                        share_text_email: '✉️ Email:',
+                        share_text_map: '🗺️ Map:',
                         // TEMPLATES
                         tpl_title_summer_closure: 'Summer Closure',
                         tpl_desc_summer_closure: 'The service will be closed for the summer from {data_inizio} to {data_fine}.',
@@ -1454,6 +1480,13 @@
                         tpl_desc_distribuzione_speciale: 'Distribution spéciale aujourd\'hui : {oggetto}.',
                         tpl_title_assenza_medico: 'Permanence Médicale Suspendue',
                         tpl_desc_assenza_medico: 'Permanence médicale suspendue le {data}.'
+                        btn_share_wa: 'Partager sur WhatsApp',
+                        share_text_intro: 'Voici les informations pour :',
+                        share_text_address: '📍 Adresse :',
+                        share_text_hours: '🕒 Horaires :',
+                        share_text_phone: '📞 Tél :',
+                        share_text_email: '✉️ Email :',
+                        share_text_map: '🗺️ Carte :',
                     },
                     es: {
                         tab_services: 'Servicios',
@@ -1542,6 +1575,13 @@
                         tpl_title_assenza_medico: 'Servicio Médico Suspendido',
                         tpl_desc_assenza_medico: 'Servicio médico suspendido el {data}.'
                     },
+            btn_share_wa: 'Compartir en WhatsApp',
+                        share_text_intro: 'Aquí está la información para:',
+                        share_text_address: '📍 Dirección:',
+                        share_text_hours: '🕒 Horarios:',
+                        share_text_phone: '📞 Tel:',
+                        share_text_email: '✉️ Email:',
+                        share_text_map: '🗺️ Mapa:',
                     ar: {
                         tab_services: 'الخدمات',
                         tab_news: 'أخبار وتنبيهات',
@@ -1629,6 +1669,13 @@
                         tpl_title_assenza_medico: 'الخدمة الطبية معلقة',
                         tpl_desc_assenza_medico: 'الخدمة الطبية معلقة في {data}.'
                     },
+            btn_share_wa: 'شارك على واتساب',
+                        share_text_intro: 'إليك معلومات عن:',
+                        share_text_address: '📍 العنوان:',
+                        share_text_hours: '🕒 ساعات العمل:',
+                        share_text_phone: '📞 هاتف:',
+                        share_text_email: '✉️ البريد الإلكتروني:',
+                        share_text_map: '🗺️ الخريطة:',
                     ur: {
                         tab_services: 'خدمات',
                         tab_news: 'خبریں اور الرٹس',
@@ -1716,6 +1763,13 @@
                         tpl_title_assenza_medico: 'طبی ڈیسک بند',
                         tpl_desc_assenza_medico: 'ڈاکٹر کی غیر موجودگی کی وجہ سے {data} کو میڈیکل ڈیسک بند ہے۔'
                     },
+            btn_share_wa: 'واٹس ایپ پر شیئر کریں',
+                        share_text_intro: 'یہاں معلومات ہیں:',
+                        share_text_address: '📍 پتہ:',
+                        share_text_hours: '🕒 اوقات:',
+                        share_text_phone: '📞 فون:',
+                        share_text_email: '✉️ ای میل:',
+                        share_text_map: '🗺️ نقشہ:',
                     hi: {
                         tab_services: 'सेवाएं खोजें',
                         tab_news: 'समाचार और अलर्ट',
@@ -1803,6 +1857,13 @@
                         tpl_title_assenza_medico: 'मेडिकल डेस्क बंद',
                         tpl_desc_assenza_medico: 'कर्मचारियों की अनुपस्थिति के कारण मेडिकल डेस्क {data} को निलंबित है।'
                     },
+            btn_share_wa: 'व्हाट्सएप पर शेयर करें',
+                        share_text_intro: 'यहाँ जानकारी है:',
+                        share_text_address: '📍 पता:',
+                        share_text_hours: '🕒 समय:',
+                        share_text_phone: '📞 फोन:',
+                        share_text_email: '✉️ ईमेल:',
+                        share_text_map: '🗺️ नक्शा:',
                     sw: {
                         tab_services: 'Huduma',
                         tab_news: 'Habari & Arifa',
@@ -1890,6 +1951,13 @@
                         tpl_title_assenza_medico: 'Huduma ya Daktari Imesimamishwa',
                         tpl_desc_assenza_medico: 'Daktari hayupo, huduma imesimamishwa tarehe {data}.'
                     },
+            btn_share_wa: 'Shiriki kwenye WhatsApp',
+                        share_text_intro: 'Hapa kuna habari kwa:',
+                        share_text_address: '📍 Anwani:',
+                        share_text_hours: '🕒 Saa:',
+                        share_text_phone: '📞 Simu:',
+                        share_text_email: '✉️ Barua pepe:',
+                        share_text_map: '🗺️ Ramani:',
                     tr: {
                         tab_services: 'Hizmetler',
                         tab_news: 'Haberler & Uyarılar',
@@ -1976,6 +2044,13 @@
                         tpl_desc_distribuzione_speciale: 'Bugün {oggetto} için özel bir dağıtım var.',
                         tpl_title_assenza_medico: 'Tıbbi Masa Kapalı',
                         tpl_desc_assenza_medico: 'Personel eksikliği nedeniyle {data} tarihinde doktor hizmeti yoktur.'
+                        btn_share_wa: 'WhatsApp\'ta Paylaş',
+                        share_text_intro: 'İşte bilgiler:',
+                        share_text_address: '📍 Adres:',
+                        share_text_hours: '🕒 Saatler:',
+                        share_text_phone: '📞 Telefon:',
+                        share_text_email: '✉️ E-posta:',
+                        share_text_map: '🗺️ Harita:',
                     }
                 };
 
@@ -2752,6 +2827,28 @@ const deleteLangFromNews = (langCode) => {
                     const query = encodeURIComponent(`${address}, Como, Italy`); 
                     return `https://www.google.com/maps/search/?api=1&query=${query}`; 
                 };
+        const shareOnWhatsApp = (service) => {
+                    const name = translateField(service, 'name');
+                    const org = service.organization;
+                    const address = service.address || '';
+                    const phone = service.phone || '';
+                    const email = service.email || '';
+                    const mapLink = address ? getNavigationUrl(address) : '';
+                    const hours = formatHours(service.hours, currentLangCode.value);
+
+                    let message = `*${t('share_text_intro')}*\n`;
+                    message += `*${name}* (${org})\n\n`;
+                    
+                    if (address) message += `${t('share_text_address')} ${address}\n`;
+                    message += `${t('share_text_hours')}\n${hours}\n\n`;
+                    
+                    if (phone) message += `${t('share_text_phone')} ${phone}\n`;
+                    if (email) message += `${t('share_text_email')} ${email}\n`;
+                    if (mapLink) message += `\n${t('share_text_map')}\n${mapLink}`;
+
+                    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+                    window.open(whatsappUrl, '_blank');
+                };
 
                 const selectedNoticeTemplate = computed(() => templates.find(t => t.id === editForm.value.noticeTemplate));
                 const selectedNewsTemplate = computed(() => templates.find(t => t.id === newsForm.value.template));
@@ -2786,6 +2883,7 @@ const deleteLangFromNews = (langCode) => {
                     goToService, 
                     openContactModal, 
                     getNavigationUrl,
+                    shareOnWhatsApp,
                     isLoading, 
                     isLoadingNews, 
                     openAdminModal, 
