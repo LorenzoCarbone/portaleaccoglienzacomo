@@ -371,13 +371,48 @@
                     </div>
                 </div>
 
-                <div class="bg-blue-50 border border-blue-200 rounded-3xl p-5 card-shadow flex items-start gap-4">
-                    <div class="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center text-xl shrink-0"><i class="fa-solid fa-info"></i></div>
-                    <div>
-                        <h3 class="font-bold text-blue-900 text-sm">Modalità Ibrida Attiva</h3>
-                        <p class="text-xs text-blue-800 mt-1">Il nome e la descrizione di questo servizio sono integrati nel codice del portale per garantire traduzioni perfette. Puoi modificare gli orari, inserire note temporanee, contatti e aggiungere avvisi di chiusura.</p>
-                    </div>
-                </div>
+                <div class="bg-white rounded-3xl border border-slate-200 p-5 sm:p-6 card-shadow space-y-5">
+    <div class="flex items-center gap-3 border-b border-slate-100 pb-3">
+        <div class="w-8 h-8 rounded-xl bg-brand-600 text-white flex items-center justify-center text-sm shadow-sm"><i class="fa-solid fa-language"></i></div>
+        <div><h3 class="font-bold text-slate-800 text-base">Nome e Descrizione</h3><p class="text-xs text-slate-500">Gestisci i testi del servizio in più lingue.</p></div>
+    </div>
+
+    <div class="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-3">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-200 pb-2 gap-2">
+            <h4 class="text-sm font-bold uppercase text-slate-700">1. Nome Servizio</h4>
+            <div class="flex items-center gap-2">
+                <select v-model="selectedNewLangName" class="text-xs border border-slate-300 rounded-lg px-2 py-1.5 bg-white outline-none">
+                    <option value="">Aggiungi lingua...</option>
+                    <option v-for="(l, code) in availableLangsForName" :key="code" :value="code">{{ l.name }}</option>
+                </select>
+                <button @click="addLangToName" type="button" class="bg-brand-600 hover:bg-brand-700 text-white text-[10px] font-bold px-2.5 py-1.5 rounded-lg shadow-sm transition"><i class="fa-solid fa-plus"></i></button>
+            </div>
+        </div>
+        <div v-for="(text, lang) in editForm.name" :key="'name_'+lang" class="relative">
+            <label class="block text-[10px] font-bold text-slate-500 mb-1 uppercase flex items-center gap-1"><span class="flag-emoji text-sm">{{ languages[lang]?.flag }}</span> {{ languages[lang]?.name }} <span v-if="lang==='it'">(Predefinito)</span></label>
+            <input v-model="editForm.name[lang]" type="text" class="w-full text-sm py-2 px-3 rounded-lg border border-slate-300 text-slate-800 focus:ring-2 focus:ring-brand-500 outline-none shadow-sm">
+            <button v-if="lang !== 'it'" @click="delete editForm.name[lang]" type="button" class="absolute top-6 right-2 text-red-500 hover:text-red-700 p-1.5 bg-white rounded-md shadow-sm"><i class="fa-solid fa-trash text-xs"></i></button>
+        </div>
+    </div>
+
+    <div class="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-3">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-200 pb-2 gap-2">
+            <h4 class="text-sm font-bold uppercase text-slate-700">2. Descrizione Servizio</h4>
+            <div class="flex items-center gap-2">
+                <select v-model="selectedNewLangDesc" class="text-xs border border-slate-300 rounded-lg px-2 py-1.5 bg-white outline-none">
+                    <option value="">Aggiungi lingua...</option>
+                    <option v-for="(l, code) in availableLangsForDesc" :key="code" :value="code">{{ l.name }}</option>
+                </select>
+                <button @click="addLangToDesc" type="button" class="bg-brand-600 hover:bg-brand-700 text-white text-[10px] font-bold px-2.5 py-1.5 rounded-lg shadow-sm transition"><i class="fa-solid fa-plus"></i></button>
+            </div>
+        </div>
+        <div v-for="(text, lang) in editForm.description" :key="'desc_'+lang" class="relative">
+            <label class="block text-[10px] font-bold text-slate-500 mb-1 uppercase flex items-center gap-1"><span class="flag-emoji text-sm">{{ languages[lang]?.flag }}</span> {{ languages[lang]?.name }} <span v-if="lang==='it'">(Predefinito)</span></label>
+            <textarea v-model="editForm.description[lang]" rows="3" class="w-full text-sm py-2 px-3 rounded-lg border border-slate-300 text-slate-800 focus:ring-2 focus:ring-brand-500 outline-none shadow-sm"></textarea>
+            <button v-if="lang !== 'it'" @click="delete editForm.description[lang]" type="button" class="absolute top-6 right-2 text-red-500 hover:text-red-700 p-1.5 bg-white rounded-md shadow-sm"><i class="fa-solid fa-trash text-xs"></i></button>
+        </div>
+    </div>
+</div>
 
                 <div class="bg-white rounded-3xl border-2 border-brand-500/20 p-5 sm:p-6 card-shadow space-y-5">
                     <div class="flex items-center gap-3 border-b border-slate-100 pb-3">
@@ -1031,10 +1066,8 @@
                     temp_info: { it: '' },
                     category: 'showers',
                     image: '',
-                    name_it: '',
-                    name_en: '',
-                    description_it: '',
-                    description_en: ''
+                    name: { it: '' },
+                    description: { it: '' }
                 });
 
                 const savingServiceId = ref(false);
@@ -2204,6 +2237,40 @@ const addLangToNews = () => {
     }
 };
 
+const selectedNewLangName = ref('');
+                const availableLangsForName = computed(() => {
+                    const available = {};
+                    for(const code in languages) {
+                        if(code !== 'it' && editForm.value.name && editForm.value.name[code] === undefined) {
+                            available[code] = languages[code];
+                        }
+                    }
+                    return available;
+                });
+                const addLangToName = () => {
+                    if (selectedNewLangName.value) { 
+                        editForm.value.name[selectedNewLangName.value] = ''; 
+                        selectedNewLangName.value = ''; 
+                    }
+                };
+
+                const selectedNewLangDesc = ref('');
+                const availableLangsForDesc = computed(() => {
+                    const available = {};
+                    for(const code in languages) {
+                        if(code !== 'it' && editForm.value.description && editForm.value.description[code] === undefined) {
+                            available[code] = languages[code];
+                        }
+                    }
+                    return available;
+                });
+                const addLangToDesc = () => {
+                    if (selectedNewLangDesc.value) { 
+                        editForm.value.description[selectedNewLangDesc.value] = ''; 
+                        selectedNewLangDesc.value = ''; 
+                    }
+                };
+
 const deleteLangFromNews = (langCode) => {
     delete newsForm.value.customTitle[langCode];
     delete newsForm.value.customContent[langCode];
@@ -2329,6 +2396,14 @@ const deleteLangFromNews = (langCode) => {
 
                     let dbHoursList = Array.isArray(service.hours) && service.hours.length > 0 ? [...service.hours] : [{ day: 1, open: '', close: '' }];
 
+                    let initName = service.name ? JSON.parse(JSON.stringify(service.name)) : { it: '' };
+                    if (typeof initName === 'string') initName = { it: initName };
+                    if (!initName.it) initName.it = '';
+
+                    let initDesc = service.description ? JSON.parse(JSON.stringify(service.description)) : { it: '' };
+                    if (typeof initDesc === 'string') initDesc = { it: initDesc };
+                    if (!initDesc.it) initDesc.it = '';
+
                     editForm.value = {
                         id: service.id, 
                         organization_id: service.org_id,
@@ -2343,16 +2418,11 @@ const deleteLangFromNews = (langCode) => {
                         temp_info: initTempInfo,
                         category: service.category || 'showers', 
                         image: service.image || '',
-                        originalName: service.name || {},          // AGGIUNGI QUESTA
-originalDesc: service.description || {},   // AGGIUNGI QUESTA
-                        name_it: extractText(service.name, 'it'),
-                        name_en: extractText(service.name, 'en'),
-                        description_it: extractText(service.description, 'it'),
-                        description_en: extractText(service.description, 'en')
+                        name: initName,
+                        description: initDesc
                     };
                     imageUploadError.value = ''; 
                     window.scrollTo({ top: 0, behavior: 'smooth' });
-                };
 
                 const startCreating = () => {
                     editingService.value = { id: null };
@@ -2370,10 +2440,8 @@ originalDesc: service.description || {},   // AGGIUNGI QUESTA
                         temp_info: { it: '' },
                         category: 'showers', 
                         image: '', 
-                        name_it: '',
-                        name_en: '',
-                        description_it: '',
-                        description_en: ''
+                        name: { it: '' },
+                        description: { it: '' }
                     };
                     imageUploadError.value = ''; 
                     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -2417,8 +2485,8 @@ originalDesc: service.description || {},   // AGGIUNGI QUESTA
                             image: String(editForm.value.image || '').trim(),
                             hours: validHours,
                             temp_info: JSON.parse(JSON.stringify(editForm.value.temp_info)),
-                            name: { ...editForm.value.originalName, it: editForm.value.name_it, en: editForm.value.name_en },
-                            description: { ...editForm.value.originalDesc, it: editForm.value.description_it, en: editForm.value.description_en }
+                            name: JSON.parse(JSON.stringify(editForm.value.name)),
+                            description: JSON.parse(JSON.stringify(editForm.value.description))
                         };
 
                         if (editForm.value.noticeTemplate === 'custom') {
@@ -2756,10 +2824,16 @@ originalDesc: service.description || {},   // AGGIUNGI QUESTA
                     templates, 
                     selectedNoticeTemplate, 
                     selectedNewsTemplate, 
-                    generateTemplateText,
+                   generateTemplateText,
                     selectedNewLangService, 
                     availableLangsForServiceCustom, 
                     addLangToServiceCustom, 
+                    selectedNewLangName,
+                    availableLangsForName,
+                    addLangToName,
+                    selectedNewLangDesc,
+                    availableLangsForDesc,
+                    addLangToDesc,
                     selectedNewLangTemp,
                     availableLangsForTemp,
                     addLangToTemp,
