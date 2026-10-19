@@ -106,10 +106,12 @@
             <div class="bg-brand-900/90 w-full rounded-b-2xl sm:rounded-b-3xl">
                 <div class="max-w-[1600px] w-full mx-auto flex px-2 sm:px-4 lg:px-8 pt-2 gap-1 overflow-x-auto no-scrollbar">
                     <button @click="activeTab = 'services'" class="flex-1 py-2.5 px-3 rounded-t-xl font-medium text-xs sm:text-sm flex items-center justify-center gap-2 whitespace-nowrap transition" :class="activeTab === 'services' ? 'bg-slate-50 text-brand-900 font-bold shadow' : 'text-brand-100 hover:bg-brand-800'"><i class="fa-solid fa-layer-group"></i><span>{{ t('tab_services') }}</span></button>
-                    <button @click="activeTab = 'news'" class="flex-1 py-2.5 px-3 rounded-t-xl font-medium text-xs sm:text-sm flex items-center justify-center gap-2 whitespace-nowrap transition relative" :class="activeTab === 'news' ? 'bg-slate-50 text-brand-900 font-bold shadow' : 'text-brand-100 hover:bg-brand-800'">
-                        <i class="fa-solid fa-bell"></i><span>{{ t('tab_news') }}</span>
-                        <span v-if="hasUnreadNews" class="absolute top-2 right-2 w-2 h-2 rounded-full bg-warm-500 animate-pulse"></span>
-                    </button>
+                    <button @click="activeTab = 'news'" class="flex-1 py-2.5 px-3 rounded-t-xl font-medium text-xs sm:text-sm flex items-center justify-center whitespace-nowrap transition" :class="activeTab === 'news' ? 'bg-slate-50 text-brand-900 font-bold shadow' : 'text-brand-100 hover:bg-brand-800'">
+    <div class="relative flex items-center gap-2">
+        <i class="fa-solid fa-bell"></i><span>{{ t('tab_news') }}</span>
+        <span v-if="hasUnreadNews" class="absolute -top-0.5 -right-3 w-2 h-2 rounded-full bg-warm-500 animate-pulse"></span>
+    </div>
+</button>
                     <button @click="activeTab = 'emergency'" class="flex-1 py-2.5 px-3 rounded-t-xl font-medium text-xs sm:text-sm flex items-center justify-center gap-2 whitespace-nowrap transition" :class="activeTab === 'emergency' ? 'bg-slate-50 text-brand-900 font-bold shadow' : 'text-brand-100 hover:bg-brand-800'"><i class="fa-solid fa-triangle-exclamation text-warm-500"></i><span>{{ t('tab_emergency') }}</span></button>
                     <button v-if="user" @click="activeTab = 'admin_dashboard'; cancelEditing()" class="flex-1 py-2.5 px-3 rounded-t-xl font-medium text-xs sm:text-sm flex items-center justify-center gap-2 whitespace-nowrap transition bg-emerald-600/30 text-emerald-200 hover:bg-emerald-600/50" :class="activeTab === 'admin_dashboard' ? '!bg-emerald-600 !text-white font-bold shadow' : ''"><i class="fa-solid fa-list-check"></i><span class="hidden md:inline">Gestione</span></button>
                 </div>
