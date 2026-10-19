@@ -1065,26 +1065,29 @@
                 };
 
                 const searchSuggestions = computed(() => {
-                    if(!searchQuery.value || searchQuery.value.length < 2) return [];
+                    if (!searchQuery.value || searchQuery.value.length < 2) return [];
                     const q = searchQuery.value.toLowerCase().trim();
                     const lang = currentLangCode.value;
                     const matches = [];
-                    
+
                     dbTags.value.forEach(tag => {
-                        // Controlla se la stringa di ricerca esiste in QUALSIASI traduzione
-                        const allWordsRaw = Object.values(tag.translations).join(',').toLowerCase();
+                        // Prendi la stringa di traduzione SOLO per la lingua corrente (fallback all'italiano)
+                        const translationString = tag.translations[lang] || tag.translations['it'] || '';
                         
-                        if (allWordsRaw.includes(q)) {
-                            // Se c'è un match, prendi la prima parola della traduzione nella lingua ATTUALE
-                            const translationString = tag.translations[lang] || tag.translations['it'] || tag.id;
-                            const firstWord = translationString.split(',')[0].trim();
-                            
-                            // Formatta con iniziale maiuscola
-                            const formattedWord = firstWord.charAt(0).toUpperCase() + firstWord.slice(1);
+                        // Dividi la stringa in un array di singole parole pulite (es: ["cibo", "pasto", "mensa"])
+                        const words = translationString.split(',').map(w => w.trim().toLowerCase());
+                        
+                        // Cerca se qualcuna di queste parole contiene ciò che l'utente ha scritto (es: "mens" è in "mensa")
+                        const matchedWord = words.find(w => w.includes(q));
+
+                        if (matchedWord) {
+                            // Se l'abbiamo trovata, metti la prima lettera maiuscola e aggiungila ai suggerimenti
+                            const formattedWord = matchedWord.charAt(0).toUpperCase() + matchedWord.slice(1);
                             matches.push({ id: tag.id, text: formattedWord });
                         }
                     });
-                    
+
+                    // Rimuovi i duplicati (se più tag contengono la stessa parola) e tieni i primi 5
                     const uniqueMatches = [];
                     const seen = new Set();
                     for (const m of matches) {
