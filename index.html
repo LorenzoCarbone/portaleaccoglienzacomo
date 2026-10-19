@@ -1063,17 +1063,36 @@
                 const searchSuggestions = computed(() => {
                     if(!searchQuery.value || searchQuery.value.length < 2) return [];
                     const q = searchQuery.value.toLowerCase().trim();
-                    const lang = currentLangCode.value;
                     const matches = [];
+                    
                     dbTags.value.forEach(tag => {
-                        const termLang = tag.translations[lang] ? tag.translations[lang].toLowerCase() : '';
-                        const termIt = tag.translations['it'] ? tag.translations['it'].toLowerCase() : '';
-                        const termEn = tag.translations['en'] ? tag.translations['en'].toLowerCase() : '';
-                        if(termLang.includes(q) || termIt.includes(q) || termEn.includes(q)) {
-                            matches.push({ id: tag.id, text: tag.translations[lang] || tag.translations['it'] || tag.id });
+                        // Prende tutte le traduzioni e le divide in singole parole pulite
+                        const allWords = Object.values(tag.translations)
+                                               .join(',')
+                                               .split(',')
+                                               .map(w => w.trim().toLowerCase())
+                                               .filter(w => w.length > 0);
+                        
+                        // Trova la singola parola esatta che l'utente sta digitando
+                        const matchedWord = allWords.find(w => w.includes(q));
+                        
+                        if (matchedWord) {
+                            // Mette l'iniziale maiuscola (es. "mensa" -> "Mensa")
+                            const formattedWord = matchedWord.charAt(0).toUpperCase() + matchedWord.slice(1);
+                            matches.push({ id: tag.id, text: formattedWord });
                         }
                     });
-                    return Array.from(new Set(matches.map(a => a.text))).map(text => matches.find(a => a.text === text)).slice(0, 5);
+                    
+                    // Rimuove eventuali doppioni e tiene solo i primi 5 suggerimenti
+                    const uniqueMatches = [];
+                    const seen = new Set();
+                    for (const m of matches) {
+                        if (!seen.has(m.text)) {
+                            seen.add(m.text);
+                            uniqueMatches.push(m);
+                        }
+                    }
+                    return uniqueMatches.slice(0, 5);
                 });
 
                 const applyTagSearch = (tagText) => { searchQuery.value = tagText; };
