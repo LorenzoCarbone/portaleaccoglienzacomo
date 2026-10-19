@@ -1071,23 +1071,24 @@
                     const matches = [];
 
                     dbTags.value.forEach(tag => {
-                        // Prendi la stringa di traduzione SOLO per la lingua corrente (fallback all'italiano)
+                        // 1. Cerca SOLO nella lingua corrente del sito (niente inglese se sei in italiano)
                         const translationString = tag.translations[lang] || tag.translations['it'] || '';
                         
-                        // Dividi la stringa in un array di singole parole pulite (es: ["cibo", "pasto", "mensa"])
+                        // 2. Separa tutte le parole del tag
                         const words = translationString.split(',').map(w => w.trim().toLowerCase());
                         
-                        // Cerca se qualcuna di queste parole contiene ciò che l'utente ha scritto (es: "mens" è in "mensa")
-                        const matchedWord = words.find(w => w.includes(q));
+                        // 3. Trova la parola esatta che INIZIA con quello che l'utente ha scritto
+                        // Es: se digita "mens", trova "mensa"
+                        const matchedWord = words.find(w => w.startsWith(q));
 
                         if (matchedWord) {
-                            // Se l'abbiamo trovata, metti la prima lettera maiuscola e aggiungila ai suggerimenti
+                            // 4. Mette l'iniziale maiuscola per eleganza (es: "Mensa")
                             const formattedWord = matchedWord.charAt(0).toUpperCase() + matchedWord.slice(1);
                             matches.push({ id: tag.id, text: formattedWord });
                         }
                     });
 
-                    // Rimuovi i duplicati (se più tag contengono la stessa parola) e tieni i primi 5
+                    // 5. Rimuove i duplicati e mostra al massimo 5 suggerimenti puliti
                     const uniqueMatches = [];
                     const seen = new Set();
                     for (const m of matches) {
