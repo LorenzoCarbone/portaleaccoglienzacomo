@@ -123,12 +123,22 @@
                 <div class="relative z-10 max-w-2xl">
                     <h2 class="text-2xl sm:text-3xl font-bold mb-2">{{ t('welcome_title') }}</h2>
                     <p class="text-brand-100 text-sm sm:text-base mb-6">{{ t('welcome_sub') }}</p>
-                    <div class="relative">
+<div class="relative">
                         <input v-model="searchQuery" type="text" :placeholder="t('search_placeholder')" class="w-full bg-white/95 text-slate-800 placeholder-slate-400 pl-11 pr-10 py-3.5 rounded-2xl text-sm sm:text-base focus:outline-none focus:ring-4 focus:ring-white/30 shadow-inner">
                         <i class="fa-solid fa-magnifying-glass absolute top-4 left-4 text-slate-400 text-lg" :class="{'right-4 left-auto': isRTL}"></i>
                         <button v-if="searchQuery" @click="searchQuery = ''" class="absolute top-3.5 right-3.5 text-slate-400 hover:text-slate-600 p-1" :class="{'left-3.5 right-auto': isRTL}"><i class="fa-solid fa-circle-xmark text-lg"></i></button>
-                    </div>
-                </div>
+                        
+                        <!-- NUOVO: Dropdown Suggerimenti Smart -->
+                        <div v-if="searchSuggestions.length > 0" class="absolute top-full left-0 w-full bg-white rounded-xl shadow-xl mt-2 z-50 overflow-hidden border border-slate-100 animate-fadeIn">
+                            <button v-for="tag in searchSuggestions" :key="tag.id" @click="applyTagSearch(tag.text)" class="w-full text-left px-4 py-3 hover:bg-brand-50 text-slate-700 border-b border-slate-100 last:border-0 flex items-center gap-3 transition">
+                                <div class="w-6 h-6 rounded-full bg-brand-100 text-brand-600 flex items-center justify-center shrink-0"><i class="fa-solid fa-tag text-[10px]"></i></div>
+                                <div class="flex-1">
+                                    <span class="font-bold text-sm block">{{ tag.text }}</span>
+                                    <span class="text-[10px] text-slate-400 uppercase">Suggerimento</span>
+                                </div>
+                            </button>
+                        </div>
+                    </div>                </div>
                 <i class="fa-solid fa-map-location-dot absolute -bottom-6 -right-6 text-9xl text-white/10 pointer-events-none"></i>
             </div>
 
@@ -315,9 +325,81 @@
             <div class="flex gap-1.5 bg-white p-1.5 rounded-2xl border border-slate-200 shadow-sm w-fit overflow-x-auto no-scrollbar mb-4">
                 <button @click="adminSection = 'services'; cancelEditing()" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition whitespace-nowrap" :class="adminSection === 'services' ? 'bg-emerald-600 text-white shadow' : 'text-slate-500 hover:bg-slate-100'"><i class="fa-solid fa-layer-group"></i><span>Servizi</span></button>
                 <button @click="adminSection = 'news'; cancelEditingNews()" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition whitespace-nowrap" :class="adminSection === 'news' ? 'bg-amber-500 text-white shadow' : 'text-slate-500 hover:bg-slate-100'"><i class="fa-solid fa-bell"></i><span>Notizie & Allerta</span></button>
-                <button @click="adminSection = 'import'; cancelEditing(); cancelEditingNews()" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition whitespace-nowrap" :class="adminSection === 'import' ? 'bg-brand-600 text-white shadow' : 'text-slate-500 hover:bg-slate-100'"><i class="fa-solid fa-code"></i><span>Importa Dati</span></button>
-            </div>
+<button @click="adminSection = 'tags'; cancelEditingTag()" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition whitespace-nowrap" :class="adminSection === 'tags' ? 'bg-indigo-500 text-white shadow' : 'text-slate-500 hover:bg-slate-100'"><i class="fa-solid fa-tags"></i><span>Smart Tags</span></button>
+                <button @click="adminSection = 'import'; cancelEditing(); cancelEditingNews(); cancelEditingTag()" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition whitespace-nowrap" :class="adminSection === 'import' ? 'bg-brand-600 text-white shadow' : 'text-slate-500 hover:bg-slate-100'"><i class="fa-solid fa-code"></i><span>Importa Dati</span></button>            </div>
+<!-- GESTIONE TAG ADMIN -->
+            <template v-if="adminSection === 'tags'">
+                <div v-if="!editingTag" class="space-y-6">
+                    <div class="bg-gradient-to-r from-indigo-600 to-indigo-800 rounded-3xl p-6 sm:p-8 text-white shadow-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        <div>
+                            <span class="bg-white/20 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-2 inline-block">Motore di Ricerca</span>
+                            <h2 class="text-2xl sm:text-3xl font-bold leading-tight">Libreria Smart Tags</h2>
+                            <p class="text-indigo-100 text-sm mt-1">Crea parole chiave invisibili (es. "cibo") tradotte in più lingue per aiutare la ricerca.</p>
+                        </div>
+                        <button @click="startCreatingTag" class="bg-white text-indigo-700 hover:bg-indigo-50 font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm shadow flex items-center gap-2 transition active:scale-95 shrink-0"><i class="fa-solid fa-plus"></i><span>Nuovo Tag</span></button>
+                    </div>
 
+                    <div v-if="isLoadingTags" class="text-center py-16"><i class="fa-solid fa-circle-notch fa-spin text-4xl text-indigo-500 mb-4 inline-block"></i></div>
+                    <div v-else-if="dbTags.length === 0" class="text-center py-16 bg-white rounded-3xl border border-slate-200 p-6 shadow-sm"><span class="text-6xl block mb-4">🏷️</span><h4 class="font-bold text-slate-700 text-lg mb-1">Nessun tag configurato</h4></div>
+                    <div v-else class="bg-white rounded-3xl border border-slate-200 overflow-hidden card-shadow divide-y divide-slate-100">
+                        <div class="p-4 bg-slate-50 border-b border-slate-100 text-xs font-bold text-slate-500 uppercase tracking-wider">Libreria Tag ({{ dbTags.length }})</div>
+                        <div v-for="tag in dbTags" :key="tag.id" class="p-4 hover:bg-indigo-50/50 transition flex items-center justify-between gap-4 group">
+                            <div @click="startEditingTag(tag)" class="flex items-center gap-3 overflow-hidden cursor-pointer flex-1">
+                                <div class="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0"><i class="fa-solid fa-tag"></i></div>
+                                <div>
+                                    <h4 class="font-bold text-slate-800">{{ tag.translations['it'] || tag.id }}</h4>
+                                    <p class="text-xs text-slate-400 font-mono">{{ tag.id }} • {{ Object.keys(tag.translations).length }} lingue</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2 shrink-0">
+                                <button @click="startEditingTag(tag)" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-indigo-600 text-slate-400 hover:text-white flex items-center justify-center text-xs transition"><i class="fa-solid fa-pen"></i></button>
+                                <button @click="deleteTagItem(tag.id)" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-red-600 text-slate-400 hover:text-white flex items-center justify-center text-xs transition"><i class="fa-solid fa-trash"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div v-else class="space-y-6 animate-fadeIn">
+                    <div class="flex items-center justify-between bg-white p-4 rounded-2xl border border-slate-200 card-shadow sticky top-20 z-30">
+                        <button @click="cancelEditingTag()" class="flex items-center gap-2 text-slate-600 hover:text-indigo-600 font-bold text-xs sm:text-sm bg-slate-100 hover:bg-indigo-50 px-3.5 py-2 rounded-xl transition"><i class="fa-solid fa-arrow-left"></i><span>Indietro</span></button>
+                    </div>
+
+                    <div class="bg-white rounded-3xl border border-slate-200 p-5 sm:p-6 card-shadow space-y-5">
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">ID Univoco Tag (Senza spazi, es: 'tag_cibo')</label>
+                            <input v-model="tagForm.id" :disabled="isEditingExistingTag" type="text" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none disabled:opacity-50 font-mono">
+                        </div>
+
+                        <div class="border-t border-slate-100 pt-4">
+                            <div class="flex items-center justify-between mb-3">
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600">Traduzioni (Ciò che gli utenti cercano)</label>
+                                <div class="flex items-center gap-2">
+                                    <select v-model="selectedNewLangTag" class="text-xs border border-slate-300 rounded-lg px-2 py-1.5 outline-none">
+                                        <option value="">Aggiungi lingua...</option>
+                                        <option v-for="(l, code) in availableLangsForTag" :key="code" :value="code">{{ l.name }}</option>
+                                    </select>
+                                    <button @click="addLangToTag" type="button" class="bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] px-2.5 py-1.5 rounded-lg shadow transition"><i class="fa-solid fa-plus"></i></button>
+                                </div>
+                            </div>
+
+                            <div class="space-y-3">
+                                <div v-for="(text, lang) in tagForm.translations" :key="'tag_'+lang" class="relative">
+                                    <label class="block text-[10px] font-bold text-slate-500 mb-1 uppercase flex items-center gap-1"><span class="flag-emoji text-sm">{{ languages[lang]?.flag }}</span> {{ languages[lang]?.name }}</label>
+                                    <input v-model="tagForm.translations[lang]" type="text" placeholder="Es. cibo, food, nourriture..." class="w-full text-sm py-2 px-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 outline-none">
+                                    <button v-if="lang !== 'it'" @click="delete tagForm.translations[lang]" type="button" class="absolute top-6 right-2 text-red-500 hover:bg-red-50 p-1.5 rounded"><i class="fa-solid fa-trash text-xs"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-900 text-white p-4 rounded-3xl shadow-xl flex items-center justify-end gap-3 sticky bottom-4 z-40">
+                        <button @click="cancelEditingTag()" :disabled="savingTag" class="py-3 px-5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-sm font-bold transition">Annulla</button>
+                        <button @click="saveTagChanges()" :disabled="savingTag" class="bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-3 px-6 rounded-2xl text-sm transition flex items-center gap-2">
+                            <i v-if="savingTag" class="fa-solid fa-circle-notch fa-spin"></i><i v-else class="fa-solid fa-check"></i> Salva Tag
+                        </button>
+                    </div>
+                </div>
+            </template>
             <!-- GESTIONE SERVIZI ADMIN -->
             <template v-if="adminSection === 'services'">
             <div v-if="!editingService" class="space-y-6">
@@ -417,6 +499,18 @@
             <label class="block text-[10px] font-bold text-slate-500 mb-1 uppercase flex items-center gap-1"><span class="flag-emoji text-sm">{{ languages[lang]?.flag }}</span> {{ languages[lang]?.name }} <span v-if="lang==='it'">(Predefinito)</span></label>
             <textarea v-model="editForm.description[lang]" rows="3" class="w-full text-sm py-2 px-3 rounded-lg border border-slate-300 text-slate-800 focus:ring-2 focus:ring-brand-500 outline-none shadow-sm"></textarea>
             <button v-if="lang !== 'it'" @click="delete editForm.description[lang]" type="button" class="absolute top-6 right-2 text-red-500 hover:text-red-700 p-1.5 bg-white rounded-md shadow-sm"><i class="fa-solid fa-trash text-xs"></i></button>
+        </div>
+    </div>
+                    <!-- SEZIONE TAGS & PAROLE CHIAVE -->
+    <div class="border-t border-slate-100 pt-4 mt-4">
+        <label class="block text-xs font-bold uppercase tracking-wider text-slate-800 mb-2">Tag & Parole Chiave (Ricerca Smart)</label>
+        <p class="text-[10px] text-slate-500 mb-2">Seleziona le etichette per aiutare gli utenti a trovare questo servizio cercando parole specifiche.</p>
+        <div class="flex flex-wrap gap-2">
+            <label v-for="tag in dbTags" :key="tag.id" class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-lg cursor-pointer hover:bg-slate-100 transition">
+                <input type="checkbox" :value="tag.id" v-model="editForm.tags" class="text-brand-600 focus:ring-brand-500 rounded border-slate-300">
+                <span class="text-xs font-medium text-slate-700">{{ tag.translations['it'] || tag.id }}</span>
+            </label>
+            <p v-if="dbTags.length===0" class="text-xs text-red-500">Nessun tag configurato. Creali nella sezione "Smart Tags".</p>
         </div>
     </div>
 </div>
@@ -947,6 +1041,78 @@
 
                 const adminSection = ref('services');
                 const importCode = ref('');
+                // --- STATO SMART TAGS ---
+                const dbTags = ref([]);
+                const isLoadingTags = ref(true);
+                const editingTag = ref(null);
+                const tagForm = ref({ id: '', translations: { it: '' } });
+                const savingTag = ref(false);
+                const isEditingExistingTag = ref(false);
+                const selectedNewLangTag = ref('');
+
+                const fetchTags = async () => {
+                    if (!supabase) { isLoadingTags.value = false; return; }
+                    isLoadingTags.value = true;
+                    try {
+                        const { data, error } = await supabase.from('tags').select('*').order('id', { ascending: true });
+                        if (error) throw error;
+                        if (data) dbTags.value = data;
+                    } catch (error) { console.error(error.message); } finally { isLoadingTags.value = false; }
+                };
+
+                const searchSuggestions = computed(() => {
+                    if(!searchQuery.value || searchQuery.value.length < 2) return [];
+                    const q = searchQuery.value.toLowerCase().trim();
+                    const lang = currentLangCode.value;
+                    const matches = [];
+                    dbTags.value.forEach(tag => {
+                        const termLang = tag.translations[lang] ? tag.translations[lang].toLowerCase() : '';
+                        const termIt = tag.translations['it'] ? tag.translations['it'].toLowerCase() : '';
+                        const termEn = tag.translations['en'] ? tag.translations['en'].toLowerCase() : '';
+                        if(termLang.includes(q) || termIt.includes(q) || termEn.includes(q)) {
+                            matches.push({ id: tag.id, text: tag.translations[lang] || tag.translations['it'] || tag.id });
+                        }
+                    });
+                    return Array.from(new Set(matches.map(a => a.text))).map(text => matches.find(a => a.text === text)).slice(0, 5);
+                });
+
+                const applyTagSearch = (tagText) => { searchQuery.value = tagText; };
+
+                const startCreatingTag = () => { editingTag.value = { id: '' }; isEditingExistingTag.value = false; tagForm.value = { id: '', translations: { it: '' } }; };
+                const startEditingTag = (tag) => { editingTag.value = tag; isEditingExistingTag.value = true; tagForm.value = { id: tag.id, translations: JSON.parse(JSON.stringify(tag.translations || {})) }; };
+                const cancelEditingTag = () => { editingTag.value = null; tagForm.value = { id: '', translations: { it: '' } }; };
+                
+                const availableLangsForTag = computed(() => {
+                    const available = {};
+                    for(const code in languages) { if(code !== 'it' && tagForm.value.translations && tagForm.value.translations[code] === undefined) available[code] = languages[code]; }
+                    return available;
+                });
+                const addLangToTag = () => { if (selectedNewLangTag.value) { tagForm.value.translations[selectedNewLangTag.value] = ''; selectedNewLangTag.value = ''; } };
+
+                const saveTagChanges = async () => {
+                    if(!supabase || !tagForm.value.id.trim()) return;
+                    savingTag.value = true;
+                    try {
+                        const formattedId = tagForm.value.id.trim().toLowerCase().replace(/[^a-z0-9_]/g, '_');
+                        const payload = { id: formattedId, translations: tagForm.value.translations };
+                        const { error } = await supabase.from('tags').upsert(payload).select();
+                        if(error) throw error;
+                        await fetchTags();
+                        alert("✅ Tag salvato con successo!");
+                        cancelEditingTag();
+                    } catch (err) { alert("❌ Errore salvataggio tag: " + err.message); } finally { savingTag.value = false; }
+                };
+
+                const deleteTagItem = async (tagId) => {
+                    if(!supabase) return;
+                    const conf = confirm(`Eliminare il tag "${tagId}"? Verrà rimosso dai servizi a cui è assegnato.`);
+                    if(!conf) return;
+                    try {
+                        const { error } = await supabase.from('tags').delete().eq('id', tagId);
+                        if(error) throw error;
+                        await fetchTags();
+                    } catch (err) { alert("Errore: " + err.message); }
+                };
 
                 // GESTIONE SELEZIONE ED ELIMINAZIONE SERVIZI
                 const selectedServices = ref(new Set());
@@ -1040,7 +1206,8 @@
                     category: 'showers',
                     image: '',
                     name: { it: '' },
-                    description: { it: '' }
+                    description: { it: '' },
+                    tags: []
                 });
 
                 const savingServiceId = ref(false);
@@ -1144,9 +1311,10 @@
     name: dbRecord.name || item.name || {},
     description: dbRecord.description || item.desc || {},
     organization: dbRecord.organization || fixedOrganizations.find(o => o.id === (dbRecord.org_id || item.org_id))?.name || 'Ente Sconosciuto',
-    org_id: dbRecord.org_id || item.org_id,
-    hours: dbRecord.hours || item.hours || []
-};
+                            org_id: dbRecord.org_id || item.org_id,
+                            hours: dbRecord.hours || item.hours || [],
+                            tags: dbRecord.tags || []
+                        };
                     });
                 });
 
@@ -2468,7 +2636,8 @@
                         category: service.category || 'showers', 
                         image: service.image || '',
                         name: initName,
-                        description: initDesc
+                        description: initDesc,
+                        tags: Array.isArray(service.tags) ? [...service.tags] : []
                     };
                     imageUploadError.value = ''; 
                     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -2488,10 +2657,11 @@
                         noticeParams: {}, 
                         customNotice: { it: '' },
                         temp_info: { it: '' },
-                        category: 'showers', 
+                    category: 'showers', 
                         image: '', 
                         name: { it: '' },
-                        description: { it: '' }
+                        description: { it: '' },
+                        tags: []
                     };
                     imageUploadError.value = ''; 
                     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -2509,8 +2679,8 @@
                     if (!confirmed) return;
                     try {
                         const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
-                        const executor = new AsyncFunction('supabase', 'dbServices', 'fixedOrganizations', 'fetchServices', importCode.value);
-                        await executor(supabase, dbServices.value, fixedOrganizations, fetchServices);
+                        const executor = new AsyncFunction('supabase', 'dbServices', 'fixedOrganizations', 'fetchServices', 'dbTags', 'fetchTags', importCode.value);
+                        await executor(supabase, dbServices.value, fixedOrganizations, fetchServices, dbTags.value, fetchTags);
                         alert('Codice eseguito con successo e dati aggiornati!');
                         importCode.value = '';
                     } catch (e) {
@@ -2536,7 +2706,8 @@
                             hours: validHours,
                             temp_info: JSON.parse(JSON.stringify(editForm.value.temp_info)),
                             name: JSON.parse(JSON.stringify(editForm.value.name)),
-                            description: JSON.parse(JSON.stringify(editForm.value.description))
+                            description: JSON.parse(JSON.stringify(editForm.value.description)),
+                            tags: editForm.value.tags
                         };
 
                         if (editForm.value.noticeTemplate === 'custom') {
@@ -2758,7 +2929,14 @@
                         const descStr = Object.values(s.description || {}).join(' ').toLowerCase();
                         const orgStr = (s.organization || '').toLowerCase(); 
                         const addrStr = (s.address || '').toLowerCase();
-                        return matchesCategory && (nameStr.includes(q) || descStr.includes(q) || orgStr.includes(q) || addrStr.includes(q));
+                        
+                        const hasTagMatch = (s.tags || []).some(tagId => {
+                            const tagObj = dbTags.value.find(t => t.id === tagId);
+                            if(!tagObj) return false;
+                            return Object.values(tagObj.translations).some(trans => trans.toLowerCase().includes(q));
+                        });
+
+                        return matchesCategory && (nameStr.includes(q) || descStr.includes(q) || orgStr.includes(q) || addrStr.includes(q) || hasTagMatch);
                     });
                 });
 
@@ -2845,12 +3023,12 @@
                 const selectedNoticeTemplate = computed(() => templates.find(t => t.id === editForm.value.noticeTemplate));
                 const selectedNewsTemplate = computed(() => templates.find(t => t.id === newsForm.value.template));
 
-                onMounted(() => { 
+               onMounted(() => { 
+                    fetchTags();
                     fetchServices(); 
                     fetchNews(); 
                     checkAuthSession(); 
                 });
-
                 return {
                     activeTab, 
                     selectedCategory, 
@@ -2955,7 +3133,9 @@
                     selectAllServices,
                     isAllSelected,
                     deleteSelectedServices,
-                    deleteSingleService
+                    deleteSingleService,
+                    dbTags, isLoadingTags, searchSuggestions, applyTagSearch, editingTag, tagForm, savingTag, isEditingExistingTag,
+                    startCreatingTag, startEditingTag, cancelEditingTag, saveTagChanges, deleteTagItem, selectedNewLangTag, availableLangsForTag, addLangToTag
                 };
             }
         }).mount('#app');
