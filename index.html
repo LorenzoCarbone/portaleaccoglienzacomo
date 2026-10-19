@@ -119,7 +119,12 @@
         <div v-if="showLangMenu" @click="showLangMenu = false" class="fixed inset-0 z-40 bg-black/10 backdrop-blur-[1px]"></div>
 
         <main v-if="activeTab === 'services'" class="max-w-[1600px] w-full mx-auto px-2 sm:px-4 lg:px-8 py-4 sm:py-6 space-y-6 animate-fadeIn">
-            <div class="bg-gradient-to-r from-brand-700 to-brand-900 rounded-3xl p-6 sm:p-8 text-white shadow-md relative overflow-hidden">
+            <div class="bg-gradient-to-r from-brand-700 to-brand-900 rounded-3xl p-6 sm:p-8 text-white shadow-md relative">
+                <!-- L'icona della mappa ora è in un suo contenitore isolato per non rompere il layout -->
+                <div class="absolute inset-0 overflow-hidden rounded-3xl pointer-events-none z-0">
+                    <i class="fa-solid fa-map-location-dot absolute -bottom-6 -right-6 text-9xl text-white/10"></i>
+                </div>
+                
                 <div class="relative z-10 max-w-2xl">
                     <h2 class="text-2xl sm:text-3xl font-bold mb-2">{{ t('welcome_title') }}</h2>
                     <p class="text-brand-100 text-sm sm:text-base mb-6">{{ t('welcome_sub') }}</p>
@@ -139,7 +144,6 @@
                             </button>
                         </div>
                     </div>                </div>
-                <i class="fa-solid fa-map-location-dot absolute -bottom-6 -right-6 text-9xl text-white/10 pointer-events-none"></i>
             </div>
 
             <div>
@@ -1063,27 +1067,24 @@
                 const searchSuggestions = computed(() => {
                     if(!searchQuery.value || searchQuery.value.length < 2) return [];
                     const q = searchQuery.value.toLowerCase().trim();
+                    const lang = currentLangCode.value;
                     const matches = [];
                     
                     dbTags.value.forEach(tag => {
-                        // Prende tutte le traduzioni e le divide in singole parole pulite
-                        const allWords = Object.values(tag.translations)
-                                               .join(',')
-                                               .split(',')
-                                               .map(w => w.trim().toLowerCase())
-                                               .filter(w => w.length > 0);
+                        // Controlla se la stringa di ricerca esiste in QUALSIASI traduzione
+                        const allWordsRaw = Object.values(tag.translations).join(',').toLowerCase();
                         
-                        // Trova la singola parola esatta che l'utente sta digitando
-                        const matchedWord = allWords.find(w => w.includes(q));
-                        
-                        if (matchedWord) {
-                            // Mette l'iniziale maiuscola (es. "mensa" -> "Mensa")
-                            const formattedWord = matchedWord.charAt(0).toUpperCase() + matchedWord.slice(1);
+                        if (allWordsRaw.includes(q)) {
+                            // Se c'è un match, prendi la prima parola della traduzione nella lingua ATTUALE
+                            const translationString = tag.translations[lang] || tag.translations['it'] || tag.id;
+                            const firstWord = translationString.split(',')[0].trim();
+                            
+                            // Formatta con iniziale maiuscola
+                            const formattedWord = firstWord.charAt(0).toUpperCase() + firstWord.slice(1);
                             matches.push({ id: tag.id, text: formattedWord });
                         }
                     });
                     
-                    // Rimuove eventuali doppioni e tiene solo i primi 5 suggerimenti
                     const uniqueMatches = [];
                     const seen = new Set();
                     for (const m of matches) {
