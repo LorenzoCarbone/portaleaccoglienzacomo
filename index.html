@@ -347,8 +347,8 @@
                             <div @click="startEditingTag(tag)" class="flex items-center gap-3 overflow-hidden cursor-pointer flex-1">
                                 <div class="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0"><i class="fa-solid fa-tag"></i></div>
                                 <div>
-                                    <h4 class="font-bold text-slate-800">{{ tag.translations['it'] || tag.id }}</h4>
-                                    <p class="text-xs text-slate-400 font-mono">{{ tag.id }} • {{ Object.keys(tag.translations).length }} lingue</p>
+                                    <h4 class="font-bold text-slate-800 uppercase">{{ tag.id.replace('tag_', '').replaceAll('_', ' ') }}</h4>
+                                    <p class="text-[10px] text-slate-500 truncate max-w-[200px] sm:max-w-xs">{{ tag.translations['it'] }}</p>
                                 </div>
                             </div>
                             <div class="flex items-center gap-2 shrink-0">
@@ -506,9 +506,9 @@
         <label class="block text-xs font-bold uppercase tracking-wider text-slate-800 mb-2">Tag & Parole Chiave (Ricerca Smart)</label>
         <p class="text-[10px] text-slate-500 mb-2">Seleziona le etichette per aiutare gli utenti a trovare questo servizio cercando parole specifiche.</p>
         <div class="flex flex-wrap gap-2">
-            <label v-for="tag in dbTags" :key="tag.id" class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-lg cursor-pointer hover:bg-slate-100 transition">
+            <label v-for="tag in dbTags" :key="tag.id" class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-lg cursor-pointer hover:bg-slate-100 transition" :title="tag.translations['it']">
                 <input type="checkbox" :value="tag.id" v-model="editForm.tags" class="text-brand-600 focus:ring-brand-500 rounded border-slate-300">
-                <span class="text-xs font-medium text-slate-700">{{ tag.translations['it'] || tag.id }}</span>
+                <span class="text-xs font-bold text-slate-700 uppercase">{{ tag.id.replace('tag_', '').replaceAll('_', ' ') }}</span>
             </label>
             <p v-if="dbTags.length===0" class="text-xs text-red-500">Nessun tag configurato. Creali nella sezione "Smart Tags".</p>
         </div>
