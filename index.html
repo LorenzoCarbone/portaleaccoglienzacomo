@@ -133,14 +133,11 @@
                         <i class="fa-solid fa-magnifying-glass absolute top-4 left-4 text-slate-400 text-lg" :class="{'right-4 left-auto': isRTL}"></i>
                         <button v-if="searchQuery" @click="searchQuery = ''" class="absolute top-3.5 right-3.5 text-slate-400 hover:text-slate-600 p-1" :class="{'left-3.5 right-auto': isRTL}"><i class="fa-solid fa-circle-xmark text-lg"></i></button>
                         
-                        <!-- NUOVO: Dropdown Suggerimenti Smart -->
-                        <div v-if="searchSuggestions.length > 0" class="absolute top-full left-0 w-full bg-white rounded-xl shadow-xl mt-2 z-50 overflow-hidden border border-slate-100 animate-fadeIn">
-                            <button v-for="tag in searchSuggestions" :key="tag.id" @click="applyTagSearch(tag.text)" class="w-full text-left px-4 py-3 hover:bg-brand-50 text-slate-700 border-b border-slate-100 last:border-0 flex items-center gap-3 transition">
-                                <div class="w-6 h-6 rounded-full bg-brand-100 text-brand-600 flex items-center justify-center shrink-0"><i class="fa-solid fa-tag text-[10px]"></i></div>
-                                <div class="flex-1">
-                                    <span class="font-bold text-sm block">{{ tag.text }}</span>
-                                    <span class="text-[10px] text-slate-400 uppercase">Suggerimento</span>
-                                </div>
+                        <!-- Dropdown Suggerimenti Smart COMPATTO -->
+                        <div v-if="searchSuggestions.length > 0" class="absolute top-full left-0 w-full bg-white rounded-2xl shadow-2xl mt-1 z-50 border border-slate-200/60 overflow-hidden py-1">
+                            <button v-for="tag in searchSuggestions" :key="tag.id" @click="applyTagSearch(tag.text)" class="w-full text-left px-4 py-2 hover:bg-slate-50 text-slate-800 flex items-center gap-3 transition">
+                                <i class="fa-solid fa-magnifying-glass text-slate-300 text-sm"></i>
+                                <span class="font-semibold text-sm">{{ tag.text }}</span>
                             </button>
                         </div>
                     </div>                </div>
