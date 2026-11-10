@@ -1,0 +1,65 @@
+[
+  {
+    "id": 1,
+    "label": {
+      "it": "Lunedì",
+      "en": "Monday",
+      "fr": "Lundi",
+      "es": "Lunes"
+    }
+  },
+  {
+    "id": 2,
+    "label": {
+      "it": "Martedì",
+      "en": "Tuesday",
+      "fr": "Mardi",
+      "es": "Martes"
+    }
+  },
+  {
+    "id": 3,
+    "label": {
+      "it": "Mercoledì",
+      "en": "Wednesday",
+      "fr": "Mercredi",
+      "es": "Miércoles"
+    }
+  },
+  {
+    "id": 4,
+    "label": {
+      "it": "Giovedì",
+      "en": "Thursday",
+      "fr": "Jeudi",
+      "es": "Jueves"
+    }
+  },
+  {
+    "id": 5,
+    "label": {
+      "it": "Venerdì",
+      "en": "Friday",
+      "fr": "Vendredi",
+      "es": "Viernes"
+    }
+  },
+  {
+    "id": 6,
+    "label": {
+      "it": "Sabato",
+      "en": "Saturday",
+      "fr": "Samedi",
+      "es": "Sábado"
+    }
+  },
+  {
+    "id": 0,
+    "label": {
+      "it": "Domenica",
+      "en": "Sunday",
+      "fr": "Dimanche",
+      "es": "Domingo"
+    }
+  }
+]

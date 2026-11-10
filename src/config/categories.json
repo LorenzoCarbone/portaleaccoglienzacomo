@@ -1,0 +1,47 @@
+[
+  {
+    "id": "food",
+    "icon": "🍲",
+    "labelKey": "cat_food"
+  },
+  {
+    "id": "shelter",
+    "icon": "🛏️",
+    "labelKey": "cat_shelter"
+  },
+  {
+    "id": "health",
+    "icon": "🩺",
+    "labelKey": "cat_health"
+  },
+  {
+    "id": "legal",
+    "icon": "⚖️",
+    "labelKey": "cat_legal"
+  },
+  {
+    "id": "day_center",
+    "icon": "☕",
+    "labelKey": "cat_day_center"
+  },
+  {
+    "id": "info",
+    "icon": "ℹ️",
+    "labelKey": "cat_info"
+  },
+  {
+    "id": "street",
+    "icon": "🚶‍♂️",
+    "labelKey": "cat_street"
+  },
+  {
+    "id": "showers",
+    "icon": "🚿",
+    "labelKey": "cat_showers"
+  },
+  {
+    "id": "clothes",
+    "icon": "👕",
+    "labelKey": "cat_clothes"
+  }
+]

@@ -1,0 +1,173 @@
+[
+  {
+    "id": "posti_esauriti",
+    "category": "recurring",
+    "label": "Posti Letto Esauriti (Dormitori)",
+    "params": []
+  },
+  {
+    "id": "raccolta_urgente",
+    "category": "recurring",
+    "label": "Richiesta Vestiario / Oggetti",
+    "params": [
+      {
+        "id": "oggetto",
+        "type": "text",
+        "label": "Cosa serve? (es. scarpe tg 42)"
+      }
+    ]
+  },
+  {
+    "id": "distribuzione_speciale",
+    "category": "recurring",
+    "label": "Distribuzione Speciale (Cibo/Vestiario)",
+    "params": [
+      {
+        "id": "oggetto",
+        "type": "text",
+        "label": "Cosa viene distribuito?"
+      }
+    ]
+  },
+  {
+    "id": "summer_closure",
+    "category": "ordinary",
+    "label": "Chiusura Estiva",
+    "params": [
+      {
+        "id": "data_inizio",
+        "type": "date",
+        "label": "Data di inizio chiusura"
+      },
+      {
+        "id": "data_fine",
+        "type": "date",
+        "label": "Data di riapertura"
+      }
+    ]
+  },
+  {
+    "id": "holiday_closure",
+    "category": "ordinary",
+    "label": "Chiusura per Festività",
+    "params": [
+      {
+        "id": "data",
+        "type": "date",
+        "label": "Data della festività"
+      }
+    ]
+  },
+  {
+    "id": "address_change",
+    "category": "ordinary",
+    "label": "Trasferimento Sede",
+    "params": [
+      {
+        "id": "indirizzo",
+        "type": "text",
+        "label": "Nuovo indirizzo"
+      },
+      {
+        "id": "data",
+        "type": "date",
+        "label": "A partire da quale data?"
+      }
+    ]
+  },
+  {
+    "id": "service_resumed",
+    "category": "ordinary",
+    "label": "Ripresa Attività",
+    "params": [
+      {
+        "id": "data",
+        "type": "date",
+        "label": "Data di ripresa"
+      }
+    ]
+  },
+  {
+    "id": "time_change",
+    "category": "extraordinary",
+    "label": "Variazione Orario Temporanea",
+    "params": [
+      {
+        "id": "orario",
+        "type": "time",
+        "label": "Nuovo orario (es. 20:00)"
+      }
+    ]
+  },
+  {
+    "id": "extra_opening",
+    "category": "extraordinary",
+    "label": "Apertura Straordinaria",
+    "params": [
+      {
+        "id": "data",
+        "type": "date",
+        "label": "Data apertura"
+      },
+      {
+        "id": "orario",
+        "type": "time",
+        "label": "A che ora?"
+      }
+    ]
+  },
+  {
+    "id": "assenza_medico",
+    "category": "extraordinary",
+    "label": "Assenza Medico / Sportello Chiuso",
+    "params": [
+      {
+        "id": "data",
+        "type": "date",
+        "label": "Giorno di assenza"
+      }
+    ]
+  },
+  {
+    "id": "temp_closure",
+    "category": "extraordinary",
+    "label": "Chiusura Temporanea Generica",
+    "params": [
+      {
+        "id": "data",
+        "type": "date",
+        "label": "Giorno di chiusura"
+      }
+    ]
+  },
+  {
+    "id": "emergenza_freddo",
+    "category": "emergency",
+    "label": "Attivazione Piano Inverno / Emergenza Freddo",
+    "params": []
+  },
+  {
+    "id": "guasto_tecnico",
+    "category": "emergency",
+    "label": "Guasto Tecnico (es. caldaia rotta)",
+    "params": []
+  },
+  {
+    "id": "weather_closure",
+    "category": "emergency",
+    "label": "Chiusura per Allerta Meteo",
+    "params": []
+  },
+  {
+    "id": "service_suspended",
+    "category": "emergency",
+    "label": "Servizio Sospeso a tempo indeterminato",
+    "params": []
+  },
+  {
+    "id": "service_updated",
+    "category": "system",
+    "label": "Aggiornamento Servizio",
+    "params": []
+  }
+]

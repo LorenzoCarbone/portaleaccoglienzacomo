@@ -1,0 +1,47 @@
+{
+  "it": {
+    "name": "Italiano",
+    "flag": "🇮🇹",
+    "rtl": false
+  },
+  "en": {
+    "name": "English",
+    "flag": "🇬🇧",
+    "rtl": false
+  },
+  "fr": {
+    "name": "Français",
+    "flag": "🇫🇷",
+    "rtl": false
+  },
+  "es": {
+    "name": "Español",
+    "flag": "🇪🇸",
+    "rtl": false
+  },
+  "ar": {
+    "name": "العربية (Arabo)",
+    "flag": "🇸🇦",
+    "rtl": true
+  },
+  "ur": {
+    "name": "اردو (Urdu)",
+    "flag": "🇵🇰",
+    "rtl": true
+  },
+  "hi": {
+    "name": "हिन्दी (Indiano)",
+    "flag": "🇮🇳",
+    "rtl": false
+  },
+  "sw": {
+    "name": "Kiswahili",
+    "flag": "🇰🇪",
+    "rtl": false
+  },
+  "tr": {
+    "name": "Türkçe",
+    "flag": "🇹🇷",
+    "rtl": false
+  }
+}

@@ -1,0 +1,50 @@
+[
+  {
+    "id": "org_caritas",
+    "name": "Caritas Como"
+  },
+  {
+    "id": "org_incroci",
+    "name": "Incroci ODV / Casa Nazareth"
+  },
+  {
+    "id": "org_ozanam",
+    "name": "Piccola Casa Federico Ozanam"
+  },
+  {
+    "id": "org_rebbio",
+    "name": "Parrocchia di Rebbio"
+  },
+  {
+    "id": "org_guanella",
+    "name": "ASCI Don Guanella / Suore Vincenziane"
+  },
+  {
+    "id": "org_ossmig",
+    "name": "Osservatorio Giuridico Diritti Migranti"
+  },
+  {
+    "id": "org_lachesi",
+    "name": "Associazione Lachesi"
+  },
+  {
+    "id": "org_comoaccoglie",
+    "name": "Como Accoglie"
+  },
+  {
+    "id": "org_legami",
+    "name": "Legàmi"
+  },
+  {
+    "id": "org_symploke",
+    "name": "Coop. Sociale Symploké"
+  },
+  {
+    "id": "org_somaschi",
+    "name": "Fondazione Somaschi"
+  },
+  {
+    "id": "org_coordinamento",
+    "name": "Coordinamento Vicini di Strada"
+  }
+]
