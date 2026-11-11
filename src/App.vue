@@ -11,6 +11,7 @@
       :has-unread-news="hasUnreadNews"
       :is-installed="isInstalled"
       :has-downloaded="hasDownloaded"
+      :is-mobile-device="isMobileDevice"
       :t="t"
       @open-admin="openAdminModal = true"
       @open-app-modal="handleDownloadClick"
@@ -220,6 +221,7 @@
       :is-open="openAppModal"
       :is-installed="isInstalled"
       :has-downloaded="hasDownloaded"
+      :is-mobile-device="isMobileDevice"
       :is-i-o-s="isIOS"
       :deferred-prompt="deferredPrompt"
       @close="openAppModal = false"
@@ -422,8 +424,14 @@ const checkHasDownloaded = () => {
   )
 }
 
+const checkIsMobile = () => {
+  if (typeof window === 'undefined') return false
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+}
+
 const isInstalled = ref(checkIsStandalone())
 const hasDownloaded = ref(checkHasDownloaded())
+const isMobileDevice = ref(checkIsMobile())
 const isIOS = ref(false)
 const deferredPrompt = ref(null)
 const openAppModal = ref(false)
@@ -450,36 +458,50 @@ const handleIncomingNewsNotification = async (newsItem) => {
 
   if (!hasSubscribed) return
 
-  // IN CHE LINGUA ARRIVA LA NOTIFICA?
-  // Arriva nella lingua che l'utente ha impostato sull'applicazione!
-  const userLang = currentLangCode.value || 'it'
-  let title = 'Nuovo avviso - Vicini di Strada'
-  let body = 'È stato pubblicato un nuovo aggiornamento dai servizi di Como.'
+  // Sincronizza lingua corrente
+  const userLang = currentLangCode.value || localStorage.getItem('vicini_lang') || 'it'
 
+  // Trova nome associazione / ente
+  const org = organizations.find(o => o.id === newsItem.association_id)
+  const orgName = org ? org.name : 'Coordinamento Vicini di Strada'
+
+  // Prefisso per tipo di notizia
+  const prefixMap = {
+    emergency: { it: '🚨 [Emergenza] ', es: '🚨 [Emergencia] ', en: '🚨 [Emergency] ', default: '🚨 ' },
+    change: { it: '🔄 [Variazione] ', es: '🔄 [Cambio de horario] ', en: '🔄 [Schedule Update] ', default: '🔄 ' },
+    general: { it: '📢 [Informativa] ', es: '📢 [Aviso informativo] ', en: '📢 [Notice] ', default: '📢 ' }
+  }
+  const prefix = prefixMap[newsItem.type]?.[userLang] || prefixMap[newsItem.type]?.default || '📢 '
+
+  let rawTitle = 'Nuovo avviso - Vicini di Strada'
   if (newsItem.title) {
     if (typeof newsItem.title === 'object') {
-      title = newsItem.title[userLang] || newsItem.title.it || newsItem.title.en || title
+      rawTitle = newsItem.title[userLang] || newsItem.title.it || newsItem.title.en || rawTitle
     } else {
-      title = newsItem.title
+      rawTitle = newsItem.title
     }
   }
 
+  let rawContent = 'È stato pubblicato un nuovo aggiornamento dai servizi di Como.'
   if (newsItem.content) {
     if (typeof newsItem.content === 'object') {
-      body = newsItem.content[userLang] || newsItem.content.it || newsItem.content.en || body
+      rawContent = newsItem.content[userLang] || newsItem.content.it || newsItem.content.en || rawContent
     } else {
-      body = newsItem.content
+      rawContent = newsItem.content
     }
   }
+
+  const finalTitle = `${prefix}${rawTitle}`
+  const finalBody = `📍 ${orgName} • ${rawContent}`
 
   if ('serviceWorker' in navigator) {
     try {
       const reg = await navigator.serviceWorker.ready
-      await reg.showNotification(title, {
-        body: body,
+      await reg.showNotification(finalTitle, {
+        body: finalBody,
         icon: '/portaleaccoglienzacomo/pwa-192x192.png',
         badge: '/portaleaccoglienzacomo/pwa-192x192.png',
-        vibrate: [200, 100, 200],
+        vibrate: newsItem.type === 'emergency' ? [300, 100, 300, 100, 300] : [200, 100, 200],
         tag: 'news-' + (newsItem.id || Date.now()),
         renotify: true,
         data: { url: '/portaleaccoglienzacomo/?tab=news' }
@@ -614,10 +636,23 @@ const getCategoryIcon = (catId) => categories.find(c => c.id === catId)?.icon ||
 const getCategoryLabelKey = (catId) => categories.find(c => c.id === catId)?.labelKey || 'cat_all'
 
 onMounted(() => {
+  isMobileDevice.value = checkIsMobile()
   fetchTags()
   fetchServices()
   fetchNews()
   checkAuthSession()
+
+  // Sincronizza lingua corrente su OneSignal
+  if (typeof window !== 'undefined' && window.OneSignalDeferred) {
+    window.OneSignalDeferred.push(async function(OneSignal) {
+      const lang = currentLangCode.value || localStorage.getItem('vicini_lang') || 'it'
+      if (OneSignal.User && OneSignal.User.setLanguage) {
+        try {
+          await OneSignal.User.setLanguage(lang)
+        } catch (e) {}
+      }
+    })
+  }
 
   // Rileva se l'app è aperta come applicazione autonoma (standalone)
   const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 

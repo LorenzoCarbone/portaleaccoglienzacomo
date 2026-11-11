@@ -281,10 +281,26 @@
           <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Collega a un Servizio (Opzionale)</label>
           <select
             v-model="newsForm.related_service_id"
+            @change="handleServiceChange"
             class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm outline-none focus:ring-2 focus:ring-amber-500"
           >
             <option :value="null">Nessun servizio collegato</option>
             <option v-for="s in services" :key="s.id" :value="s.id">{{ translateField(s, 'name') }} ({{ s.organization }})</option>
+          </select>
+        </div>
+
+        <!-- Ente / Associazione che pubblica l'avviso -->
+        <div class="mt-4 pt-4 border-t border-slate-100">
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">
+            Ente / Associazione che pubblica l'avviso
+          </label>
+          <select
+            v-model="newsForm.association_id"
+            class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm outline-none focus:ring-2 focus:ring-amber-500 font-medium text-slate-800"
+          >
+            <option v-for="org in organizations" :key="org.id" :value="org.id">
+              {{ org.name }}
+            </option>
           </select>
         </div>
 
@@ -384,6 +400,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { usePushNotifications } from '../../composables/usePushNotifications'
+import organizations from '../../config/organizations.json'
 
 const props = defineProps({
   globalNews: Array,
@@ -439,14 +456,30 @@ const handleAddLang = () => {
   }
 }
 
+const handleServiceChange = () => {
+  if (props.newsForm?.related_service_id) {
+    const s = props.services?.find(srv => srv.id === props.newsForm.related_service_id)
+    if (s && s.organization) {
+      const matchOrg = organizations.find(o => 
+        o.name.toLowerCase() === s.organization.toLowerCase() || 
+        s.organization.toLowerCase().includes(o.name.toLowerCase()) ||
+        o.name.toLowerCase().includes(s.organization.toLowerCase())
+      )
+      if (matchOrg) {
+        props.newsForm.association_id = matchOrg.id
+      }
+    }
+  }
+}
+
 const pushPreviewTitle = computed(() => {
   const prefix = props.newsForm.type === 'emergency'
     ? '🚨 [Emergenza] '
-    : (props.newsForm.type === 'change' ? '🔄 [Variazione] ' : '📢 [Avviso] ')
+    : (props.newsForm.type === 'change' ? '🔄 [Variazione] ' : '📢 [Informativa] ')
 
   let rawTitle = ''
   if (props.newsForm.useCustomText) {
-    rawTitle = props.newsForm.customTitle?.it || props.newsForm.customTitle?.en || 'Nuovo Avviso'
+    rawTitle = props.newsForm.customTitle?.it || props.newsForm.customTitle?.es || props.newsForm.customTitle?.en || 'Nuovo Avviso'
   } else if (props.generateTemplateText && props.newsForm.template) {
     rawTitle = props.generateTemplateText(props.newsForm.template, props.newsForm.templateParams, 'it', true) || 'Nuovo Avviso'
   }
@@ -454,11 +487,15 @@ const pushPreviewTitle = computed(() => {
 })
 
 const pushPreviewBody = computed(() => {
+  const org = organizations.find(o => o.id === props.newsForm?.association_id)
+  const orgName = org ? org.name : 'Coordinamento Vicini di Strada'
+
+  let rawText = ''
   if (props.newsForm.useCustomText) {
-    return props.newsForm.customContent?.it || props.newsForm.customContent?.en || 'Testo della notifica...'
+    rawText = props.newsForm.customContent?.it || props.newsForm.customContent?.es || props.newsForm.customContent?.en || 'Testo della notifica...'
   } else if (props.generateTemplateText && props.newsForm.template) {
-    return props.generateTemplateText(props.newsForm.template, props.newsForm.templateParams, 'it', false) || 'Dettagli dell\'avviso...'
+    rawText = props.generateTemplateText(props.newsForm.template, props.newsForm.templateParams, 'it', false) || 'Dettagli dell\'avviso...'
   }
-  return 'Testo della notifica...'
+  return `📍 ${orgName} • ${rawText || 'Dettagli dell\'avviso...'}`
 })
 </script>

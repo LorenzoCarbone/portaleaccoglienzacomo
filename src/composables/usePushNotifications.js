@@ -1,4 +1,5 @@
 import { ref } from 'vue'
+import organizations from '../config/organizations.json'
 
 const ONESIGNAL_APP_ID = 'b454646f-7e4b-4ef3-95f6-f399bf2a3826'
 // Base64-encoded to prevent false positives in GitHub secret scanning
@@ -130,33 +131,36 @@ export function usePushNotifications() {
 }
 
 // Funzione globale per spedire notifiche push a tutti gli smartphone tramite l'API OneSignal
-export async function sendOneSignalPush({ title, content, url, newsId, type = 'general', priority = 'normal' }) {
+export async function sendOneSignalPush({ title, content, url, newsId, type = 'general', priority = 'normal', association_id = 'org_coordinamento' }) {
   const headings = {}
   const contents = {}
+
+  const org = organizations.find(o => o.id === association_id)
+  const orgName = org ? org.name : 'Coordinamento Vicini di Strada'
 
   // Prefisso visivo ed emoji in base al tipo di notizia
   const prefixMap = {
     emergency: {
       it: '🚨 [Emergenza] ',
+      es: '🚨 [Emergencia] ',
       en: '🚨 [Emergency] ',
       fr: '🚨 [Urgence] ',
-      es: '🚨 [Emergencia] ',
       ar: '🚨 [طوارئ] ',
       default: '🚨 '
     },
     change: {
       it: '🔄 [Variazione] ',
+      es: '🔄 [Cambio de horario] ',
       en: '🔄 [Schedule Update] ',
       fr: '🔄 [Mise à jour] ',
-      es: '🔄 [Cambio] ',
       ar: '🔄 [تحديث] ',
       default: '🔄 '
     },
     general: {
-      it: '📢 [Avviso] ',
+      it: '📢 [Informativa] ',
+      es: '📢 [Aviso informativo] ',
       en: '📢 [Notice] ',
-      fr: '📢 [Avis] ',
-      es: '📢 [Aviso] ',
+      fr: '📢 [Information] ',
       ar: '📢 [إشعار] ',
       default: '📢 '
     }
@@ -174,22 +178,33 @@ export async function sendOneSignalPush({ title, content, url, newsId, type = 'g
   } else if (title) {
     const prefIt = currentPrefix.it || currentPrefix.default || ''
     const prefEn = currentPrefix.en || currentPrefix.default || ''
+    const prefEs = currentPrefix.es || currentPrefix.default || ''
     headings.it = `${prefIt}${title}`
     headings.en = `${prefEn}${title}`
+    headings.es = `${prefEs}${title}`
   }
 
   if (typeof content === 'object' && content !== null) {
     for (const k in content) {
-      if (content[k]) contents[k] = content[k]
+      if (content[k]) {
+        const text = content[k]
+        contents[k] = text.startsWith('📍') ? text : `📍 ${orgName} • ${text}`
+      }
     }
   } else if (content) {
-    contents.it = content
-    contents.en = content
+    const formatted = content.startsWith('📍') ? content : `📍 ${orgName} • ${content}`
+    contents.it = formatted
+    contents.en = formatted
+    contents.es = formatted
   }
 
-  // Fallback obbligatorio per lingua default di OneSignal (en)
-  if (!headings.en) headings.en = headings.it || 'Vicini di Strada Como'
-  if (!contents.en) contents.en = contents.it || 'Nuovo avviso pubblicato dai servizi'
+  // Fallback intelligenti per lingua default di OneSignal (en) e altre lingue
+  if (!headings.en) headings.en = headings.es || headings.it || 'Vicini di Strada Como'
+  if (!contents.en) contents.en = contents.es || contents.it || 'Nuovo avviso pubblicato dai servizi'
+  if (!headings.it) headings.it = headings.en || 'Vicini di Strada Como'
+  if (!contents.it) contents.it = contents.en || 'Nuovo avviso pubblicato dai servizi'
+  if (!headings.es && headings.it) headings.es = headings.it
+  if (!contents.es && contents.it) contents.es = contents.it
 
   const isEmergency = type === 'emergency' || priority === 'high'
 

@@ -34,6 +34,13 @@
           serviceWorkerParam: { scope: isGhPages ? "/portaleaccoglienzacomo/" : "/" },
           allowLocalhostAsSecureOrigin: true
         });
+        const currentLang = localStorage.getItem('vicini_lang') || 'it';
+        if (OneSignal.User && OneSignal.User.setLanguage) {
+          try {
+            await OneSignal.User.setLanguage(currentLang);
+            console.log('[OneSignal] Lingua utente sincronizzata:', currentLang);
+          } catch (e) {}
+        }
       });
     </script>
   </head>

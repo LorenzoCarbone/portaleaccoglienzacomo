@@ -218,7 +218,7 @@ export function useNews(buildMultilangObjFromTemplate = null) {
       const payload = {
         type: newsForm.value.type,
         priority: newsForm.value.priority,
-        association_id: 'org_coordinamento',
+        association_id: newsForm.value.association_id || 'org_coordinamento',
         related_service_id: newsForm.value.related_service_id || null,
         title: finalTitle,
         content: finalContent
@@ -243,6 +243,7 @@ export function useNews(buildMultilangObjFromTemplate = null) {
             content: payload.content,
             type: payload.type,
             priority: payload.priority,
+            association_id: payload.association_id,
             url: 'https://lorenzocarbone.github.io/portaleaccoglienzacomo/?tab=news',
             newsId: insertedItem?.id || newsForm.value.id
           })
@@ -261,18 +262,32 @@ export function useNews(buildMultilangObjFromTemplate = null) {
             title: payload.title,
             content: payload.content,
             type: payload.type,
-            priority: payload.priority
+            priority: payload.priority,
+            association_id: payload.association_id
           }
         })
       } catch (broadcastErr) {
         console.warn('[Push] Errore invio broadcast Realtime:', broadcastErr)
       }
 
-      // 2. Notifica di sistema immediata sul dispositivo dell'operatore che pubblica
+      // 3. Notifica immediata sul dispositivo dell'operatore che pubblica
       if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
-        const lang = localStorage.getItem('vds_lang') || 'it'
-        const titleText = (typeof payload.title === 'object' ? (payload.title[lang] || payload.title.it) : payload.title) || 'Nuovo avviso dai servizi'
-        const bodyText = (typeof payload.content === 'object' ? (payload.content[lang] || payload.content.it) : payload.content) || 'Nuova notizia pubblicata.'
+        const lang = localStorage.getItem('vicini_lang') || 'it'
+        const org = organizations.find(o => o.id === payload.association_id)
+        const orgName = org ? org.name : 'Coordinamento Vicini di Strada'
+
+        const prefixMap = {
+          emergency: { it: '🚨 [Emergenza] ', es: '🚨 [Emergencia] ', en: '🚨 [Emergency] ', default: '🚨 ' },
+          change: { it: '🔄 [Variazione] ', es: '🔄 [Cambio de horario] ', en: '🔄 [Schedule Update] ', default: '🔄 ' },
+          general: { it: '📢 [Informativa] ', es: '📢 [Aviso informativo] ', en: '📢 [Notice] ', default: '📢 ' }
+        }
+        const pref = prefixMap[payload.type]?.[lang] || prefixMap[payload.type]?.default || '📢 '
+
+        const rawTitle = (typeof payload.title === 'object' ? (payload.title[lang] || payload.title.it) : payload.title) || 'Nuovo avviso dai servizi'
+        const rawContent = (typeof payload.content === 'object' ? (payload.content[lang] || payload.content.it) : payload.content) || 'Nuova notizia pubblicata.'
+
+        const titleText = `${pref}${rawTitle}`
+        const bodyText = `📍 ${orgName} • ${rawContent}`
 
         if ('serviceWorker' in navigator) {
           navigator.serviceWorker.ready.then((reg) => {

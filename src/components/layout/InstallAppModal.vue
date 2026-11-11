@@ -33,20 +33,27 @@
             <i class="fa-solid fa-circle-check"></i>
           </div>
           <div>
-            <h4 class="font-bold text-emerald-950 text-base">App già sul tuo telefono!</h4>
+            <h4 class="font-bold text-emerald-950 text-base">
+              {{ isMobileDevice ? 'App già sul tuo telefono!' : 'App già installata sul computer!' }}
+            </h4>
             <p class="text-xs text-emerald-800 mt-1 leading-relaxed">
-              Hai già scaricato l'applicazione su questo dispositivo.
+              {{ isMobileDevice
+                ? "Hai già scaricato l'applicazione su questo smartphone."
+                : "L'applicazione è già stata aggiunta tra i programmi del tuo computer." }}
             </p>
           </div>
         </div>
 
         <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 text-xs text-slate-600 space-y-2">
           <p class="font-medium text-slate-700 flex items-center gap-2">
-            <i class="fa-solid fa-mobile-screen-button text-brand-600 text-sm"></i>
+            <i :class="isMobileDevice ? 'fa-solid fa-mobile-screen-button' : 'fa-solid fa-desktop'" class="text-brand-600 text-sm"></i>
             <span>Come aprirla:</span>
           </p>
-          <p class="leading-relaxed">
+          <p class="leading-relaxed" v-if="isMobileDevice">
             Cerca l'icona verde <strong>Vicini di Strada</strong> nella schermata Home o tra le app del tuo smartphone.
+          </p>
+          <p class="leading-relaxed" v-else>
+            Cerca l'icona <strong>Vicini di Strada</strong> sul Desktop o nel menu Start del computer. Puoi avviarla direttamente come qualsiasi applicazione.
           </p>
           <p class="leading-relaxed text-slate-500">
             Aprendola da lì, l'app funzionerà a schermo intero senza barre del browser e sarà consultabile anche senza connessione internet.
@@ -65,7 +72,7 @@
             @click="$emit('force-reinstall')"
             class="text-xs text-slate-400 hover:text-brand-600 underline font-medium transition"
           >
-            Non la trovi? Clicca qui per riscaricarla
+            {{ isMobileDevice ? 'Non la trovi? Clicca qui per riscaricarla' : 'Vuoi reinstallarla sul computer? Clicca qui' }}
           </button>
         </div>
       </div>
@@ -140,7 +147,11 @@ defineProps({
   isInstalled: Boolean,
   hasDownloaded: Boolean,
   isIOS: Boolean,
-  deferredPrompt: Object
+  deferredPrompt: Object,
+  isMobileDevice: {
+    type: Boolean,
+    default: true
+  }
 })
 
 const emit = defineEmits(['close', 'install', 'force-reinstall'])

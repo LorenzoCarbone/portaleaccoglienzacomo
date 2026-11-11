@@ -20,27 +20,27 @@
       <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
         <!-- Tasto App (Nascosto se aperta dentro l'app standalone) -->
         <template v-if="!isInstalled">
-          <!-- Se l'utente ha già scaricato l'app sul telefono -->
+          <!-- Se l'utente ha già scaricato l'app -->
           <button
             v-if="hasDownloaded"
             @click="$emit('download-click')"
-            class="flex items-center gap-1 px-2 py-1.5 sm:px-2.5 sm:py-1.5 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-semibold transition active:scale-95 border cursor-pointer bg-brand-800/90 hover:bg-brand-700 text-emerald-300 border-brand-700 shadow-inner shrink-0"
-            title="L'applicazione è già stata scaricata su questo smartphone"
+            class="flex items-center gap-1.5 px-2 py-1.5 sm:px-2.5 sm:py-1.5 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-semibold transition active:scale-95 border cursor-pointer bg-brand-800/90 hover:bg-brand-700 text-emerald-300 border-brand-700 shadow-inner shrink-0"
+            :title="isMobileDevice ? 'L\'applicazione è già presente sullo smartphone' : 'L\'applicazione è già installata su questo computer'"
           >
             <i class="fa-solid fa-circle-check text-emerald-400 text-xs"></i>
-            <span class="hidden xs:inline">App sul telefono</span>
-            <span class="xs:hidden">App</span>
+            <span class="hidden sm:inline">{{ isMobileDevice ? 'App sul telefono' : 'App su computer' }}</span>
+            <span class="sm:hidden">App</span>
           </button>
 
           <!-- Se l'app non è ancora stata scaricata -->
           <button
             v-else
             @click="$emit('download-click')"
-            class="flex items-center gap-1 px-2.5 py-1.5 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-xl text-xs sm:text-sm font-bold transition active:scale-95 border cursor-pointer bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-400 shadow-md shadow-emerald-900/30 shrink-0"
-            title="Scarica subito l'app sul tuo telefono"
+            class="flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-xl text-xs sm:text-sm font-bold transition active:scale-95 border cursor-pointer bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-400 shadow-md shadow-emerald-900/30 shrink-0"
+            :title="isMobileDevice ? 'Scarica subito l\'app sul tuo telefono' : 'Installa l\'applicazione sul tuo computer'"
           >
             <i class="fa-solid fa-download text-xs"></i>
-            <span>Scarica</span>
+            <span>{{ isMobileDevice ? 'Scarica' : 'Installa su PC' }}</span>
           </button>
         </template>
 
@@ -153,6 +153,10 @@ const props = defineProps({
   hasUnreadNews: Boolean,
   isInstalled: Boolean,
   hasDownloaded: Boolean,
+  isMobileDevice: {
+    type: Boolean,
+    default: true
+  },
   t: Function
 })
 
