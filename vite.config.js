@@ -19,7 +19,7 @@ export default defineConfig({
         background_color: '#f8fafc',
         display: 'standalone',
         orientation: 'portrait',
-        start_url: '/portaleaccoglienzacomo/',
+        start_url: '/portaleaccoglienzacomo/?source=pwa',
         scope: '/portaleaccoglienzacomo/',
         lang: 'it',
         icons: [

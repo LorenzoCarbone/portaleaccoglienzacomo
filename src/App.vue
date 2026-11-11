@@ -236,7 +236,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, nextTick } from 'vue'
 
 // Configurations
 import categories from './config/categories.json'
@@ -391,7 +391,17 @@ const {
 } = useNews(buildMultilangObjFromTemplate)
 
 // PWA State & Installation
-const isInstalled = ref(false)
+const checkIsStandalone = () => {
+  if (typeof window === 'undefined') return false
+  return (
+    window.matchMedia('(display-mode: standalone)').matches ||
+    window.navigator.standalone === true ||
+    document.referrer.includes('android-app://') ||
+    window.location.search.includes('source=pwa')
+  )
+}
+
+const isInstalled = ref(checkIsStandalone())
 const isIOS = ref(false)
 const deferredPrompt = ref(null)
 const openAppModal = ref(false)
