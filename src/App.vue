@@ -210,6 +210,9 @@
       @logout="handleLogout"
       @open-dashboard="activeTab = 'admin_dashboard'; openAdminModal = false; cancelAllEditing()"
     />
+
+    <!-- Banner Installazione PWA -->
+    <PwaInstallBanner />
   </div>
 </template>
 
@@ -241,6 +244,7 @@ import NewsSection from './components/news/NewsSection.vue'
 import EmergencySection from './components/emergency/EmergencySection.vue'
 import AdminModal from './components/admin/AdminModal.vue'
 import AdminDashboard from './components/admin/AdminDashboard.vue'
+import PwaInstallBanner from './components/layout/PwaInstallBanner.vue'
 
 // 1. i18n
 const {
