@@ -131,41 +131,18 @@ export function usePushNotifications() {
 }
 
 // Funzione globale per spedire notifiche push a tutti gli smartphone tramite l'API OneSignal
-export async function sendOneSignalPush({ title, content, url, newsId, type = 'general', priority = 'normal', association_id = 'org_coordinamento' }) {
+export async function sendOneSignalPush({ title, content, url, newsId, type = 'general', priority = 'normal', serviceName = '' }) {
   const headings = {}
   const contents = {}
 
-  const org = organizations.find(o => o.id === association_id)
-  const orgName = org ? org.name : 'Coordinamento Vicini di Strada'
+  const isEmergency = type === 'emergency'
+  const isUpdate = type === 'service_update' || type === 'change'
 
-  // Solo emoji nel titolo per massima leggibilità e spazio
-  const emojiMap = {
-    emergency: '🚨 ',
-    change: '🔄 ',
-    general: '📢 '
-  }
-  const emoji = emojiMap[type] || '📢 '
+  // Emoji distintiva per tipologia
+  const emoji = isEmergency ? '🚨 ' : (isUpdate ? '🔄 ' : '📢 ')
 
-  // Configurazione colori differenziati: Rosso per Emergenza, Arancione per Variazione, Blu per Normale
-  const colorMap = {
-    emergency: {
-      accentColor: 'FFDC2626', // Rosso #dc2626
-      icon: 'https://lorenzocarbone.github.io/portaleaccoglienzacomo/icon-emergency.png',
-      priority: 10
-    },
-    change: {
-      accentColor: 'FFF59E0B', // Arancione / Ambra #f59e0b
-      icon: 'https://lorenzocarbone.github.io/portaleaccoglienzacomo/icon-change.png',
-      priority: 5
-    },
-    general: {
-      accentColor: 'FF2563EB', // Blu #2563eb
-      icon: 'https://lorenzocarbone.github.io/portaleaccoglienzacomo/icon-general.png',
-      priority: 5
-    }
-  }
-
-  const colorConfig = colorMap[type] || colorMap.general
+  // Accent color di sistema Android (Rosso per Emergenza, Arancione per Variazione, Blu per Normale)
+  const accentColor = isEmergency ? 'FFDC2626' : (isUpdate ? 'FFF59E0B' : 'FF2563EB')
 
   if (typeof title === 'object' && title !== null) {
     for (const k in title) {
@@ -179,15 +156,17 @@ export async function sendOneSignalPush({ title, content, url, newsId, type = 'g
     headings.es = `${emoji}${title}`
   }
 
+  const prefixService = serviceName ? `${serviceName} • ` : ''
+
   if (typeof content === 'object' && content !== null) {
     for (const k in content) {
       if (content[k]) {
         const text = content[k]
-        contents[k] = text.startsWith('📍') ? text : `📍 ${orgName} • ${text}`
+        contents[k] = text.startsWith(prefixService) ? text : `${prefixService}${text}`
       }
     }
   } else if (content) {
-    const formatted = content.startsWith('📍') ? content : `📍 ${orgName} • ${content}`
+    const formatted = content.startsWith(prefixService) ? content : `${prefixService}${content}`
     contents.it = formatted
     contents.en = formatted
     contents.es = formatted
@@ -215,12 +194,14 @@ export async function sendOneSignalPush({ title, content, url, newsId, type = 'g
         included_segments: ['Total Subscriptions'],
         headings: headings,
         contents: contents,
-        priority: colorConfig.priority,
-        android_accent_color: colorConfig.accentColor,
+        // Priority 10 garantisce consegna immediata su Android/iOS risvegliando il dispositivo da Doze mode
+        priority: 10,
+        ttl: 259200,
+        android_accent_color: accentColor,
         url: targetUrl,
         web_url: targetUrl,
-        chrome_web_icon: colorConfig.icon,
-        chrome_web_badge: colorConfig.icon,
+        chrome_web_icon: 'https://lorenzocarbone.github.io/portaleaccoglienzacomo/pwa-192x192.png',
+        chrome_web_badge: 'https://lorenzocarbone.github.io/portaleaccoglienzacomo/pwa-192x192.png',
         data: {
           url: targetUrl,
           newsId: newsId || null,

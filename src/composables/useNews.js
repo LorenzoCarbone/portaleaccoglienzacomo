@@ -31,7 +31,7 @@ const NEWS_TYPES = {
 
 const lastViewedNewsTime = ref(parseInt(localStorage.getItem('vds_last_news_time')) || 0)
 
-export function useNews(buildMultilangObjFromTemplate = null) {
+export function useNews(buildMultilangObjFromTemplate = null, servicesRef = null) {
   const getNewsTypeStyle = (type) => NEWS_TYPES[type] || NEWS_TYPES.general
 
   const isUrgency = (level) => {
@@ -235,6 +235,15 @@ export function useNews(buildMultilangObjFromTemplate = null) {
         insertedItem = data?.[0]
       }
 
+      // Recupera il nome del servizio collegato (se presente)
+      let serviceName = ''
+      if (newsForm.value.related_service_id && servicesRef?.value) {
+        const found = servicesRef.value.find(s => s.id === newsForm.value.related_service_id)
+        if (found) {
+          serviceName = typeof found.name === 'object' ? (found.name.it || Object.values(found.name)[0] || '') : (found.name || '')
+        }
+      }
+
       // 1. Spedisci notifica push globale a tutti i telefoni tramite OneSignal se abilitato (default: attivo)
       if (newsForm.value.sendPushNotification !== false) {
         try {
@@ -244,6 +253,7 @@ export function useNews(buildMultilangObjFromTemplate = null) {
             type: payload.type,
             priority: payload.priority,
             association_id: payload.association_id,
+            serviceName: serviceName,
             url: 'https://lorenzocarbone.github.io/portaleaccoglienzacomo/?tab=news',
             newsId: insertedItem?.id || newsForm.value.id
           })
@@ -263,7 +273,8 @@ export function useNews(buildMultilangObjFromTemplate = null) {
             content: payload.content,
             type: payload.type,
             priority: payload.priority,
-            association_id: payload.association_id
+            association_id: payload.association_id,
+            serviceName: serviceName
           }
         })
       } catch (broadcastErr) {
@@ -273,32 +284,24 @@ export function useNews(buildMultilangObjFromTemplate = null) {
       // 3. Notifica immediata sul dispositivo dell'operatore che pubblica
       if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
         const lang = localStorage.getItem('vicini_lang') || 'it'
-        const org = organizations.find(o => o.id === payload.association_id)
-        const orgName = org ? org.name : 'Coordinamento Vicini di Strada'
-
-        const emojiMap = { emergency: '🚨 ', change: '🔄 ', general: '📢 ' }
-        const pref = emojiMap[payload.type] || '📢 '
-
-        const iconMap = {
-          emergency: '/portaleaccoglienzacomo/icon-emergency.png',
-          change: '/portaleaccoglienzacomo/icon-change.png',
-          general: '/portaleaccoglienzacomo/icon-general.png'
-        }
-        const notifIcon = iconMap[payload.type] || '/portaleaccoglienzacomo/icon-general.png'
+        const isEmergency = payload.type === 'emergency'
+        const isUpdate = payload.type === 'service_update' || payload.type === 'change'
+        const pref = isEmergency ? '🚨 ' : (isUpdate ? '🔄 ' : '📢 ')
 
         const rawTitle = (typeof payload.title === 'object' ? (payload.title[lang] || payload.title.it) : payload.title) || 'Nuovo avviso dai servizi'
         const rawContent = (typeof payload.content === 'object' ? (payload.content[lang] || payload.content.it) : payload.content) || 'Nuova notizia pubblicata.'
 
+        const prefix = serviceName ? `${serviceName} • ` : ''
         const titleText = `${pref}${rawTitle}`
-        const bodyText = `📍 ${orgName} • ${rawContent}`
+        const bodyText = `${prefix}${rawContent}`
 
         if ('serviceWorker' in navigator) {
           navigator.serviceWorker.ready.then((reg) => {
             reg.showNotification(titleText, {
               body: bodyText,
-              icon: notifIcon,
-              badge: notifIcon,
-              vibrate: payload.type === 'emergency' ? [300, 100, 300, 100, 300] : [200, 100, 200],
+              icon: '/portaleaccoglienzacomo/pwa-192x192.png',
+              badge: '/portaleaccoglienzacomo/pwa-192x192.png',
+              vibrate: isEmergency ? [300, 100, 300, 100, 300] : [200, 100, 200],
               tag: 'news-' + (insertedItem?.id || Date.now()),
               renotify: true,
               data: { url: 'https://lorenzocarbone.github.io/portaleaccoglienzacomo/?tab=news' }

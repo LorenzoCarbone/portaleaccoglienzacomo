@@ -30,7 +30,7 @@
         const isGhPages = window.location.pathname.startsWith('/portaleaccoglienzacomo');
         await OneSignal.init({
           appId: "b454646f-7e4b-4ef3-95f6-f399bf2a3826",
-          serviceWorkerPath: isGhPages ? "portaleaccoglienzacomo/sw.js" : "sw.js",
+          serviceWorkerPath: isGhPages ? "portaleaccoglienzacomo/OneSignalSDKWorker.js" : "OneSignalSDKWorker.js",
           serviceWorkerParam: { scope: isGhPages ? "/portaleaccoglienzacomo/" : "/" },
           allowLocalhostAsSecureOrigin: true
         });

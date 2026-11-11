@@ -9,7 +9,7 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       injectRegister: 'auto',
-      includeAssets: ['favicon.svg', 'apple-touch-icon.png', 'pwa-192x192.png', 'pwa-512x512.png', 'OneSignalSDKWorker.js', 'icon-emergency.png', 'icon-change.png', 'icon-general.png'],
+      includeAssets: ['favicon.svg', 'apple-touch-icon.png', 'pwa-192x192.png', 'pwa-512x512.png', 'OneSignalSDKWorker.js'],
       manifest: {
         id: '/portaleaccoglienzacomo/',
         name: 'Vicini di Strada Como',

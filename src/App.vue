@@ -403,7 +403,7 @@ const {
   cancelEditingNews,
   saveNewsChanges,
   deleteNewsItem
-} = useNews(buildMultilangObjFromTemplate)
+} = useNews(buildMultilangObjFromTemplate, services)
 
 // PWA State & Installation
 const checkIsStandalone = () => {

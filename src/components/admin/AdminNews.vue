@@ -228,7 +228,7 @@
             <div class="flex items-center gap-2 shrink-0">
               <select v-model="selectedNewLang" class="text-xs border border-amber-300 rounded-lg px-2 py-1.5 bg-white outline-none">
                 <option value="">Aggiungi lingua...</option>
-                <option v-for="(l, code) in availableLangsForNews" :key="code" :value="code">{{ l.name }}</option>
+                <option v-for="(l, code) in currentAvailableLangs" :key="code" :value="code">{{ l.name }}</option>
               </select>
               <button
                 @click="handleAddLang"
@@ -240,7 +240,7 @@
             </div>
           </div>
 
-          <div v-for="lang in activeNewsLangs" :key="'lang_group_' + lang" class="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-4 relative">
+          <div v-for="lang in currentActiveLangs" :key="'lang_group_' + lang" class="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-4 relative">
             <div class="flex items-center gap-2 mb-2 border-b border-slate-200 pb-2">
               <span class="flag-emoji text-lg">{{ languages[lang]?.flag }}</span>
               <h5 class="text-xs font-bold text-slate-700 uppercase tracking-wider">
@@ -250,7 +250,7 @@
 
             <button
               v-if="lang !== 'it'"
-              @click="$emit('delete-lang', lang)"
+              @click="handleDeleteLang(lang)"
               type="button"
               class="absolute top-4 right-4 text-red-500 hover:text-red-700 p-1.5 bg-white rounded-md shadow-sm border border-red-100 transition"
             >
@@ -281,26 +281,10 @@
           <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Collega a un Servizio (Opzionale)</label>
           <select
             v-model="newsForm.related_service_id"
-            @change="handleServiceChange"
             class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm outline-none focus:ring-2 focus:ring-amber-500"
           >
             <option :value="null">Nessun servizio collegato</option>
-            <option v-for="s in services" :key="s.id" :value="s.id">{{ translateField(s, 'name') }} ({{ s.organization }})</option>
-          </select>
-        </div>
-
-        <!-- Ente / Associazione che pubblica l'avviso -->
-        <div class="mt-4 pt-4 border-t border-slate-100">
-          <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">
-            Ente / Associazione che pubblica l'avviso
-          </label>
-          <select
-            v-model="newsForm.association_id"
-            class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm outline-none focus:ring-2 focus:ring-amber-500 font-medium text-slate-800"
-          >
-            <option v-for="org in organizations" :key="org.id" :value="org.id">
-              {{ org.name }}
-            </option>
+            <option v-for="s in services" :key="s.id" :value="s.id">{{ translateField(s, 'name') }}</option>
           </select>
         </div>
 
@@ -332,18 +316,18 @@
           <div
             v-if="newsForm.sendPushNotification !== false"
             class="rounded-2xl p-3.5 sm:p-4 border text-xs space-y-2 animate-fadeIn transition-colors"
-            :class="newsForm.type === 'emergency' ? 'bg-red-50/60 border-red-200' : (newsForm.type === 'change' ? 'bg-amber-50/60 border-amber-200' : 'bg-blue-50/60 border-blue-200')"
+            :class="newsForm.type === 'emergency' ? 'bg-red-50/60 border-red-200' : ((newsForm.type === 'service_update' || newsForm.type === 'change') ? 'bg-amber-50/60 border-amber-200' : 'bg-blue-50/60 border-blue-200')"
           >
-            <div class="flex items-center justify-between text-[11px] font-semibold border-b pb-2" :class="newsForm.type === 'emergency' ? 'border-red-200/80 text-red-800' : (newsForm.type === 'change' ? 'border-amber-200/80 text-amber-800' : 'border-blue-200/80 text-blue-800')">
+            <div class="flex items-center justify-between text-[11px] font-semibold border-b pb-2" :class="newsForm.type === 'emergency' ? 'border-red-200/80 text-red-800' : ((newsForm.type === 'service_update' || newsForm.type === 'change') ? 'border-amber-200/80 text-amber-800' : 'border-blue-200/80 text-blue-800')">
               <span class="flex items-center gap-1.5 font-bold">
                 <i class="fa-solid fa-mobile-screen-button"></i>
                 <span>Anteprima notifica su smartphone</span>
               </span>
               <span
                 class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase shadow-sm"
-                :class="newsForm.type === 'emergency' ? 'bg-red-600 text-white' : (newsForm.type === 'change' ? 'bg-amber-500 text-white' : 'bg-blue-600 text-white')"
+                :class="newsForm.type === 'emergency' ? 'bg-red-600 text-white' : ((newsForm.type === 'service_update' || newsForm.type === 'change') ? 'bg-amber-500 text-white' : 'bg-blue-600 text-white')"
               >
-                {{ newsForm.type === 'emergency' ? 'Rosso • Emergenza' : (newsForm.type === 'change' ? 'Arancione • Variazione' : 'Blu • Normale') }}
+                {{ newsForm.type === 'emergency' ? 'Rosso • Emergenza' : ((newsForm.type === 'service_update' || newsForm.type === 'change') ? 'Arancione • Variazione' : 'Blu • Normale') }}
               </span>
             </div>
             <div class="space-y-1 pt-1">
@@ -450,33 +434,52 @@ const selectedNewsTemplate = computed(() => {
   return props.templates?.find(t => t.id === props.newsForm.template)
 })
 
+const currentActiveLangs = computed(() => {
+  if (!props.newsForm?.customTitle) return ['it']
+  const langs = Object.keys(props.newsForm.customTitle)
+  return ['it', ...langs.filter(l => l !== 'it')]
+})
+
+const currentAvailableLangs = computed(() => {
+  const available = {}
+  for (const code in props.languages) {
+    if (code !== 'it' && (!props.newsForm?.customTitle || props.newsForm.customTitle[code] === undefined)) {
+      available[code] = props.languages[code]
+    }
+  }
+  return available
+})
+
 const handleAddLang = () => {
   if (selectedNewLang.value) {
-    emit('add-lang', selectedNewLang.value)
+    const code = selectedNewLang.value
+    if (!props.newsForm.customTitle) props.newsForm.customTitle = { it: '' }
+    if (!props.newsForm.customContent) props.newsForm.customContent = { it: '' }
+    props.newsForm.customTitle = { ...props.newsForm.customTitle, [code]: '' }
+    props.newsForm.customContent = { ...props.newsForm.customContent, [code]: '' }
+    emit('add-lang', code)
     selectedNewLang.value = ''
   }
 }
 
-const handleServiceChange = () => {
-  if (props.newsForm?.related_service_id) {
-    const s = props.services?.find(srv => srv.id === props.newsForm.related_service_id)
-    if (s && s.organization) {
-      const matchOrg = organizations.find(o => 
-        o.name.toLowerCase() === s.organization.toLowerCase() || 
-        s.organization.toLowerCase().includes(o.name.toLowerCase()) ||
-        o.name.toLowerCase().includes(s.organization.toLowerCase())
-      )
-      if (matchOrg) {
-        props.newsForm.association_id = matchOrg.id
-      }
-    }
+const handleDeleteLang = (lang) => {
+  if (props.newsForm?.customTitle) {
+    const newT = { ...props.newsForm.customTitle }
+    delete newT[lang]
+    props.newsForm.customTitle = newT
   }
+  if (props.newsForm?.customContent) {
+    const newC = { ...props.newsForm.customContent }
+    delete newC[lang]
+    props.newsForm.customContent = newC
+  }
+  emit('delete-lang', lang)
 }
 
 const pushPreviewTitle = computed(() => {
-  const emoji = props.newsForm.type === 'emergency'
-    ? '🚨 '
-    : (props.newsForm.type === 'change' ? '🔄 ' : '📢 ')
+  const isEmergency = props.newsForm.type === 'emergency'
+  const isUpdate = props.newsForm.type === 'service_update' || props.newsForm.type === 'change'
+  const emoji = isEmergency ? '🚨 ' : (isUpdate ? '🔄 ' : '📢 ')
 
   let rawTitle = ''
   if (props.newsForm.useCustomText) {
@@ -488,8 +491,14 @@ const pushPreviewTitle = computed(() => {
 })
 
 const pushPreviewBody = computed(() => {
-  const org = organizations.find(o => o.id === props.newsForm?.association_id)
-  const orgName = org ? org.name : 'Coordinamento Vicini di Strada'
+  let prefix = ''
+  if (props.newsForm?.related_service_id) {
+    const s = props.services?.find(srv => srv.id === props.newsForm.related_service_id)
+    if (s) {
+      const name = props.translateField ? props.translateField(s, 'name') : (typeof s.name === 'object' ? s.name.it : s.name)
+      if (name) prefix = `${name} • `
+    }
+  }
 
   let rawText = ''
   if (props.newsForm.useCustomText) {
@@ -497,6 +506,6 @@ const pushPreviewBody = computed(() => {
   } else if (props.generateTemplateText && props.newsForm.template) {
     rawText = props.generateTemplateText(props.newsForm.template, props.newsForm.templateParams, 'it', false) || 'Dettagli dell\'avviso...'
   }
-  return `📍 ${orgName} • ${rawText || 'Dettagli dell\'avviso...'}`
+  return `${prefix}${rawText || 'Dettagli dell\'avviso...'}`
 })
 </script>
