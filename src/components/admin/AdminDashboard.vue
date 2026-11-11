@@ -99,7 +99,7 @@
       @cancel="$emit('news-cancel')"
       @save="$emit('news-save')"
       @delete="$emit('news-delete', $event)"
-      @add-lang="$emit('news-add-lang')"
+      @add-lang="$emit('news-add-lang', $event)"
       @delete-lang="$emit('news-delete-lang', $event)"
     />
 

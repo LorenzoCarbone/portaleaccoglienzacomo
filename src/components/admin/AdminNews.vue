@@ -289,25 +289,72 @@
         </div>
 
         <!-- Opzione Notifica Push -->
-        <div class="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between">
-          <div>
-            <label class="font-bold text-xs uppercase tracking-wider text-slate-700 flex items-center gap-2">
-              <i class="fa-solid fa-bell text-amber-500"></i>
-              <span>Invia Notifica Push</span>
+        <div class="mt-4 pt-4 border-t border-slate-100 space-y-3">
+          <div class="flex items-center justify-between gap-4">
+            <div>
+              <label class="font-bold text-xs uppercase tracking-wider text-slate-700 flex items-center gap-2 cursor-pointer" @click="newsForm.sendPushNotification = !(newsForm.sendPushNotification !== false)">
+                <i class="fa-solid fa-bell text-amber-500"></i>
+                <span>Invia Notifica Push agli Smartphone</span>
+              </label>
+              <p class="text-xs text-slate-500 mt-0.5">
+                {{ newsForm.sendPushNotification !== false
+                  ? "I telefoni registrati riceveranno l'avviso sulla schermata di blocco."
+                  : "L'avviso apparirà in bacheca SENZA suonare o inviare notifiche sui telefoni." }}
+              </p>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer shrink-0">
+              <input
+                type="checkbox"
+                v-model="newsForm.sendPushNotification"
+                class="sr-only peer"
+              >
+              <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
             </label>
-            <p class="text-xs text-slate-500 mt-0.5">Avvisa istantaneamente gli utenti che hanno installato l'app sul proprio smartphone.</p>
           </div>
-          <span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
-            Attiva
-          </span>
+
+          <!-- Anteprima notifica smartphone -->
+          <div
+            v-if="newsForm.sendPushNotification !== false"
+            class="bg-slate-50 rounded-2xl p-3 sm:p-4 border border-slate-200 text-xs space-y-2 animate-fadeIn"
+          >
+            <div class="flex items-center justify-between text-[11px] text-slate-500 font-semibold border-b border-slate-200/80 pb-2">
+              <span class="flex items-center gap-1.5 text-slate-700">
+                <i class="fa-solid fa-mobile-screen-button text-emerald-600"></i>
+                <span>Anteprima notifica su smartphone</span>
+              </span>
+              <span
+                class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase"
+                :class="newsForm.type === 'emergency' ? 'bg-red-100 text-red-700 border border-red-200' : (newsForm.type === 'change' ? 'bg-amber-100 text-amber-800 border border-amber-200' : 'bg-blue-100 text-blue-800 border border-blue-200')"
+              >
+                {{ newsForm.type === 'emergency' ? '🚨 Emergenza (Alta priorità)' : (newsForm.type === 'change' ? '🔄 Variazione Orari' : '📢 Informativa') }}
+              </span>
+            </div>
+            <div class="space-y-1 pt-1">
+              <div class="font-bold text-slate-800 text-xs sm:text-sm leading-snug">
+                {{ pushPreviewTitle }}
+              </div>
+              <p class="text-slate-600 text-xs leading-relaxed line-clamp-3">
+                {{ pushPreviewBody }}
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 
       <!-- Sticky Save Bar -->
       <div class="bg-slate-900 text-white p-4 rounded-3xl shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4 sticky bottom-4 z-40">
-        <div class="flex items-center gap-2">
-          <i class="fa-solid fa-cloud-arrow-up text-amber-400 text-lg"></i>
-          <span class="text-xs sm:text-sm font-medium">Tutto pronto per la pubblicazione</span>
+        <div class="flex items-center gap-2.5">
+          <i class="fa-solid fa-cloud-arrow-up text-amber-400 text-lg shrink-0"></i>
+          <div>
+            <span class="text-xs sm:text-sm font-medium block">Tutto pronto per la pubblicazione</span>
+            <span
+              class="text-[11px] font-semibold flex items-center gap-1"
+              :class="newsForm.sendPushNotification !== false ? 'text-emerald-400' : 'text-slate-400'"
+            >
+              <i class="fa-solid" :class="newsForm.sendPushNotification !== false ? 'fa-bell' : 'fa-bell-slash'"></i>
+              <span>{{ newsForm.sendPushNotification !== false ? 'Notifica push inclusa' : 'Nessuna notifica push' }}</span>
+            </span>
+          </div>
         </div>
         <div class="flex items-center gap-3 w-full sm:w-auto">
           <button
@@ -391,4 +438,27 @@ const handleAddLang = () => {
     selectedNewLang.value = ''
   }
 }
+
+const pushPreviewTitle = computed(() => {
+  const prefix = props.newsForm.type === 'emergency'
+    ? '🚨 [Emergenza] '
+    : (props.newsForm.type === 'change' ? '🔄 [Variazione] ' : '📢 [Avviso] ')
+
+  let rawTitle = ''
+  if (props.newsForm.useCustomText) {
+    rawTitle = props.newsForm.customTitle?.it || props.newsForm.customTitle?.en || 'Nuovo Avviso'
+  } else if (props.generateTemplateText && props.newsForm.template) {
+    rawTitle = props.generateTemplateText(props.newsForm.template, props.newsForm.templateParams, 'it', true) || 'Nuovo Avviso'
+  }
+  return prefix + (rawTitle || 'Avviso per i servizi')
+})
+
+const pushPreviewBody = computed(() => {
+  if (props.newsForm.useCustomText) {
+    return props.newsForm.customContent?.it || props.newsForm.customContent?.en || 'Testo della notifica...'
+  } else if (props.generateTemplateText && props.newsForm.template) {
+    return props.generateTemplateText(props.newsForm.template, props.newsForm.templateParams, 'it', false) || 'Dettagli dell\'avviso...'
+  }
+  return 'Testo della notifica...'
+})
 </script>

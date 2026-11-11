@@ -130,17 +130,52 @@ export function usePushNotifications() {
 }
 
 // Funzione globale per spedire notifiche push a tutti gli smartphone tramite l'API OneSignal
-export async function sendOneSignalPush({ title, content, url, newsId }) {
+export async function sendOneSignalPush({ title, content, url, newsId, type = 'general', priority = 'normal' }) {
   const headings = {}
   const contents = {}
 
+  // Prefisso visivo ed emoji in base al tipo di notizia
+  const prefixMap = {
+    emergency: {
+      it: '🚨 [Emergenza] ',
+      en: '🚨 [Emergency] ',
+      fr: '🚨 [Urgence] ',
+      es: '🚨 [Emergencia] ',
+      ar: '🚨 [طوارئ] ',
+      default: '🚨 '
+    },
+    change: {
+      it: '🔄 [Variazione] ',
+      en: '🔄 [Schedule Update] ',
+      fr: '🔄 [Mise à jour] ',
+      es: '🔄 [Cambio] ',
+      ar: '🔄 [تحديث] ',
+      default: '🔄 '
+    },
+    general: {
+      it: '📢 [Avviso] ',
+      en: '📢 [Notice] ',
+      fr: '📢 [Avis] ',
+      es: '📢 [Aviso] ',
+      ar: '📢 [إشعار] ',
+      default: '📢 '
+    }
+  }
+
+  const currentPrefix = prefixMap[type] || prefixMap.general
+
   if (typeof title === 'object' && title !== null) {
     for (const k in title) {
-      if (title[k]) headings[k] = title[k]
+      if (title[k]) {
+        const pref = currentPrefix[k] || currentPrefix.default || ''
+        headings[k] = `${pref}${title[k]}`
+      }
     }
   } else if (title) {
-    headings.it = title
-    headings.en = title
+    const prefIt = currentPrefix.it || currentPrefix.default || ''
+    const prefEn = currentPrefix.en || currentPrefix.default || ''
+    headings.it = `${prefIt}${title}`
+    headings.en = `${prefEn}${title}`
   }
 
   if (typeof content === 'object' && content !== null) {
@@ -156,6 +191,8 @@ export async function sendOneSignalPush({ title, content, url, newsId }) {
   if (!headings.en) headings.en = headings.it || 'Vicini di Strada Como'
   if (!contents.en) contents.en = contents.it || 'Nuovo avviso pubblicato dai servizi'
 
+  const isEmergency = type === 'emergency' || priority === 'high'
+
   try {
     const response = await fetch('https://api.onesignal.com/notifications', {
       method: 'POST',
@@ -168,9 +205,15 @@ export async function sendOneSignalPush({ title, content, url, newsId }) {
         included_segments: ['Total Subscriptions'],
         headings: headings,
         contents: contents,
+        priority: isEmergency ? 10 : 5,
         url: url || 'https://lorenzocarbone.github.io/portaleaccoglienzacomo/?tab=news',
         chrome_web_icon: 'https://lorenzocarbone.github.io/portaleaccoglienzacomo/pwa-192x192.png',
-        chrome_web_badge: 'https://lorenzocarbone.github.io/portaleaccoglienzacomo/pwa-192x192.png'
+        chrome_web_badge: 'https://lorenzocarbone.github.io/portaleaccoglienzacomo/pwa-192x192.png',
+        data: {
+          newsId: newsId || null,
+          type: type || 'general',
+          priority: priority || 'normal'
+        }
       })
     })
 

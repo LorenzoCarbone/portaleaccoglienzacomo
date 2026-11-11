@@ -120,17 +120,34 @@ export function useNews(buildMultilangObjFromTemplate = null) {
     return ['it', ...langs.filter(l => l !== 'it')]
   })
 
-  const addLangToNews = () => {
-    if (selectedNewLangNews.value) {
-      newsForm.value.customTitle[selectedNewLangNews.value] = ''
-      newsForm.value.customContent[selectedNewLangNews.value] = ''
+  const addLangToNews = (langCode) => {
+    const code = langCode || selectedNewLangNews.value
+    if (code) {
+      if (!newsForm.value.customTitle) newsForm.value.customTitle = { it: '' }
+      if (!newsForm.value.customContent) newsForm.value.customContent = { it: '' }
+      newsForm.value.customTitle = {
+        ...newsForm.value.customTitle,
+        [code]: ''
+      }
+      newsForm.value.customContent = {
+        ...newsForm.value.customContent,
+        [code]: ''
+      }
       selectedNewLangNews.value = ''
     }
   }
 
   const deleteLangFromNews = (langCode) => {
-    delete newsForm.value.customTitle[langCode]
-    delete newsForm.value.customContent[langCode]
+    if (newsForm.value.customTitle) {
+      const updatedTitles = { ...newsForm.value.customTitle }
+      delete updatedTitles[langCode]
+      newsForm.value.customTitle = updatedTitles
+    }
+    if (newsForm.value.customContent) {
+      const updatedContents = { ...newsForm.value.customContent }
+      delete updatedContents[langCode]
+      newsForm.value.customContent = updatedContents
+    }
   }
 
   const startEditingNews = (news) => {
@@ -153,7 +170,8 @@ export function useNews(buildMultilangObjFromTemplate = null) {
       template: 'posti_esauriti',
       templateParams: {},
       customTitle: initCustomTitle,
-      customContent: initCustomContent
+      customContent: initCustomContent,
+      sendPushNotification: true
     }
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
@@ -170,7 +188,8 @@ export function useNews(buildMultilangObjFromTemplate = null) {
       template: 'posti_esauriti',
       templateParams: {},
       customTitle: { it: '' },
-      customContent: { it: '' }
+      customContent: { it: '' },
+      sendPushNotification: true
     }
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
@@ -216,16 +235,20 @@ export function useNews(buildMultilangObjFromTemplate = null) {
         insertedItem = data?.[0]
       }
 
-      // 1. Spedisci notifica push globale a tutti i telefoni tramite OneSignal
-      try {
-        await sendOneSignalPush({
-          title: payload.title,
-          content: payload.content,
-          url: 'https://lorenzocarbone.github.io/portaleaccoglienzacomo/?tab=news',
-          newsId: insertedItem?.id || newsForm.value.id
-        })
-      } catch (pushErr) {
-        console.warn('[OneSignal] Errore invio push:', pushErr)
+      // 1. Spedisci notifica push globale a tutti i telefoni tramite OneSignal se abilitato (default: attivo)
+      if (newsForm.value.sendPushNotification !== false) {
+        try {
+          await sendOneSignalPush({
+            title: payload.title,
+            content: payload.content,
+            type: payload.type,
+            priority: payload.priority,
+            url: 'https://lorenzocarbone.github.io/portaleaccoglienzacomo/?tab=news',
+            newsId: insertedItem?.id || newsForm.value.id
+          })
+        } catch (pushErr) {
+          console.warn('[OneSignal] Errore invio push:', pushErr)
+        }
       }
 
       // 2. Invia broadcast Realtime di supporto

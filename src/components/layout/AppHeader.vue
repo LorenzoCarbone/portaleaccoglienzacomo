@@ -29,7 +29,7 @@
           >
             <i class="fa-solid fa-circle-check text-emerald-400 text-xs"></i>
             <span class="hidden xs:inline">App sul telefono</span>
-            <span class="xs:hidden">App ✓</span>
+            <span class="xs:hidden">App</span>
           </button>
 
           <!-- Se l'app non è ancora stata scaricata -->
