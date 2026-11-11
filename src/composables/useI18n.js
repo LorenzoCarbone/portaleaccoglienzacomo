@@ -24,6 +24,15 @@ export function useI18n() {
     if (languages[code]) {
       currentLangCode.value = code
       localStorage.setItem('vicini_lang', code)
+      if (typeof window !== 'undefined' && window.OneSignalDeferred) {
+        window.OneSignalDeferred.push(async function(OneSignal) {
+          if (OneSignal.User && OneSignal.User.setLanguage) {
+            try {
+              await OneSignal.User.setLanguage(code)
+            } catch (e) {}
+          }
+        })
+      }
     }
   }
 

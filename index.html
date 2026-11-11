@@ -21,6 +21,21 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Color+Emoji&display=swap" rel="stylesheet">
+
+    <!-- OneSignal Web Push SDK -->
+    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+    <script>
+      window.OneSignalDeferred = window.OneSignalDeferred || [];
+      OneSignalDeferred.push(async function(OneSignal) {
+        const isGhPages = window.location.pathname.startsWith('/portaleaccoglienzacomo');
+        await OneSignal.init({
+          appId: "b454646f-7e4b-4ef3-95f6-f399bf2a3826",
+          serviceWorkerPath: isGhPages ? "portaleaccoglienzacomo/sw.js" : "sw.js",
+          serviceWorkerParam: { scope: isGhPages ? "/portaleaccoglienzacomo/" : "/" },
+          allowLocalhostAsSecureOrigin: true
+        });
+      });
+    </script>
   </head>
   <body class="bg-slate-50 text-slate-800 min-h-screen">
     <div id="app"></div>

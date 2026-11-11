@@ -2,6 +2,7 @@ import { ref, computed } from 'vue'
 import { supabase, alertsChannel } from '../lib/supabase'
 import organizations from '../config/organizations.json'
 import languages from '../config/languages.json'
+import { sendOneSignalPush } from './usePushNotifications'
 
 const globalNews = ref([])
 const isLoadingNews = ref(true)
@@ -215,7 +216,19 @@ export function useNews(buildMultilangObjFromTemplate = null) {
         insertedItem = data?.[0]
       }
 
-      // 1. Invia broadcast Realtime a tutti i telefoni e computer connessi
+      // 1. Spedisci notifica push globale a tutti i telefoni tramite OneSignal
+      try {
+        await sendOneSignalPush({
+          title: payload.title,
+          content: payload.content,
+          url: 'https://lorenzocarbone.github.io/portaleaccoglienzacomo/?tab=news',
+          newsId: insertedItem?.id || newsForm.value.id
+        })
+      } catch (pushErr) {
+        console.warn('[OneSignal] Errore invio push:', pushErr)
+      }
+
+      // 2. Invia broadcast Realtime di supporto
       try {
         await alertsChannel.send({
           type: 'broadcast',
@@ -230,21 +243,6 @@ export function useNews(buildMultilangObjFromTemplate = null) {
         })
       } catch (broadcastErr) {
         console.warn('[Push] Errore invio broadcast Realtime:', broadcastErr)
-      }
-
-      // 2. Invoca la Edge Function su Supabase per raggiungere tutti i dispositivi
-      try {
-        await supabase.functions.invoke('send-push', {
-          body: {
-            newsId: insertedItem?.id || newsForm.value.id,
-            title: payload.title,
-            content: payload.content,
-            type: payload.type,
-            priority: payload.priority
-          }
-        })
-      } catch (edgeErr) {
-        console.warn('[Push] Edge function non ancora attiva:', edgeErr)
       }
 
       // 2. Notifica di sistema immediata sul dispositivo dell'operatore che pubblica
