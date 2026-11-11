@@ -14,16 +14,19 @@
       <div class="flex items-center gap-2">
         <!-- Tasto Esplicito Scarica / Stato App -->
         <button
-          @click="$emit('open-app-modal')"
-          class="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold transition active:scale-95 border"
+          @click="$emit('download-click')"
+          class="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-bold transition active:scale-95 border cursor-pointer"
           :class="isInstalled 
-            ? 'bg-brand-800 hover:bg-brand-700 text-emerald-300 border-brand-700 shadow-inner' 
-            : 'bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-500 shadow-md shadow-emerald-700/30'"
-          :title="isInstalled ? 'App già installata su questo dispositivo' : 'Scarica e installa l\'applicazione'"
+            ? 'bg-brand-800/90 hover:bg-brand-700 text-emerald-300 border-brand-700 shadow-inner' 
+            : 'bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-400 shadow-md shadow-emerald-900/40'"
+          :title="isInstalled ? 'App già installata su questo dispositivo' : 'Scarica subito l\'app sul tuo telefono'"
         >
-          <i :class="isInstalled ? 'fa-solid fa-circle-check text-emerald-400' : 'fa-solid fa-cloud-arrow-down'"></i>
-          <span class="hidden sm:inline">{{ isInstalled ? 'App Installata' : 'Scarica App' }}</span>
-          <span class="sm:hidden font-bold">{{ isInstalled ? 'App ✓' : 'App' }}</span>
+          <i :class="isInstalled ? 'fa-solid fa-circle-check text-emerald-400' : 'fa-solid fa-download'"></i>
+          <span v-if="isInstalled">
+            <span class="hidden sm:inline">App Installata</span>
+            <span class="sm:hidden">App ✓</span>
+          </span>
+          <span v-else>Scarica</span>
         </button>
 
         <!-- Tasto Area Operatori -->
@@ -137,7 +140,7 @@ const props = defineProps({
   t: Function
 })
 
-const emit = defineEmits(['open-admin', 'open-app-modal', 'select-language', 'update:activeTab'])
+const emit = defineEmits(['open-admin', 'open-app-modal', 'download-click', 'select-language', 'update:activeTab'])
 
 const showLangMenu = ref(false)
 

@@ -8,6 +8,7 @@ export default defineConfig({
     vue(),
     VitePWA({
       registerType: 'autoUpdate',
+      injectRegister: 'auto',
       includeAssets: ['favicon.svg', 'apple-touch-icon.png', 'pwa-192x192.png', 'pwa-512x512.png'],
       manifest: {
         id: '/portaleaccoglienzacomo/',
@@ -54,7 +55,10 @@ export default defineConfig({
         ]
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,png,woff2,ttf}']
+        globPatterns: ['**/*.{js,css,html,svg,png,woff2,ttf}'],
+        cleanupOutdatedCaches: true,
+        clientsClaim: true,
+        skipWaiting: true
       }
     })
   ]

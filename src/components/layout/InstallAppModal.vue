@@ -74,7 +74,7 @@
             class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 px-4 rounded-2xl text-sm sm:text-base flex items-center justify-center gap-2.5 shadow-lg shadow-emerald-600/30 active:scale-95 transition"
           >
             <i class="fa-solid fa-download"></i>
-            <span>Installa Ora sul Telefono</span>
+            <span>Scarica e Installa Ora</span>
           </button>
         </div>
 

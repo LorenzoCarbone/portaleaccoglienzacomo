@@ -12,7 +12,8 @@
       :is-installed="isInstalled"
       :t="t"
       @open-admin="openAdminModal = true"
-      @open-app-modal="openAppModal = true"
+      @open-app-modal="handleDownloadClick"
+      @download-click="handleDownloadClick"
       @select-language="selectLanguage"
       @update:active-tab="handleTabChange"
     />
@@ -397,24 +398,63 @@ const openAppModal = ref(false)
 
 const installPwa = async () => {
   if (!deferredPrompt.value) return
-  deferredPrompt.value.prompt()
-  const { outcome } = await deferredPrompt.value.userChoice
-  if (outcome === 'accepted') {
-    isInstalled.value = true
+  try {
+    deferredPrompt.value.prompt()
+    const { outcome } = await deferredPrompt.value.userChoice
+    if (outcome === 'accepted') {
+      isInstalled.value = true
+      localStorage.setItem('pwa_is_installed', 'true')
+    }
+  } catch (err) {
+    console.error('PWA install error:', err)
   }
   deferredPrompt.value = null
   openAppModal.value = false
 }
 
+// Click sul pulsante "Scarica"
+const handleDownloadClick = async () => {
+  if (isInstalled.value) {
+    // Se l'app è già installata, mostra la conferma
+    openAppModal.value = true
+    return
+  }
+
+  // Se abbiamo il prompt nativo (Android, Chrome, Edge):
+  // SCARICA E INSTALLA SUBITO DIRETTAMENTE SENZA NESSUN PASSAGGIO O SCHERMATA INTERMEDIA!
+  if (deferredPrompt.value) {
+    await installPwa()
+    return
+  }
+
+  // Altrimenti (iOS Safari o browser senza prompt automatico), apri la guida
+  openAppModal.value = true
+}
+
 // Scorrimento fluido ed elegante al click della categoria
+const scrollToServices = () => {
+  nextTick(() => {
+    setTimeout(() => {
+      const el = document.getElementById('services-list')
+      if (el) {
+        const header = document.querySelector('header')
+        const headerHeight = header ? header.offsetHeight : 64
+        const rect = el.getBoundingClientRect()
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop
+        const targetY = rect.top + scrollTop - headerHeight - 16
+
+        window.scrollTo({
+          top: Math.max(0, targetY),
+          behavior: 'smooth'
+        })
+      }
+    }, 60)
+  })
+}
+
 const handleCategorySelect = (catId) => {
   selectedCategory.value = catId
-  setTimeout(() => {
-    const el = document.getElementById('services-list')
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    }
-  }, 100)
+  scrollToServices()
 }
 
 // Import code state
@@ -468,8 +508,12 @@ onMounted(() => {
   fetchNews()
   checkAuthSession()
 
-  // Verifica se l'app è già avviata in modalità standalone (installata)
-  if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
+  // Rileva se l'app è aperta come applicazione autonoma (standalone)
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
+                       window.navigator.standalone === true ||
+                       document.referrer.includes('android-app://')
+
+  if (isStandalone) {
     isInstalled.value = true
   }
 
@@ -481,12 +525,25 @@ onMounted(() => {
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault()
     deferredPrompt.value = e
+    if (!isStandalone) {
+      isInstalled.value = false
+    }
   })
 
   // Evento app installata con successo
   window.addEventListener('appinstalled', () => {
     isInstalled.value = true
     deferredPrompt.value = null
+    localStorage.setItem('pwa_is_installed', 'true')
+  })
+
+  // Controlla aggiornamenti del Service Worker quando la finestra torna attiva
+  window.addEventListener('focus', () => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.ready.then((reg) => {
+        reg.update()
+      }).catch(() => {})
+    }
   })
 })
 </script>
@@ -494,7 +551,6 @@ onMounted(() => {
 <style>
 html {
   font-size: 18px;
-  scroll-behavior: smooth;
 }
 @media (min-width: 640px) {
   html {
