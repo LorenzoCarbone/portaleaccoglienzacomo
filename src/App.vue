@@ -261,7 +261,7 @@ import { useAuth } from './composables/useAuth'
 import { useTags } from './composables/useTags'
 import { useNews } from './composables/useNews'
 import { useServices } from './composables/useServices'
-import { supabase } from './lib/supabase'
+import { supabase, alertsChannel } from './lib/supabase'
 
 // Components
 import AppHeader from './components/layout/AppHeader.vue'
@@ -679,15 +679,13 @@ onMounted(() => {
     }
   }
 
-  // Canale Realtime Supabase per ricezione istantanea notizie e notifiche
-  if (supabase) {
-    supabase
-      .channel('vds-news-alerts')
-      .on('broadcast', { event: 'news_published' }, (event) => {
-        handleIncomingNewsNotification(event.payload)
-      })
-      .subscribe()
+  // Canale Realtime condiviso per ricezione istantanea notizie e notifiche
+  alertsChannel.on('broadcast', { event: 'news_published' }, (event) => {
+    console.log('[Realtime Push] Notizia ricevuta via broadcast:', event.payload)
+    handleIncomingNewsNotification(event.payload)
+  })
 
+  if (supabase) {
     supabase
       .channel('public:news')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'news' }, (event) => {

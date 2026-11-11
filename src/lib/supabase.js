@@ -5,3 +5,17 @@ const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'sb_publishable_v7
 
 export const supabase = createClient(supabaseUrl, supabaseKey)
 export const IMAGE_BUCKET = 'service-images'
+
+// Canale Realtime condiviso per trasmissione istantanea avvisi
+export const alertsChannel = supabase.channel('vds-news-alerts', {
+  config: {
+    broadcast: {
+      self: true,
+      ack: true
+    }
+  }
+})
+
+alertsChannel.subscribe((status) => {
+  console.log('[Realtime] vds-news-alerts status:', status)
+})

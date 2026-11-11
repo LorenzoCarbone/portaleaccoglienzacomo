@@ -1,5 +1,5 @@
 import { ref, computed } from 'vue'
-import { supabase } from '../lib/supabase'
+import { supabase, alertsChannel } from '../lib/supabase'
 import organizations from '../config/organizations.json'
 import languages from '../config/languages.json'
 
@@ -215,10 +215,9 @@ export function useNews(buildMultilangObjFromTemplate = null) {
         insertedItem = data?.[0]
       }
 
-      // Invia evento broadcast di notifica a tutti i client collegati
+      // 1. Invia broadcast Realtime a tutti i telefoni e computer connessi
       try {
-        const channel = supabase.channel('vds-news-alerts')
-        await channel.send({
+        await alertsChannel.send({
           type: 'broadcast',
           event: 'news_published',
           payload: {
@@ -233,8 +232,29 @@ export function useNews(buildMultilangObjFromTemplate = null) {
         console.warn('[Push] Errore invio broadcast Realtime:', broadcastErr)
       }
 
+      // 2. Notifica di sistema immediata sul dispositivo dell'operatore che pubblica
+      if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+        const lang = localStorage.getItem('vds_lang') || 'it'
+        const titleText = (typeof payload.title === 'object' ? (payload.title[lang] || payload.title.it) : payload.title) || 'Nuovo avviso dai servizi'
+        const bodyText = (typeof payload.content === 'object' ? (payload.content[lang] || payload.content.it) : payload.content) || 'Nuova notizia pubblicata.'
+
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.ready.then((reg) => {
+            reg.showNotification(titleText, {
+              body: bodyText,
+              icon: '/portaleaccoglienzacomo/pwa-192x192.png',
+              badge: '/portaleaccoglienzacomo/pwa-192x192.png',
+              vibrate: [200, 100, 200],
+              tag: 'news-' + (insertedItem?.id || Date.now()),
+              renotify: true,
+              data: { url: '/portaleaccoglienzacomo/?tab=news' }
+            })
+          }).catch(console.error)
+        }
+      }
+
       await fetchNews()
-      alert(newsForm.value.id ? 'Notizia aggiornata e notificata!' : 'Notizia pubblicata e notificata con successo!')
+      alert(newsForm.value.id ? 'Notizia aggiornata e notificata!' : 'Notizia pubblicata e inviata come notifica!')
       cancelEditingNews()
     } catch (err) {
       alert('Errore pubblicazione: ' + err.message)
