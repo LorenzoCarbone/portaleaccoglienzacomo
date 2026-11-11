@@ -235,6 +235,14 @@
       @open-modal="openAppModal = true"
       @install="installPwa"
     />
+
+    <!-- Modale Richiesta Notifiche Push (All'apertura dell'app) -->
+    <PushNotificationPromptModal
+      :is-open="showPushPromptModal"
+      @close="showPushPromptModal = false"
+      @dismiss="dismissPushPrompt"
+      @accept="acceptPushPrompt"
+    />
   </div>
 </template>
 
@@ -268,6 +276,8 @@ import AdminModal from './components/admin/AdminModal.vue'
 import AdminDashboard from './components/admin/AdminDashboard.vue'
 import InstallAppModal from './components/layout/InstallAppModal.vue'
 import PwaInstallBanner from './components/layout/PwaInstallBanner.vue'
+import PushNotificationPromptModal from './components/layout/PushNotificationPromptModal.vue'
+import { usePushNotifications } from './composables/usePushNotifications'
 
 // 1. i18n
 const {
@@ -417,6 +427,70 @@ const hasDownloaded = ref(checkHasDownloaded())
 const isIOS = ref(false)
 const deferredPrompt = ref(null)
 const openAppModal = ref(false)
+
+// Push Notifications State & Prompt
+const { subscribeToPush } = usePushNotifications()
+const showPushPromptModal = ref(false)
+
+const acceptPushPrompt = async () => {
+  showPushPromptModal.value = false
+  await subscribeToPush()
+}
+
+const dismissPushPrompt = () => {
+  showPushPromptModal.value = false
+  localStorage.setItem('vds_push_prompt_dismissed', 'true')
+}
+
+// Gestione Notifiche Push in Tempo Reale
+const handleIncomingNewsNotification = async (newsItem) => {
+  if (!newsItem) return
+  const hasSubscribed = localStorage.getItem('vds_push_subscribed') === 'true' || 
+                        (typeof Notification !== 'undefined' && Notification.permission === 'granted')
+
+  if (!hasSubscribed) return
+
+  // IN CHE LINGUA ARRIVA LA NOTIFICA?
+  // Arriva nella lingua che l'utente ha impostato sull'applicazione!
+  const userLang = currentLangCode.value || 'it'
+  let title = 'Nuovo avviso - Vicini di Strada'
+  let body = 'È stato pubblicato un nuovo aggiornamento dai servizi di Como.'
+
+  if (newsItem.title) {
+    if (typeof newsItem.title === 'object') {
+      title = newsItem.title[userLang] || newsItem.title.it || newsItem.title.en || title
+    } else {
+      title = newsItem.title
+    }
+  }
+
+  if (newsItem.content) {
+    if (typeof newsItem.content === 'object') {
+      body = newsItem.content[userLang] || newsItem.content.it || newsItem.content.en || body
+    } else {
+      body = newsItem.content
+    }
+  }
+
+  if ('serviceWorker' in navigator) {
+    try {
+      const reg = await navigator.serviceWorker.ready
+      await reg.showNotification(title, {
+        body: body,
+        icon: '/portaleaccoglienzacomo/pwa-192x192.png',
+        badge: '/portaleaccoglienzacomo/pwa-192x192.png',
+        vibrate: [200, 100, 200],
+        tag: 'news-' + (newsItem.id || Date.now()),
+        renotify: true,
+        data: { url: '/portaleaccoglienzacomo/?tab=news' }
+      })
+    } catch (e) {
+      console.warn('[Push] Notifica non visualizzata:', e)
+    }
+  }
+
+  fetchNews()
+}
 
 const installPwa = async () => {
   if (!deferredPrompt.value) return
@@ -595,6 +669,32 @@ onMounted(() => {
       }).catch(() => {})
     }
   })
+
+  // Se l'utente non ha ancora deciso sulle notifiche, proponile all'avvio dell'app
+  if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
+    if (!localStorage.getItem('vds_push_prompt_dismissed')) {
+      setTimeout(() => {
+        showPushPromptModal.value = true
+      }, 1500)
+    }
+  }
+
+  // Canale Realtime Supabase per ricezione istantanea notizie e notifiche
+  if (supabase) {
+    supabase
+      .channel('vds-news-alerts')
+      .on('broadcast', { event: 'news_published' }, (event) => {
+        handleIncomingNewsNotification(event.payload)
+      })
+      .subscribe()
+
+    supabase
+      .channel('public:news')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'news' }, (event) => {
+        handleIncomingNewsNotification(event.new)
+      })
+      .subscribe()
+  }
 })
 </script>
 

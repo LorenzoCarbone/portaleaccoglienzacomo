@@ -204,16 +204,37 @@ export function useNews(buildMultilangObjFromTemplate = null) {
         content: finalContent
       }
 
+      let insertedItem = null
       if (newsForm.value.id) {
-        const { error } = await supabase.from('news').update(payload).eq('id', newsForm.value.id).select()
+        const { data, error } = await supabase.from('news').update(payload).eq('id', newsForm.value.id).select()
         if (error) throw error
+        insertedItem = data?.[0]
       } else {
-        const { error } = await supabase.from('news').insert([payload]).select()
+        const { data, error } = await supabase.from('news').insert([payload]).select()
         if (error) throw error
+        insertedItem = data?.[0]
+      }
+
+      // Invia evento broadcast di notifica a tutti i client collegati
+      try {
+        const channel = supabase.channel('vds-news-alerts')
+        await channel.send({
+          type: 'broadcast',
+          event: 'news_published',
+          payload: {
+            id: insertedItem?.id || newsForm.value.id || Date.now(),
+            title: payload.title,
+            content: payload.content,
+            type: payload.type,
+            priority: payload.priority
+          }
+        })
+      } catch (broadcastErr) {
+        console.warn('[Push] Errore invio broadcast Realtime:', broadcastErr)
       }
 
       await fetchNews()
-      alert(newsForm.value.id ? 'Notizia aggiornata!' : 'Notizia pubblicata!')
+      alert(newsForm.value.id ? 'Notizia aggiornata e notificata!' : 'Notizia pubblicata e notificata con successo!')
       cancelEditingNews()
     } catch (err) {
       alert('Errore pubblicazione: ' + err.message)

@@ -11,32 +11,40 @@
     <!-- Banner Notifiche Push per Notizie Urgenti -->
     <div
       v-if="isSupported"
-      class="bg-white rounded-3xl p-5 border border-slate-200 card-shadow flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+      class="bg-white rounded-3xl p-4 sm:p-6 border border-slate-200 card-shadow flex flex-col md:flex-row md:items-center justify-between gap-4"
     >
-      <div class="flex items-center gap-3.5">
+      <div class="flex items-start sm:items-center gap-3.5 min-w-0">
         <div
-          class="w-12 h-12 rounded-2xl flex items-center justify-center text-xl shrink-0 transition shadow-inner"
-          :class="isSubscribed ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'"
+          class="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center text-xl shrink-0 transition shadow-sm"
+          :class="isSubscribed ? 'bg-emerald-500 text-white shadow-emerald-500/20' : 'bg-amber-100 text-amber-700'"
         >
           <i :class="isSubscribed ? 'fa-solid fa-bell' : 'fa-regular fa-bell'"></i>
         </div>
-        <div>
-          <h4 class="font-bold text-slate-800 text-sm sm:text-base flex items-center gap-2">
-            <span>{{ isSubscribed ? 'Notifiche attive sul tuo dispositivo' : 'Ricevi avvisi e comunicazioni urgenti' }}</span>
-            <span v-if="isSubscribed" class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-bold">Attive ✓</span>
-          </h4>
-          <p class="text-xs text-slate-500 mt-0.5 leading-relaxed">
-            {{ isSubscribed ? 'Riceverai una notifica classica sullo smartphone per emergenze freddo e cambi orari.' : 'Attiva le notifiche per non perdere cambi orari delle mense e allerte per i servizi di Como.' }}
+        <div class="min-w-0 flex-1">
+          <div class="flex items-center gap-2 flex-wrap">
+            <h4 class="font-bold text-slate-800 text-sm sm:text-base">
+              {{ isSubscribed ? 'Notifiche attive sul dispositivo' : 'Ricevi avvisi e comunicazioni urgenti' }}
+            </h4>
+            <span
+              v-if="isSubscribed"
+              class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold border border-emerald-300 shrink-0 whitespace-nowrap"
+            >
+              <i class="fa-solid fa-check text-[11px] text-emerald-600"></i>
+              <span>Attive</span>
+            </span>
+          </div>
+          <p class="text-xs text-slate-500 mt-1 leading-relaxed">
+            {{ isSubscribed ? 'Riceverai una notifica classica sullo smartphone per emergenze freddo e variazioni orari.' : 'Attiva le notifiche per non perdere cambi orari delle mense e allerte per i servizi di Como.' }}
           </p>
         </div>
       </div>
 
-      <div class="flex items-center gap-2 w-full sm:w-auto shrink-0 justify-end">
+      <div class="flex items-center gap-2 shrink-0 self-end sm:self-center">
         <template v-if="!isSubscribed">
           <button
             @click="subscribeToPush"
             :disabled="isPushLoading"
-            class="w-full sm:w-auto px-4 py-2.5 rounded-xl font-bold text-xs bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-700/20 active:scale-95 transition flex items-center justify-center gap-2"
+            class="px-4 py-2.5 rounded-xl font-bold text-xs bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-700/20 active:scale-95 transition flex items-center gap-2 whitespace-nowrap cursor-pointer"
           >
             <i class="fa-solid fa-bell"></i>
             <span>{{ isPushLoading ? 'Attivazione...' : 'Attiva Notifiche' }}</span>
@@ -45,16 +53,16 @@
         <template v-else>
           <button
             @click="sendTestNotification()"
-            class="px-3 py-2 rounded-xl font-semibold text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 transition flex items-center gap-1.5"
-            title="Invia una notifica di prova su questo dispositivo"
+            class="px-3.5 py-2 rounded-xl font-semibold text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 transition flex items-center gap-1.5 whitespace-nowrap active:scale-95 border border-slate-200 cursor-pointer"
+            title="Invia subito una notifica di prova su questo telefono"
           >
-            <i class="fa-solid fa-paper-plane text-[10px] text-brand-600"></i>
+            <i class="fa-solid fa-paper-plane text-[11px] text-emerald-600"></i>
             <span>Prova notifica</span>
           </button>
           <button
             @click="unsubscribeFromPush"
             :disabled="isPushLoading"
-            class="px-3 py-2 rounded-xl font-semibold text-xs text-slate-400 hover:text-red-600 hover:bg-red-50 transition"
+            class="px-3 py-2 rounded-xl font-semibold text-xs text-slate-400 hover:text-red-600 hover:bg-red-50 transition border border-transparent hover:border-red-200 cursor-pointer"
             title="Disattiva notifiche"
           >
             <i class="fa-solid fa-bell-slash"></i>
