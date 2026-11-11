@@ -12,6 +12,21 @@
       </div>
 
       <div class="flex items-center gap-2">
+        <!-- Tasto Esplicito Scarica / Stato App -->
+        <button
+          @click="$emit('open-app-modal')"
+          class="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold transition active:scale-95 border"
+          :class="isInstalled 
+            ? 'bg-brand-800 hover:bg-brand-700 text-emerald-300 border-brand-700 shadow-inner' 
+            : 'bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-500 shadow-md shadow-emerald-700/30'"
+          :title="isInstalled ? 'App già installata su questo dispositivo' : 'Scarica e installa l\'applicazione'"
+        >
+          <i :class="isInstalled ? 'fa-solid fa-circle-check text-emerald-400' : 'fa-solid fa-cloud-arrow-down'"></i>
+          <span class="hidden sm:inline">{{ isInstalled ? 'App Installata' : 'Scarica App' }}</span>
+          <span class="sm:hidden font-bold">{{ isInstalled ? 'App ✓' : 'App' }}</span>
+        </button>
+
+        <!-- Tasto Area Operatori -->
         <button
           @click="$emit('open-admin')"
           class="flex items-center justify-center w-10 h-10 bg-brand-800 hover:bg-brand-700 rounded-xl text-brand-100 transition shadow-inner border border-brand-700"
@@ -21,6 +36,7 @@
           <i class="fa-solid text-sm sm:text-base transition-transform active:scale-95" :class="user ? 'fa-user-shield' : 'fa-lock'"></i>
         </button>
 
+        <!-- Selettore Lingua -->
         <div class="relative">
           <button
             @click="showLangMenu = !showLangMenu"
@@ -117,10 +133,11 @@ const props = defineProps({
   languages: Object,
   isRTL: Boolean,
   hasUnreadNews: Boolean,
+  isInstalled: Boolean,
   t: Function
 })
 
-const emit = defineEmits(['open-admin', 'select-language', 'update:activeTab'])
+const emit = defineEmits(['open-admin', 'open-app-modal', 'select-language', 'update:activeTab'])
 
 const showLangMenu = ref(false)
 

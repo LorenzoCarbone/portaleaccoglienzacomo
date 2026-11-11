@@ -9,8 +9,10 @@
       :languages="languages"
       :is-r-t-l="isRTL"
       :has-unread-news="hasUnreadNews"
+      :is-installed="isInstalled"
       :t="t"
       @open-admin="openAdminModal = true"
+      @open-app-modal="openAppModal = true"
       @select-language="selectLanguage"
       @update:active-tab="handleTabChange"
     />
@@ -26,13 +28,13 @@
         @select-suggestion="searchQuery = $event"
       />
 
-      <!-- Filtro Categorie -->
+      <!-- Filtro Categorie con scorrimento automatico elegante -->
       <CategoryFilter
         :categories="categories"
         :selected-category="selectedCategory"
         :get-service-count="getServiceCount"
         :t="t"
-        @select-category="selectedCategory = $event"
+        @select-category="handleCategorySelect"
       />
 
       <!-- Loading State -->
@@ -42,7 +44,7 @@
       </div>
 
       <!-- Services Grid / Empty State -->
-      <div v-else class="space-y-4 pt-2">
+      <div v-else id="services-list" class="space-y-4 pt-2 scroll-mt-28">
         <div class="flex justify-between items-center text-xs font-semibold text-slate-400 px-1">
           <span>{{ filteredServices.length }} {{ t('services_found') }}</span>
           <span v-if="selectedCategory !== 'all'" class="bg-brand-100 text-brand-800 px-2.5 py-1 rounded-full font-bold">
@@ -55,7 +57,7 @@
           <h4 class="font-bold text-slate-700 text-lg mb-1">{{ t('no_results_title') }}</h4>
           <p class="text-sm text-slate-500 max-w-sm mx-auto mb-6">{{ t('no_results_sub') }}</p>
           <button
-            @click="selectedCategory = 'all'; searchQuery = ''"
+            @click="handleCategorySelect('all'); searchQuery = ''"
             class="bg-brand-600 text-white px-6 py-3 rounded-xl text-sm font-semibold shadow hover:bg-brand-700 transition"
           >
             {{ t('reset_filters') }}
@@ -211,8 +213,24 @@
       @open-dashboard="activeTab = 'admin_dashboard'; openAdminModal = false; cancelAllEditing()"
     />
 
-    <!-- Banner Installazione PWA -->
-    <PwaInstallBanner />
+    <!-- Modale Esplicito Installazione App -->
+    <InstallAppModal
+      :is-open="openAppModal"
+      :is-installed="isInstalled"
+      :is-i-o-s="isIOS"
+      :deferred-prompt="deferredPrompt"
+      @close="openAppModal = false"
+      @install="installPwa"
+    />
+
+    <!-- Banner Flottante Installazione PWA -->
+    <PwaInstallBanner
+      :is-installed="isInstalled"
+      :is-i-o-s="isIOS"
+      :deferred-prompt="deferredPrompt"
+      @open-modal="openAppModal = true"
+      @install="installPwa"
+    />
   </div>
 </template>
 
@@ -244,6 +262,7 @@ import NewsSection from './components/news/NewsSection.vue'
 import EmergencySection from './components/emergency/EmergencySection.vue'
 import AdminModal from './components/admin/AdminModal.vue'
 import AdminDashboard from './components/admin/AdminDashboard.vue'
+import InstallAppModal from './components/layout/InstallAppModal.vue'
 import PwaInstallBanner from './components/layout/PwaInstallBanner.vue'
 
 // 1. i18n
@@ -370,6 +389,34 @@ const {
   deleteNewsItem
 } = useNews(buildMultilangObjFromTemplate)
 
+// PWA State & Installation
+const isInstalled = ref(false)
+const isIOS = ref(false)
+const deferredPrompt = ref(null)
+const openAppModal = ref(false)
+
+const installPwa = async () => {
+  if (!deferredPrompt.value) return
+  deferredPrompt.value.prompt()
+  const { outcome } = await deferredPrompt.value.userChoice
+  if (outcome === 'accepted') {
+    isInstalled.value = true
+  }
+  deferredPrompt.value = null
+  openAppModal.value = false
+}
+
+// Scorrimento fluido ed elegante al click della categoria
+const handleCategorySelect = (catId) => {
+  selectedCategory.value = catId
+  setTimeout(() => {
+    const el = document.getElementById('services-list')
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }, 100)
+}
+
 // Import code state
 const importCode = ref('')
 
@@ -420,21 +467,43 @@ onMounted(() => {
   fetchServices()
   fetchNews()
   checkAuthSession()
+
+  // Verifica se l'app è già avviata in modalità standalone (installata)
+  if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
+    isInstalled.value = true
+  }
+
+  // Rileva se il dispositivo è iOS (iPhone/iPad)
+  const userAgent = window.navigator.userAgent.toLowerCase()
+  isIOS.value = /iphone|ipad|ipod/.test(userAgent)
+
+  // Ascolta l'evento di installazione su Android/Chrome
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault()
+    deferredPrompt.value = e
+  })
+
+  // Evento app installata con successo
+  window.addEventListener('appinstalled', () => {
+    isInstalled.value = true
+    deferredPrompt.value = null
+  })
 })
 </script>
 
 <style>
-body {
-  font-family: 'Inter', sans-serif;
-  -webkit-tap-highlight-color: transparent;
-}
 html {
   font-size: 18px;
+  scroll-behavior: smooth;
 }
 @media (min-width: 640px) {
   html {
     font-size: 16px;
   }
+}
+body {
+  font-family: 'Inter', sans-serif;
+  -webkit-tap-highlight-color: transparent;
 }
 .no-scrollbar::-webkit-scrollbar {
   display: none;
