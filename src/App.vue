@@ -465,13 +465,16 @@ const handleIncomingNewsNotification = async (newsItem) => {
   const org = organizations.find(o => o.id === newsItem.association_id)
   const orgName = org ? org.name : 'Coordinamento Vicini di Strada'
 
-  // Prefisso per tipo di notizia
-  const prefixMap = {
-    emergency: { it: '🚨 [Emergenza] ', es: '🚨 [Emergencia] ', en: '🚨 [Emergency] ', default: '🚨 ' },
-    change: { it: '🔄 [Variazione] ', es: '🔄 [Cambio de horario] ', en: '🔄 [Schedule Update] ', default: '🔄 ' },
-    general: { it: '📢 [Informativa] ', es: '📢 [Aviso informativo] ', en: '📢 [Notice] ', default: '📢 ' }
+  // Solo emoji nel titolo per massima leggibilità
+  const emojiMap = { emergency: '🚨 ', change: '🔄 ', general: '📢 ' }
+  const prefix = emojiMap[newsItem.type] || '📢 '
+
+  const iconMap = {
+    emergency: '/portaleaccoglienzacomo/icon-emergency.png',
+    change: '/portaleaccoglienzacomo/icon-change.png',
+    general: '/portaleaccoglienzacomo/icon-general.png'
   }
-  const prefix = prefixMap[newsItem.type]?.[userLang] || prefixMap[newsItem.type]?.default || '📢 '
+  const notifIcon = iconMap[newsItem.type] || '/portaleaccoglienzacomo/icon-general.png'
 
   let rawTitle = 'Nuovo avviso - Vicini di Strada'
   if (newsItem.title) {
@@ -499,12 +502,12 @@ const handleIncomingNewsNotification = async (newsItem) => {
       const reg = await navigator.serviceWorker.ready
       await reg.showNotification(finalTitle, {
         body: finalBody,
-        icon: '/portaleaccoglienzacomo/pwa-192x192.png',
-        badge: '/portaleaccoglienzacomo/pwa-192x192.png',
+        icon: notifIcon,
+        badge: notifIcon,
         vibrate: newsItem.type === 'emergency' ? [300, 100, 300, 100, 300] : [200, 100, 200],
         tag: 'news-' + (newsItem.id || Date.now()),
         renotify: true,
-        data: { url: '/portaleaccoglienzacomo/?tab=news' }
+        data: { url: 'https://lorenzocarbone.github.io/portaleaccoglienzacomo/?tab=news' }
       })
     } catch (e) {
       console.warn('[Push] Notifica non visualizzata:', e)
@@ -637,6 +640,19 @@ const getCategoryLabelKey = (catId) => categories.find(c => c.id === catId)?.lab
 
 onMounted(() => {
   isMobileDevice.value = checkIsMobile()
+
+  // Se l'utente clicca una notifica o link con ?tab=news, apri direttamente la bacheca
+  if (typeof window !== 'undefined') {
+    const urlParams = new URLSearchParams(window.location.search)
+    const tabParam = urlParams.get('tab')
+    if (tabParam && ['services', 'news', 'emergency'].includes(tabParam)) {
+      activeTab.value = tabParam
+      if (tabParam === 'news') {
+        markNewsAsRead()
+      }
+    }
+  }
+
   fetchTags()
   fetchServices()
   fetchNews()

@@ -331,25 +331,26 @@
           <!-- Anteprima notifica smartphone -->
           <div
             v-if="newsForm.sendPushNotification !== false"
-            class="bg-slate-50 rounded-2xl p-3 sm:p-4 border border-slate-200 text-xs space-y-2 animate-fadeIn"
+            class="rounded-2xl p-3.5 sm:p-4 border text-xs space-y-2 animate-fadeIn transition-colors"
+            :class="newsForm.type === 'emergency' ? 'bg-red-50/60 border-red-200' : (newsForm.type === 'change' ? 'bg-amber-50/60 border-amber-200' : 'bg-blue-50/60 border-blue-200')"
           >
-            <div class="flex items-center justify-between text-[11px] text-slate-500 font-semibold border-b border-slate-200/80 pb-2">
-              <span class="flex items-center gap-1.5 text-slate-700">
-                <i class="fa-solid fa-mobile-screen-button text-emerald-600"></i>
+            <div class="flex items-center justify-between text-[11px] font-semibold border-b pb-2" :class="newsForm.type === 'emergency' ? 'border-red-200/80 text-red-800' : (newsForm.type === 'change' ? 'border-amber-200/80 text-amber-800' : 'border-blue-200/80 text-blue-800')">
+              <span class="flex items-center gap-1.5 font-bold">
+                <i class="fa-solid fa-mobile-screen-button"></i>
                 <span>Anteprima notifica su smartphone</span>
               </span>
               <span
-                class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase"
-                :class="newsForm.type === 'emergency' ? 'bg-red-100 text-red-700 border border-red-200' : (newsForm.type === 'change' ? 'bg-amber-100 text-amber-800 border border-amber-200' : 'bg-blue-100 text-blue-800 border border-blue-200')"
+                class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase shadow-sm"
+                :class="newsForm.type === 'emergency' ? 'bg-red-600 text-white' : (newsForm.type === 'change' ? 'bg-amber-500 text-white' : 'bg-blue-600 text-white')"
               >
-                {{ newsForm.type === 'emergency' ? '🚨 Emergenza (Alta priorità)' : (newsForm.type === 'change' ? '🔄 Variazione Orari' : '📢 Informativa') }}
+                {{ newsForm.type === 'emergency' ? 'Rosso • Emergenza' : (newsForm.type === 'change' ? 'Arancione • Variazione' : 'Blu • Normale') }}
               </span>
             </div>
             <div class="space-y-1 pt-1">
-              <div class="font-bold text-slate-800 text-xs sm:text-sm leading-snug">
+              <div class="font-bold text-slate-900 text-xs sm:text-sm leading-snug">
                 {{ pushPreviewTitle }}
               </div>
-              <p class="text-slate-600 text-xs leading-relaxed line-clamp-3">
+              <p class="text-slate-600 text-xs leading-relaxed line-clamp-2">
                 {{ pushPreviewBody }}
               </p>
             </div>
@@ -473,9 +474,9 @@ const handleServiceChange = () => {
 }
 
 const pushPreviewTitle = computed(() => {
-  const prefix = props.newsForm.type === 'emergency'
-    ? '🚨 [Emergenza] '
-    : (props.newsForm.type === 'change' ? '🔄 [Variazione] ' : '📢 [Informativa] ')
+  const emoji = props.newsForm.type === 'emergency'
+    ? '🚨 '
+    : (props.newsForm.type === 'change' ? '🔄 ' : '📢 ')
 
   let rawTitle = ''
   if (props.newsForm.useCustomText) {
@@ -483,7 +484,7 @@ const pushPreviewTitle = computed(() => {
   } else if (props.generateTemplateText && props.newsForm.template) {
     rawTitle = props.generateTemplateText(props.newsForm.template, props.newsForm.templateParams, 'it', true) || 'Nuovo Avviso'
   }
-  return prefix + (rawTitle || 'Avviso per i servizi')
+  return emoji + (rawTitle || 'Avviso per i servizi')
 })
 
 const pushPreviewBody = computed(() => {

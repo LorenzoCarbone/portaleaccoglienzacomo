@@ -276,12 +276,15 @@ export function useNews(buildMultilangObjFromTemplate = null) {
         const org = organizations.find(o => o.id === payload.association_id)
         const orgName = org ? org.name : 'Coordinamento Vicini di Strada'
 
-        const prefixMap = {
-          emergency: { it: '🚨 [Emergenza] ', es: '🚨 [Emergencia] ', en: '🚨 [Emergency] ', default: '🚨 ' },
-          change: { it: '🔄 [Variazione] ', es: '🔄 [Cambio de horario] ', en: '🔄 [Schedule Update] ', default: '🔄 ' },
-          general: { it: '📢 [Informativa] ', es: '📢 [Aviso informativo] ', en: '📢 [Notice] ', default: '📢 ' }
+        const emojiMap = { emergency: '🚨 ', change: '🔄 ', general: '📢 ' }
+        const pref = emojiMap[payload.type] || '📢 '
+
+        const iconMap = {
+          emergency: '/portaleaccoglienzacomo/icon-emergency.png',
+          change: '/portaleaccoglienzacomo/icon-change.png',
+          general: '/portaleaccoglienzacomo/icon-general.png'
         }
-        const pref = prefixMap[payload.type]?.[lang] || prefixMap[payload.type]?.default || '📢 '
+        const notifIcon = iconMap[payload.type] || '/portaleaccoglienzacomo/icon-general.png'
 
         const rawTitle = (typeof payload.title === 'object' ? (payload.title[lang] || payload.title.it) : payload.title) || 'Nuovo avviso dai servizi'
         const rawContent = (typeof payload.content === 'object' ? (payload.content[lang] || payload.content.it) : payload.content) || 'Nuova notizia pubblicata.'
@@ -293,14 +296,14 @@ export function useNews(buildMultilangObjFromTemplate = null) {
           navigator.serviceWorker.ready.then((reg) => {
             reg.showNotification(titleText, {
               body: bodyText,
-              icon: '/portaleaccoglienzacomo/pwa-192x192.png',
-              badge: '/portaleaccoglienzacomo/pwa-192x192.png',
-              vibrate: [200, 100, 200],
+              icon: notifIcon,
+              badge: notifIcon,
+              vibrate: payload.type === 'emergency' ? [300, 100, 300, 100, 300] : [200, 100, 200],
               tag: 'news-' + (insertedItem?.id || Date.now()),
               renotify: true,
-              data: { url: '/portaleaccoglienzacomo/?tab=news' }
+              data: { url: 'https://lorenzocarbone.github.io/portaleaccoglienzacomo/?tab=news' }
             })
-          }).catch(console.error)
+          })
         }
       }
 

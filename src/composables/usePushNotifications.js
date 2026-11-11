@@ -138,50 +138,45 @@ export async function sendOneSignalPush({ title, content, url, newsId, type = 'g
   const org = organizations.find(o => o.id === association_id)
   const orgName = org ? org.name : 'Coordinamento Vicini di Strada'
 
-  // Prefisso visivo ed emoji in base al tipo di notizia
-  const prefixMap = {
+  // Solo emoji nel titolo per massima leggibilità e spazio
+  const emojiMap = {
+    emergency: '🚨 ',
+    change: '🔄 ',
+    general: '📢 '
+  }
+  const emoji = emojiMap[type] || '📢 '
+
+  // Configurazione colori differenziati: Rosso per Emergenza, Arancione per Variazione, Blu per Normale
+  const colorMap = {
     emergency: {
-      it: '🚨 [Emergenza] ',
-      es: '🚨 [Emergencia] ',
-      en: '🚨 [Emergency] ',
-      fr: '🚨 [Urgence] ',
-      ar: '🚨 [طوارئ] ',
-      default: '🚨 '
+      accentColor: 'FFDC2626', // Rosso #dc2626
+      icon: 'https://lorenzocarbone.github.io/portaleaccoglienzacomo/icon-emergency.png',
+      priority: 10
     },
     change: {
-      it: '🔄 [Variazione] ',
-      es: '🔄 [Cambio de horario] ',
-      en: '🔄 [Schedule Update] ',
-      fr: '🔄 [Mise à jour] ',
-      ar: '🔄 [تحديث] ',
-      default: '🔄 '
+      accentColor: 'FFF59E0B', // Arancione / Ambra #f59e0b
+      icon: 'https://lorenzocarbone.github.io/portaleaccoglienzacomo/icon-change.png',
+      priority: 5
     },
     general: {
-      it: '📢 [Informativa] ',
-      es: '📢 [Aviso informativo] ',
-      en: '📢 [Notice] ',
-      fr: '📢 [Information] ',
-      ar: '📢 [إشعار] ',
-      default: '📢 '
+      accentColor: 'FF2563EB', // Blu #2563eb
+      icon: 'https://lorenzocarbone.github.io/portaleaccoglienzacomo/icon-general.png',
+      priority: 5
     }
   }
 
-  const currentPrefix = prefixMap[type] || prefixMap.general
+  const colorConfig = colorMap[type] || colorMap.general
 
   if (typeof title === 'object' && title !== null) {
     for (const k in title) {
       if (title[k]) {
-        const pref = currentPrefix[k] || currentPrefix.default || ''
-        headings[k] = `${pref}${title[k]}`
+        headings[k] = `${emoji}${title[k]}`
       }
     }
   } else if (title) {
-    const prefIt = currentPrefix.it || currentPrefix.default || ''
-    const prefEn = currentPrefix.en || currentPrefix.default || ''
-    const prefEs = currentPrefix.es || currentPrefix.default || ''
-    headings.it = `${prefIt}${title}`
-    headings.en = `${prefEn}${title}`
-    headings.es = `${prefEs}${title}`
+    headings.it = `${emoji}${title}`
+    headings.en = `${emoji}${title}`
+    headings.es = `${emoji}${title}`
   }
 
   if (typeof content === 'object' && content !== null) {
@@ -198,7 +193,7 @@ export async function sendOneSignalPush({ title, content, url, newsId, type = 'g
     contents.es = formatted
   }
 
-  // Fallback intelligenti per lingua default di OneSignal (en) e altre lingue
+  // Fallback intelligenti per lingue
   if (!headings.en) headings.en = headings.es || headings.it || 'Vicini di Strada Como'
   if (!contents.en) contents.en = contents.es || contents.it || 'Nuovo avviso pubblicato dai servizi'
   if (!headings.it) headings.it = headings.en || 'Vicini di Strada Como'
@@ -206,7 +201,7 @@ export async function sendOneSignalPush({ title, content, url, newsId, type = 'g
   if (!headings.es && headings.it) headings.es = headings.it
   if (!contents.es && contents.it) contents.es = contents.it
 
-  const isEmergency = type === 'emergency' || priority === 'high'
+  const targetUrl = url || 'https://lorenzocarbone.github.io/portaleaccoglienzacomo/?tab=news'
 
   try {
     const response = await fetch('https://api.onesignal.com/notifications', {
@@ -220,11 +215,14 @@ export async function sendOneSignalPush({ title, content, url, newsId, type = 'g
         included_segments: ['Total Subscriptions'],
         headings: headings,
         contents: contents,
-        priority: isEmergency ? 10 : 5,
-        url: url || 'https://lorenzocarbone.github.io/portaleaccoglienzacomo/?tab=news',
-        chrome_web_icon: 'https://lorenzocarbone.github.io/portaleaccoglienzacomo/pwa-192x192.png',
-        chrome_web_badge: 'https://lorenzocarbone.github.io/portaleaccoglienzacomo/pwa-192x192.png',
+        priority: colorConfig.priority,
+        android_accent_color: colorConfig.accentColor,
+        url: targetUrl,
+        web_url: targetUrl,
+        chrome_web_icon: colorConfig.icon,
+        chrome_web_badge: colorConfig.icon,
         data: {
+          url: targetUrl,
           newsId: newsId || null,
           type: type || 'general',
           priority: priority || 'normal'
