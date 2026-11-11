@@ -1,47 +1,68 @@
 <template>
   <header class="bg-brand-900 text-white shadow-lg sticky top-0 z-50">
-    <div class="max-w-[1600px] w-full mx-auto px-2 sm:px-4 lg:px-8 py-3 flex items-center justify-between gap-2 border-b border-brand-700/50">
-      <div class="flex items-center space-x-3" :class="{'space-x-reverse': isRTL}">
-        <div class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center font-bold text-xl backdrop-blur-sm text-brand-100">
+    <div class="max-w-[1600px] w-full mx-auto px-2.5 sm:px-4 lg:px-8 py-2 sm:py-3 flex items-center justify-between gap-2 border-b border-brand-700/50">
+      <!-- Logo e Titolo Proporzionato -->
+      <div class="flex items-center gap-2 sm:gap-3 min-w-0" :class="{'space-x-reverse': isRTL}">
+        <div class="w-8 h-8 xs:w-9 xs:h-9 sm:w-10 sm:h-10 rounded-xl bg-white/10 flex items-center justify-center font-bold text-base xs:text-lg sm:text-xl backdrop-blur-sm text-emerald-300 shrink-0 shadow-inner border border-white/10">
           <i class="fa-solid fa-hands-holding-circle"></i>
         </div>
-        <div>
-          <h1 class="font-bold text-lg leading-tight tracking-wide">VICINI DI STRADA</h1>
-          <p class="text-xs text-brand-200 font-medium">Coordinamento Servizi Como</p>
+        <div class="min-w-0 flex flex-col justify-center">
+          <h1 class="font-extrabold text-xs xs:text-sm sm:text-base md:text-lg lg:text-xl leading-tight tracking-wide text-white truncate">
+            VICINI DI STRADA
+          </h1>
+          <p class="text-[9px] xs:text-[10px] sm:text-xs text-brand-200/90 font-medium truncate leading-tight">
+            Coordinamento Servizi Como
+          </p>
         </div>
       </div>
 
-      <div class="flex items-center gap-2">
-        <!-- Tasto Esplicito Scarica (Nascosto se già aperta dentro l'app) -->
-        <button
-          v-if="!isInstalled"
-          @click="$emit('download-click')"
-          class="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-bold transition active:scale-95 border cursor-pointer bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-400 shadow-md shadow-emerald-900/40"
-          title="Scarica subito l'app sul tuo telefono"
-        >
-          <i class="fa-solid fa-download"></i>
-          <span>Scarica</span>
-        </button>
+      <!-- Azioni Header -->
+      <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+        <!-- Tasto App (Nascosto se aperta dentro l'app standalone) -->
+        <template v-if="!isInstalled">
+          <!-- Se l'utente ha già scaricato l'app sul telefono -->
+          <button
+            v-if="hasDownloaded"
+            @click="$emit('download-click')"
+            class="flex items-center gap-1 px-2 py-1.5 sm:px-2.5 sm:py-1.5 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-semibold transition active:scale-95 border cursor-pointer bg-brand-800/90 hover:bg-brand-700 text-emerald-300 border-brand-700 shadow-inner shrink-0"
+            title="L'applicazione è già stata scaricata su questo smartphone"
+          >
+            <i class="fa-solid fa-circle-check text-emerald-400 text-xs"></i>
+            <span class="hidden xs:inline">App sul telefono</span>
+            <span class="xs:hidden">App ✓</span>
+          </button>
+
+          <!-- Se l'app non è ancora stata scaricata -->
+          <button
+            v-else
+            @click="$emit('download-click')"
+            class="flex items-center gap-1 px-2.5 py-1.5 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-xl text-xs sm:text-sm font-bold transition active:scale-95 border cursor-pointer bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-400 shadow-md shadow-emerald-900/30 shrink-0"
+            title="Scarica subito l'app sul tuo telefono"
+          >
+            <i class="fa-solid fa-download text-xs"></i>
+            <span>Scarica</span>
+          </button>
+        </template>
 
         <!-- Tasto Area Operatori -->
         <button
           @click="$emit('open-admin')"
-          class="flex items-center justify-center w-10 h-10 bg-brand-800 hover:bg-brand-700 rounded-xl text-brand-100 transition shadow-inner border border-brand-700"
+          class="flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 bg-brand-800 hover:bg-brand-700 rounded-lg sm:rounded-xl text-brand-100 transition shadow-inner border border-brand-700 shrink-0"
           :class="{'bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-500 shadow-md shadow-emerald-500/20': user}"
           :title="user ? 'Area Operatori (Accesso Effettuato)' : 'Accesso Area Operatori'"
         >
-          <i class="fa-solid text-sm sm:text-base transition-transform active:scale-95" :class="user ? 'fa-user-shield' : 'fa-lock'"></i>
+          <i class="fa-solid text-xs sm:text-sm transition-transform active:scale-95" :class="user ? 'fa-user-shield' : 'fa-lock'"></i>
         </button>
 
         <!-- Selettore Lingua -->
-        <div class="relative">
+        <div class="relative shrink-0">
           <button
             @click="showLangMenu = !showLangMenu"
-            class="flex items-center gap-2 bg-brand-800 hover:bg-brand-700 px-3 py-2 rounded-xl text-sm font-medium transition shadow-inner border border-brand-700"
+            class="flex items-center gap-1 sm:gap-1.5 bg-brand-800 hover:bg-brand-700 px-2 py-1.5 sm:px-2.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium transition shadow-inner border border-brand-700"
           >
-            <span class="text-lg flag-emoji">{{ currentLang.flag }}</span>
-            <span class="hidden sm:inline">{{ currentLang.name }}</span>
-            <i class="fa-solid fa-chevron-down text-xs ml-1 opacity-75 transition-transform duration-200" :class="{'rotate-180': showLangMenu}"></i>
+            <span class="text-base sm:text-lg flag-emoji">{{ currentLang.flag }}</span>
+            <span class="hidden md:inline">{{ currentLang.name }}</span>
+            <i class="fa-solid fa-chevron-down text-[10px] sm:text-xs ml-0.5 opacity-75 transition-transform duration-200" :class="{'rotate-180': showLangMenu}"></i>
           </button>
 
           <div
@@ -131,6 +152,7 @@ const props = defineProps({
   isRTL: Boolean,
   hasUnreadNews: Boolean,
   isInstalled: Boolean,
+  hasDownloaded: Boolean,
   t: Function
 })
 

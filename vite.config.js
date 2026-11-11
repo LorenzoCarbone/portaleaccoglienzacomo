@@ -58,7 +58,8 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,svg,png,woff2,ttf}'],
         cleanupOutdatedCaches: true,
         clientsClaim: true,
-        skipWaiting: true
+        skipWaiting: true,
+        importScripts: ['sw-push.js']
       }
     })
   ]

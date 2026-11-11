@@ -10,6 +10,14 @@
         </div>
         <div class="flex flex-wrap gap-2 shrink-0 w-full sm:w-auto justify-end">
           <button
+            @click="testPushAlert"
+            class="bg-white/20 hover:bg-white/30 text-white font-bold px-3.5 py-2.5 rounded-xl text-xs sm:text-sm border border-white/30 flex items-center gap-2 transition active:scale-95"
+            title="Invia una notifica push di prova su questo telefono"
+          >
+            <i class="fa-solid fa-bell"></i>
+            <span>Test Notifica</span>
+          </button>
+          <button
             @click="$emit('start-creating')"
             class="bg-white text-amber-700 hover:bg-amber-50 font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm shadow flex items-center gap-2 transition active:scale-95"
           >
@@ -279,6 +287,20 @@
             <option v-for="s in services" :key="s.id" :value="s.id">{{ translateField(s, 'name') }} ({{ s.organization }})</option>
           </select>
         </div>
+
+        <!-- Opzione Notifica Push -->
+        <div class="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between">
+          <div>
+            <label class="font-bold text-xs uppercase tracking-wider text-slate-700 flex items-center gap-2">
+              <i class="fa-solid fa-bell text-amber-500"></i>
+              <span>Invia Notifica Push</span>
+            </label>
+            <p class="text-xs text-slate-500 mt-0.5">Avvisa istantaneamente gli utenti che hanno installato l'app sul proprio smartphone.</p>
+          </div>
+          <span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+            Attiva
+          </span>
+        </div>
       </div>
 
       <!-- Sticky Save Bar -->
@@ -314,6 +336,7 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import { usePushNotifications } from '../../composables/usePushNotifications'
 
 const props = defineProps({
   globalNews: Array,
@@ -345,6 +368,16 @@ const emit = defineEmits([
   'add-lang',
   'delete-lang'
 ])
+
+const { sendTestNotification } = usePushNotifications()
+
+const testPushAlert = async () => {
+  await sendTestNotification(
+    'Avviso di Prova - Vicini di Strada',
+    'Questo è un test del sistema di notifiche push di Vicini di Strada Como.'
+  )
+  alert('Notifica di prova inviata!')
+}
 
 const selectedNewLang = ref('')
 

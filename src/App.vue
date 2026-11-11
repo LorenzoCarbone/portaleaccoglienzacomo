@@ -10,6 +10,7 @@
       :is-r-t-l="isRTL"
       :has-unread-news="hasUnreadNews"
       :is-installed="isInstalled"
+      :has-downloaded="hasDownloaded"
       :t="t"
       @open-admin="openAdminModal = true"
       @open-app-modal="handleDownloadClick"
@@ -218,10 +219,12 @@
     <InstallAppModal
       :is-open="openAppModal"
       :is-installed="isInstalled"
+      :has-downloaded="hasDownloaded"
       :is-i-o-s="isIOS"
       :deferred-prompt="deferredPrompt"
       @close="openAppModal = false"
       @install="installPwa"
+      @force-reinstall="forceReinstall"
     />
 
     <!-- Banner Flottante Installazione PWA -->
@@ -401,7 +404,16 @@ const checkIsStandalone = () => {
   )
 }
 
+const checkHasDownloaded = () => {
+  if (typeof window === 'undefined') return false
+  return (
+    localStorage.getItem('pwa_is_installed') === 'true' ||
+    localStorage.getItem('pwa_downloaded') === 'true'
+  )
+}
+
 const isInstalled = ref(checkIsStandalone())
+const hasDownloaded = ref(checkHasDownloaded())
 const isIOS = ref(false)
 const deferredPrompt = ref(null)
 const openAppModal = ref(false)
@@ -412,7 +424,8 @@ const installPwa = async () => {
     deferredPrompt.value.prompt()
     const { outcome } = await deferredPrompt.value.userChoice
     if (outcome === 'accepted') {
-      isInstalled.value = true
+      hasDownloaded.value = true
+      localStorage.setItem('pwa_downloaded', 'true')
       localStorage.setItem('pwa_is_installed', 'true')
     }
   } catch (err) {
@@ -422,16 +435,30 @@ const installPwa = async () => {
   openAppModal.value = false
 }
 
-// Click sul pulsante "Scarica"
+const forceReinstall = async () => {
+  hasDownloaded.value = false
+  localStorage.removeItem('pwa_downloaded')
+  localStorage.removeItem('pwa_is_installed')
+  openAppModal.value = false
+  if (deferredPrompt.value) {
+    await installPwa()
+  } else {
+    setTimeout(() => {
+      openAppModal.value = true
+    }, 200)
+  }
+}
+
+// Click sul pulsante "Scarica" o "App scaricata"
 const handleDownloadClick = async () => {
-  if (isInstalled.value) {
-    // Se l'app è già installata, mostra la conferma
+  // Se l'app è già stata scaricata sul telefono o siamo dentro l'app:
+  if (isInstalled.value || hasDownloaded.value) {
     openAppModal.value = true
     return
   }
 
   // Se abbiamo il prompt nativo (Android, Chrome, Edge):
-  // SCARICA E INSTALLA SUBITO DIRETTAMENTE SENZA NESSUN PASSAGGIO O SCHERMATA INTERMEDIA!
+  // SCARICA E INSTALLA SUBITO DIRETTAMENTE A 1 TOCCO!
   if (deferredPrompt.value) {
     await installPwa()
     return
@@ -525,6 +552,7 @@ onMounted(() => {
 
   if (isStandalone) {
     isInstalled.value = true
+    hasDownloaded.value = true
   }
 
   // Rileva se il dispositivo è iOS (iPhone/iPad)
@@ -543,9 +571,21 @@ onMounted(() => {
   // Evento app installata con successo
   window.addEventListener('appinstalled', () => {
     isInstalled.value = true
+    hasDownloaded.value = true
     deferredPrompt.value = null
     localStorage.setItem('pwa_is_installed', 'true')
+    localStorage.setItem('pwa_downloaded', 'true')
   })
+
+  // Se supportato dal browser, controlla se l'app è già presente
+  if ('getInstalledRelatedApps' in navigator) {
+    navigator.getInstalledRelatedApps().then((apps) => {
+      if (apps && apps.length > 0) {
+        hasDownloaded.value = true
+        localStorage.setItem('pwa_downloaded', 'true')
+      }
+    }).catch(() => {})
+  }
 
   // Controlla aggiornamenti del Service Worker quando la finestra torna attiva
   window.addEventListener('focus', () => {

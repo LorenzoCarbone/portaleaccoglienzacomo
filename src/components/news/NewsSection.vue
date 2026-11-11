@@ -8,6 +8,61 @@
       <p class="text-white/90 text-sm sm:text-base max-w-xl">{{ t('news_page_sub') }}</p>
     </div>
 
+    <!-- Banner Notifiche Push per Notizie Urgenti -->
+    <div
+      v-if="isSupported"
+      class="bg-white rounded-3xl p-5 border border-slate-200 card-shadow flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+    >
+      <div class="flex items-center gap-3.5">
+        <div
+          class="w-12 h-12 rounded-2xl flex items-center justify-center text-xl shrink-0 transition shadow-inner"
+          :class="isSubscribed ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'"
+        >
+          <i :class="isSubscribed ? 'fa-solid fa-bell' : 'fa-regular fa-bell'"></i>
+        </div>
+        <div>
+          <h4 class="font-bold text-slate-800 text-sm sm:text-base flex items-center gap-2">
+            <span>{{ isSubscribed ? 'Notifiche attive sul tuo dispositivo' : 'Ricevi avvisi e comunicazioni urgenti' }}</span>
+            <span v-if="isSubscribed" class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-bold">Attive ✓</span>
+          </h4>
+          <p class="text-xs text-slate-500 mt-0.5 leading-relaxed">
+            {{ isSubscribed ? 'Riceverai una notifica classica sullo smartphone per emergenze freddo e cambi orari.' : 'Attiva le notifiche per non perdere cambi orari delle mense e allerte per i servizi di Como.' }}
+          </p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 w-full sm:w-auto shrink-0 justify-end">
+        <template v-if="!isSubscribed">
+          <button
+            @click="subscribeToPush"
+            :disabled="isPushLoading"
+            class="w-full sm:w-auto px-4 py-2.5 rounded-xl font-bold text-xs bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-700/20 active:scale-95 transition flex items-center justify-center gap-2"
+          >
+            <i class="fa-solid fa-bell"></i>
+            <span>{{ isPushLoading ? 'Attivazione...' : 'Attiva Notifiche' }}</span>
+          </button>
+        </template>
+        <template v-else>
+          <button
+            @click="sendTestNotification()"
+            class="px-3 py-2 rounded-xl font-semibold text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 transition flex items-center gap-1.5"
+            title="Invia una notifica di prova su questo dispositivo"
+          >
+            <i class="fa-solid fa-paper-plane text-[10px] text-brand-600"></i>
+            <span>Prova notifica</span>
+          </button>
+          <button
+            @click="unsubscribeFromPush"
+            :disabled="isPushLoading"
+            class="px-3 py-2 rounded-xl font-semibold text-xs text-slate-400 hover:text-red-600 hover:bg-red-50 transition"
+            title="Disattiva notifiche"
+          >
+            <i class="fa-solid fa-bell-slash"></i>
+          </button>
+        </template>
+      </div>
+    </div>
+
     <div v-if="isLoading" class="text-center py-16">
       <i class="fa-solid fa-circle-notch fa-spin text-4xl text-amber-500 mb-4 inline-block"></i>
       <p class="text-sm text-slate-500 font-medium">Caricamento notizie in corso...</p>
@@ -71,6 +126,9 @@
 </template>
 
 <script setup>
+import { onMounted } from 'vue'
+import { usePushNotifications } from '../../composables/usePushNotifications'
+
 defineProps({
   newsList: Array,
   isLoading: Boolean,
@@ -83,4 +141,18 @@ defineProps({
 })
 
 defineEmits(['go-to-service'])
+
+const {
+  isSupported,
+  isSubscribed,
+  isPushLoading,
+  checkExistingSubscription,
+  subscribeToPush,
+  unsubscribeFromPush,
+  sendTestNotification
+} = usePushNotifications()
+
+onMounted(() => {
+  checkExistingSubscription()
+})
 </script>

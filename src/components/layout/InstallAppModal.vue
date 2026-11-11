@@ -26,16 +26,16 @@
         </button>
       </div>
 
-      <!-- CASO 1: L'APP È GIÀ INSTALLATA -->
-      <div v-if="isInstalled" class="space-y-4 py-2">
+      <!-- CASO 1: L'APP È GIÀ SUL TELEFONO O INSTALLATA -->
+      <div v-if="isInstalled || hasDownloaded" class="space-y-4 py-2">
         <div class="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-start gap-3.5">
           <div class="w-12 h-12 rounded-full bg-emerald-500 text-white flex items-center justify-center text-2xl shrink-0 shadow-md">
             <i class="fa-solid fa-circle-check"></i>
           </div>
           <div>
-            <h4 class="font-bold text-emerald-950 text-base">App già installata!</h4>
+            <h4 class="font-bold text-emerald-950 text-base">App già sul tuo telefono!</h4>
             <p class="text-xs text-emerald-800 mt-1 leading-relaxed">
-              L'applicazione è già stata installata e salvata su questo dispositivo.
+              Hai già scaricato l'applicazione su questo dispositivo.
             </p>
           </div>
         </div>
@@ -43,13 +43,13 @@
         <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 text-xs text-slate-600 space-y-2">
           <p class="font-medium text-slate-700 flex items-center gap-2">
             <i class="fa-solid fa-mobile-screen-button text-brand-600 text-sm"></i>
-            <span>Come usarla al meglio:</span>
+            <span>Come aprirla:</span>
           </p>
           <p class="leading-relaxed">
-            Cerca l'icona verde <strong>Vicini di Strada</strong> nella schermata Home del tuo smartphone o nell'elenco app.
+            Cerca l'icona verde <strong>Vicini di Strada</strong> nella schermata Home o tra le app del tuo smartphone.
           </p>
           <p class="leading-relaxed text-slate-500">
-            Aprendola da lì, funzionerà a schermo intero senza barre del browser e sarà attiva anche in assenza di connessione.
+            Aprendola da lì, l'app funzionerà a schermo intero senza barre del browser e sarà consultabile anche senza connessione internet.
           </p>
         </div>
 
@@ -59,6 +59,15 @@
         >
           Ho capito, grazie
         </button>
+
+        <div class="text-center pt-1">
+          <button
+            @click="$emit('force-reinstall')"
+            class="text-xs text-slate-400 hover:text-brand-600 underline font-medium transition"
+          >
+            Non la trovi? Clicca qui per riscaricarla
+          </button>
+        </div>
       </div>
 
       <!-- CASO 2: L'APP NON È ANCORA INSTALLATA -->
@@ -129,11 +138,12 @@
 defineProps({
   isOpen: Boolean,
   isInstalled: Boolean,
+  hasDownloaded: Boolean,
   isIOS: Boolean,
   deferredPrompt: Object
 })
 
-const emit = defineEmits(['close', 'install'])
+const emit = defineEmits(['close', 'install', 'force-reinstall'])
 
 const handleInstallClick = () => {
   emit('install')
