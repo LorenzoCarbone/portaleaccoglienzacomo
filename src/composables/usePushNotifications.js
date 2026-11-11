@@ -82,10 +82,12 @@ export function usePushNotifications() {
       if (sub) {
         const subJson = sub.toJSON()
         try {
+          const userLang = localStorage.getItem('vds_lang') || 'it'
           await supabase.from('push_subscriptions').upsert({
             endpoint: sub.endpoint,
-            p256dh: subJson.keys?.p256dh || null,
-            auth: subJson.keys?.auth || null,
+            p256dh: subJson.keys?.p256dh || '',
+            auth: subJson.keys?.auth || '',
+            lang: userLang,
             user_agent: navigator.userAgent,
             created_at: new Date().toISOString()
           }, { onConflict: 'endpoint' })

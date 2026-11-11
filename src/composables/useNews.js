@@ -232,6 +232,21 @@ export function useNews(buildMultilangObjFromTemplate = null) {
         console.warn('[Push] Errore invio broadcast Realtime:', broadcastErr)
       }
 
+      // 2. Invoca la Edge Function su Supabase per raggiungere tutti i dispositivi
+      try {
+        await supabase.functions.invoke('send-push', {
+          body: {
+            newsId: insertedItem?.id || newsForm.value.id,
+            title: payload.title,
+            content: payload.content,
+            type: payload.type,
+            priority: payload.priority
+          }
+        })
+      } catch (edgeErr) {
+        console.warn('[Push] Edge function non ancora attiva:', edgeErr)
+      }
+
       // 2. Notifica di sistema immediata sul dispositivo dell'operatore che pubblica
       if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
         const lang = localStorage.getItem('vds_lang') || 'it'
