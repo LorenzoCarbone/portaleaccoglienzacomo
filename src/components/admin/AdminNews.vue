@@ -421,11 +421,7 @@ const emit = defineEmits([
 const { sendTestNotification } = usePushNotifications()
 
 const testPushAlert = async () => {
-  await sendTestNotification(
-    'Avviso di Prova - Vicini di Strada',
-    'Questo è un test del sistema di notifiche push di Vicini di Strada Como.'
-  )
-  alert('Notifica di prova inviata!')
+  await sendTestNotification()
 }
 
 const selectedNewLang = ref('')

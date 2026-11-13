@@ -29,9 +29,20 @@ export function usePushNotifications() {
     checkSupport()
     if (typeof window !== 'undefined' && window.OneSignalDeferred) {
       window.OneSignalDeferred.push(async function(OneSignal) {
-        if (OneSignal.Notifications) {
+        if (OneSignal.User && OneSignal.User.PushSubscription) {
+          isSubscribed.value = !!OneSignal.User.PushSubscription.optedIn
+          permissionState.value = Notification.permission
+
+          // Se l'utente ha già concesso il permesso a livello browser ma la registrazione OneSignal era inattiva, riattivala subito
+          if (Notification.permission === 'granted' && !OneSignal.User.PushSubscription.optedIn) {
+            try {
+              await OneSignal.User.PushSubscription.optIn()
+              isSubscribed.value = !!OneSignal.User.PushSubscription.optedIn
+            } catch (e) {}
+          }
+        } else if (OneSignal.Notifications) {
           isSubscribed.value = OneSignal.Notifications.permission
-          permissionState.value = OneSignal.Notifications.permission ? 'granted' : 'default'
+          permissionState.value = Notification.permission
         }
       })
     }
@@ -49,17 +60,23 @@ export function usePushNotifications() {
       if (typeof window !== 'undefined' && window.OneSignalDeferred) {
         window.OneSignalDeferred.push(async function(OneSignal) {
           try {
-            await OneSignal.Notifications.requestPermission()
-            isSubscribed.value = OneSignal.Notifications.permission
-            permissionState.value = OneSignal.Notifications.permission ? 'granted' : 'denied'
-            
-            // Imposta la lingua scelta dall'utente su OneSignal
+            // optIn() richiede il permesso nativo (se non concesso) e registra attivamente il token su OneSignal
+            if (OneSignal.User && OneSignal.User.PushSubscription) {
+              await OneSignal.User.PushSubscription.optIn()
+              isSubscribed.value = !!OneSignal.User.PushSubscription.optedIn
+            } else if (OneSignal.Notifications) {
+              await OneSignal.Notifications.requestPermission()
+              isSubscribed.value = OneSignal.Notifications.permission
+            }
+            permissionState.value = Notification.permission
+
+            // Sincronizza la lingua scelta dall'utente su OneSignal
             const userLang = localStorage.getItem('vicini_lang') || 'it'
             if (OneSignal.User && OneSignal.User.setLanguage) {
               await OneSignal.User.setLanguage(userLang)
             }
           } catch (e) {
-            console.error('[OneSignal] Errore richiesta permesso:', e)
+            console.error('[OneSignal] Errore sottoscrizione:', e)
           } finally {
             isPushLoading.value = false
           }
@@ -107,7 +124,8 @@ export function usePushNotifications() {
         title: { it: 'Prova Notifica - Vicini di Strada', en: 'Test Notification - Vicini di Strada' },
         content: { it: 'Le notifiche push tramite OneSignal sono configurate e attive!', en: 'Push notifications via OneSignal are active and working!' }
       })
-      alert('Notifica di prova inviata con successo ai server di OneSignal!')
+      const rec = res?.recipients !== undefined ? res.recipients : (res?.id ? 'inviata' : '0')
+      alert(`Notifica di prova inviata con successo! Dispositivi raggiunti: ${rec}`)
       return res
     } catch (e) {
       alert('Errore invio notifica di prova: ' + e.message)
@@ -191,7 +209,7 @@ export async function sendOneSignalPush({ title, content, url, newsId, type = 'g
       },
       body: JSON.stringify({
         app_id: ONESIGNAL_APP_ID,
-        included_segments: ['Total Subscriptions'],
+        included_segments: ['Total Subscriptions', 'Subscribed Users'],
         headings: headings,
         contents: contents,
         // Priority 10 garantisce consegna immediata su Android/iOS risvegliando il dispositivo da Doze mode

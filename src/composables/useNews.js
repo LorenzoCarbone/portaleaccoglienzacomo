@@ -245,9 +245,10 @@ export function useNews(buildMultilangObjFromTemplate = null, servicesRef = null
       }
 
       // 1. Spedisci notifica push globale a tutti i telefoni tramite OneSignal se abilitato (default: attivo)
+      let pushFeedback = ''
       if (newsForm.value.sendPushNotification !== false) {
         try {
-          await sendOneSignalPush({
+          const pushRes = await sendOneSignalPush({
             title: payload.title,
             content: payload.content,
             type: payload.type,
@@ -257,61 +258,29 @@ export function useNews(buildMultilangObjFromTemplate = null, servicesRef = null
             url: 'https://lorenzocarbone.github.io/portaleaccoglienzacomo/?tab=news',
             newsId: insertedItem?.id || newsForm.value.id
           })
+          if (pushRes && pushRes.recipients !== undefined) {
+            pushFeedback = ` (inviata a ${pushRes.recipients} dispositivi)`
+          }
         } catch (pushErr) {
           console.warn('[OneSignal] Errore invio push:', pushErr)
         }
       }
 
-      // 2. Invia broadcast Realtime di supporto
+      // 2. Invia broadcast Realtime di supporto per aggiornare le schede aperte
       try {
         await alertsChannel.send({
           type: 'broadcast',
           event: 'news_published',
           payload: {
-            id: insertedItem?.id || newsForm.value.id || Date.now(),
-            title: payload.title,
-            content: payload.content,
-            type: payload.type,
-            priority: payload.priority,
-            association_id: payload.association_id,
-            serviceName: serviceName
+            id: insertedItem?.id || newsForm.value.id || Date.now()
           }
         })
       } catch (broadcastErr) {
         console.warn('[Push] Errore invio broadcast Realtime:', broadcastErr)
       }
 
-      // 3. Notifica immediata sul dispositivo dell'operatore che pubblica
-      if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
-        const lang = localStorage.getItem('vicini_lang') || 'it'
-        const isEmergency = payload.type === 'emergency'
-        const isUpdate = payload.type === 'service_update' || payload.type === 'change'
-        const pref = isEmergency ? '🚨 ' : (isUpdate ? '🔄 ' : '📢 ')
-
-        const rawTitle = (typeof payload.title === 'object' ? (payload.title[lang] || payload.title.it) : payload.title) || 'Nuovo avviso dai servizi'
-        const rawContent = (typeof payload.content === 'object' ? (payload.content[lang] || payload.content.it) : payload.content) || 'Nuova notizia pubblicata.'
-
-        const prefix = serviceName ? `${serviceName} • ` : ''
-        const titleText = `${pref}${rawTitle}`
-        const bodyText = `${prefix}${rawContent}`
-
-        if ('serviceWorker' in navigator) {
-          navigator.serviceWorker.ready.then((reg) => {
-            reg.showNotification(titleText, {
-              body: bodyText,
-              icon: '/portaleaccoglienzacomo/pwa-192x192.png',
-              badge: '/portaleaccoglienzacomo/pwa-192x192.png',
-              vibrate: isEmergency ? [300, 100, 300, 100, 300] : [200, 100, 200],
-              tag: 'news-' + (insertedItem?.id || Date.now()),
-              renotify: true,
-              data: { url: 'https://lorenzocarbone.github.io/portaleaccoglienzacomo/?tab=news' }
-            })
-          })
-        }
-      }
-
       await fetchNews()
-      alert(newsForm.value.id ? 'Notizia aggiornata e notificata!' : 'Notizia pubblicata e inviata come notifica!')
+      alert(newsForm.value.id ? `Notizia aggiornata!${pushFeedback}` : `Notizia pubblicata!${pushFeedback}`)
       cancelEditingNews()
     } catch (err) {
       alert('Errore pubblicazione: ' + err.message)

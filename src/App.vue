@@ -450,70 +450,8 @@ const dismissPushPrompt = () => {
   localStorage.setItem('vds_push_prompt_dismissed', 'true')
 }
 
-// Gestione Notifiche Push in Tempo Reale
-const handleIncomingNewsNotification = async (newsItem) => {
-  if (!newsItem) return
-  const hasSubscribed = localStorage.getItem('vds_push_subscribed') === 'true' || 
-                        (typeof Notification !== 'undefined' && Notification.permission === 'granted')
-
-  if (!hasSubscribed) return
-
-  // Sincronizza lingua corrente
-  const userLang = currentLangCode.value || localStorage.getItem('vicini_lang') || 'it'
-
-  // Trova nome associazione / ente
-  const org = organizations.find(o => o.id === newsItem.association_id)
-  const orgName = org ? org.name : 'Coordinamento Vicini di Strada'
-
-  // Solo emoji nel titolo per massima leggibilità
-  const emojiMap = { emergency: '🚨 ', change: '🔄 ', general: '📢 ' }
-  const prefix = emojiMap[newsItem.type] || '📢 '
-
-  const iconMap = {
-    emergency: '/portaleaccoglienzacomo/icon-emergency.png',
-    change: '/portaleaccoglienzacomo/icon-change.png',
-    general: '/portaleaccoglienzacomo/icon-general.png'
-  }
-  const notifIcon = iconMap[newsItem.type] || '/portaleaccoglienzacomo/icon-general.png'
-
-  let rawTitle = 'Nuovo avviso - Vicini di Strada'
-  if (newsItem.title) {
-    if (typeof newsItem.title === 'object') {
-      rawTitle = newsItem.title[userLang] || newsItem.title.it || newsItem.title.en || rawTitle
-    } else {
-      rawTitle = newsItem.title
-    }
-  }
-
-  let rawContent = 'È stato pubblicato un nuovo aggiornamento dai servizi di Como.'
-  if (newsItem.content) {
-    if (typeof newsItem.content === 'object') {
-      rawContent = newsItem.content[userLang] || newsItem.content.it || newsItem.content.en || rawContent
-    } else {
-      rawContent = newsItem.content
-    }
-  }
-
-  const finalTitle = `${prefix}${rawTitle}`
-  const finalBody = `📍 ${orgName} • ${rawContent}`
-
-  if ('serviceWorker' in navigator) {
-    try {
-      const reg = await navigator.serviceWorker.ready
-      await reg.showNotification(finalTitle, {
-        body: finalBody,
-        icon: notifIcon,
-        badge: notifIcon,
-        vibrate: newsItem.type === 'emergency' ? [300, 100, 300, 100, 300] : [200, 100, 200],
-        tag: 'news-' + (newsItem.id || Date.now()),
-        renotify: true,
-        data: { url: 'https://lorenzocarbone.github.io/portaleaccoglienzacomo/?tab=news' }
-      })
-    } catch (e) {
-      console.warn('[Push] Notifica non visualizzata:', e)
-    }
-  }
-
+// Aggiornamento Notizie in Tempo Reale (Le notifiche di sistema sono gestite esclusivamente da OneSignal)
+const handleIncomingNewsNotification = () => {
   fetchNews()
 }
 
