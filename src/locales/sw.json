@@ -94,5 +94,8 @@
   "tpl_title_distribuzione_speciale": "Ugawaji Maalum",
   "tpl_desc_distribuzione_speciale": "Leo kuna ugawaji maalum wa: {oggetto}.",
   "tpl_title_assenza_medico": "Huduma ya Daktari Imesimamishwa",
-  "tpl_desc_assenza_medico": "Daktari hayupo, huduma imesimamishwa tarehe {data}."
+  "tpl_desc_assenza_medico": "Daktari hayupo, huduma imesimamishwa tarehe {data}.",
+  "type_emergency": "Dharura",
+  "type_update": "Mabadiliko",
+  "type_general": "Taarifa"
 }

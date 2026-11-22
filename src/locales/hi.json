@@ -94,5 +94,8 @@
   "tpl_title_distribuzione_speciale": "विशेष वितरण",
   "tpl_desc_distribuzione_speciale": "आज {oggetto} का विशेष वितरण है।",
   "tpl_title_assenza_medico": "मेडिकल डेस्क बंद",
-  "tpl_desc_assenza_medico": "कर्मचारियों की अनुपस्थिति के कारण मेडिकल डेस्क {data} को निलंबित है।"
+  "tpl_desc_assenza_medico": "कर्मचारियों की अनुपस्थिति के कारण मेडिकल डेस्क {data} को निलंबित है।",
+  "type_emergency": "आपातकाल",
+  "type_update": "बदलाव",
+  "type_general": "सूचना"
 }

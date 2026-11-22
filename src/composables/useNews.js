@@ -14,7 +14,7 @@ const newsForm = ref({
   id: null,
   type: 'general',
   priority: 'normal',
-  association_id: 'org_coordinamento',
+  association_id: '',
   related_service_id: null,
   useCustomText: false,
   template: 'posti_esauriti',
@@ -96,7 +96,8 @@ export function useNews(buildMultilangObjFromTemplate = null, servicesRef = null
 
       globalNews.value = (data || []).map(n => {
         const org = organizations.find(o => o.id === n.association_id)
-        return { ...n, association: org ? org.name : 'Coordinamento Vicini di Strada' }
+        const name = (org && org.id !== 'org_coordinamento') ? org.name : ''
+        return { ...n, association: name }
       })
     } catch (error) {
       console.error(error.message)
@@ -183,7 +184,7 @@ export function useNews(buildMultilangObjFromTemplate = null, servicesRef = null
       id: null,
       type: 'general',
       priority: 'normal',
-      association_id: 'org_coordinamento',
+      association_id: '',
       related_service_id: null,
       useCustomText: false,
       template: 'posti_esauriti',
@@ -219,7 +220,7 @@ export function useNews(buildMultilangObjFromTemplate = null, servicesRef = null
       const payload = {
         type: newsForm.value.type,
         priority: newsForm.value.priority,
-        association_id: newsForm.value.association_id || 'org_coordinamento',
+        association_id: newsForm.value.association_id || null,
         related_service_id: newsForm.value.related_service_id || null,
         title: finalTitle,
         content: finalContent
@@ -261,6 +262,10 @@ export function useNews(buildMultilangObjFromTemplate = null, servicesRef = null
           })
           if (pushRes && pushRes.recipients !== undefined) {
             pushFeedback = ` (inviata a ${pushRes.recipients} dispositivi)`
+          } else if (pushRes?.errors && pushRes.errors.length > 0) {
+            if (pushRes.errors.some(e => e.includes('All included players are not subscribed'))) {
+              pushFeedback = ' (Attenzione: nessun dispositivo è attualmente iscritto alle notifiche. Ricordati di attivarle dal telefono!)'
+            }
           }
         } catch (pushErr) {
           console.warn('[OneSignal] Errore invio push:', pushErr)

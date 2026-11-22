@@ -5,7 +5,12 @@
       "it": "Lunedì",
       "en": "Monday",
       "fr": "Lundi",
-      "es": "Lunes"
+      "es": "Lunes",
+      "ar": "الإثنين",
+      "ur": "پیر",
+      "hi": "सोमवार",
+      "sw": "Jumatatu",
+      "tr": "Pazartesi"
     }
   },
   {
@@ -14,7 +19,12 @@
       "it": "Martedì",
       "en": "Tuesday",
       "fr": "Mardi",
-      "es": "Martes"
+      "es": "Martes",
+      "ar": "الثلاثاء",
+      "ur": "منگل",
+      "hi": "मंगलवार",
+      "sw": "Jumanne",
+      "tr": "Salı"
     }
   },
   {
@@ -23,7 +33,12 @@
       "it": "Mercoledì",
       "en": "Wednesday",
       "fr": "Mercredi",
-      "es": "Miércoles"
+      "es": "Miércoles",
+      "ar": "الأربعاء",
+      "ur": "بدھ",
+      "hi": "बुधवार",
+      "sw": "Jumatano",
+      "tr": "Çarşamba"
     }
   },
   {
@@ -32,7 +47,12 @@
       "it": "Giovedì",
       "en": "Thursday",
       "fr": "Jeudi",
-      "es": "Jueves"
+      "es": "Jueves",
+      "ar": "الخميس",
+      "ur": "جمعرات",
+      "hi": "गुरुवार",
+      "sw": "Alhamisi",
+      "tr": "Perşembe"
     }
   },
   {
@@ -41,7 +61,12 @@
       "it": "Venerdì",
       "en": "Friday",
       "fr": "Vendredi",
-      "es": "Viernes"
+      "es": "Viernes",
+      "ar": "الجمعة",
+      "ur": "جمعہ",
+      "hi": "शुक्रवार",
+      "sw": "Ijumaa",
+      "tr": "Cuma"
     }
   },
   {
@@ -50,7 +75,12 @@
       "it": "Sabato",
       "en": "Saturday",
       "fr": "Samedi",
-      "es": "Sábado"
+      "es": "Sábado",
+      "ar": "السبت",
+      "ur": "ہفتہ",
+      "hi": "शनिवार",
+      "sw": "Jumamosi",
+      "tr": "Cumartesi"
     }
   },
   {
@@ -59,7 +89,12 @@
       "it": "Domenica",
       "en": "Sunday",
       "fr": "Dimanche",
-      "es": "Domingo"
+      "es": "Domingo",
+      "ar": "الأحد",
+      "ur": "اتوار",
+      "hi": "रविवार",
+      "sw": "Jumapili",
+      "tr": "Pazar"
     }
   }
 ]

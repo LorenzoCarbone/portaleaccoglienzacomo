@@ -94,5 +94,8 @@
   "tpl_title_distribuzione_speciale": "Distribuzione Speciale",
   "tpl_desc_distribuzione_speciale": "Oggi è prevista una distribuzione speciale di: {oggetto}.",
   "tpl_title_assenza_medico": "Presidio Medico Sospeso",
-  "tpl_desc_assenza_medico": "Il presidio medico è sospeso in data {data} per assenza del personale."
+  "tpl_desc_assenza_medico": "Il presidio medico è sospeso in data {data} per assenza del personale.",
+  "type_emergency": "Emergenza",
+  "type_update": "Variazione",
+  "type_general": "Informativa"
 }

@@ -34,12 +34,10 @@
           </div>
           <div>
             <h4 class="font-bold text-emerald-950 text-base">
-              {{ isMobileDevice ? 'App già sul tuo telefono!' : 'App già installata sul computer!' }}
+              App già installata!
             </h4>
             <p class="text-xs text-emerald-800 mt-1 leading-relaxed">
-              {{ isMobileDevice
-                ? "Hai già scaricato l'applicazione su questo smartphone."
-                : "L'applicazione è già stata aggiunta tra i programmi del tuo computer." }}
+              L'applicazione è già stata installata e salvata su questo dispositivo.
             </p>
           </div>
         </div>

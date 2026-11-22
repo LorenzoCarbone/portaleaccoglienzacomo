@@ -94,5 +94,8 @@
   "tpl_title_distribuzione_speciale": "Distribución Especial",
   "tpl_desc_distribuzione_speciale": "Hoy hay distribución especial de: {oggetto}.",
   "tpl_title_assenza_medico": "Servicio Médico Suspendido",
-  "tpl_desc_assenza_medico": "Servicio médico suspendido el {data}."
+  "tpl_desc_assenza_medico": "Servicio médico suspendido el {data}.",
+  "type_emergency": "Emergencia",
+  "type_update": "Variación",
+  "type_general": "Aviso"
 }

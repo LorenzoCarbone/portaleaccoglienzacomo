@@ -94,5 +94,8 @@
   "tpl_title_distribuzione_speciale": "توزيع خاص",
   "tpl_desc_distribuzione_speciale": "يوجد اليوم توزيع خاص لـ: {oggetto}.",
   "tpl_title_assenza_medico": "الخدمة الطبية معلقة",
-  "tpl_desc_assenza_medico": "الخدمة الطبية معلقة في {data}."
+  "tpl_desc_assenza_medico": "الخدمة الطبية معلقة في {data}.",
+  "type_emergency": "طوارئ",
+  "type_update": "تعديل",
+  "type_general": "إشعار"
 }

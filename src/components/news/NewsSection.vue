@@ -99,9 +99,9 @@
             </span>
             <span
               class="px-3 py-1 rounded-full text-xs font-bold"
-              :class="news.priority === 'high' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'"
+              :class="news.type === 'emergency' ? 'bg-red-100 text-red-800 border border-red-200' : ((news.type === 'service_update' || news.type === 'change') ? 'bg-amber-100 text-amber-800 border border-amber-200' : 'bg-blue-100 text-blue-800 border border-blue-200')"
             >
-              {{ news.priority === 'high' ? t('priority_urgent') : t('priority_info') }}
+              {{ news.type === 'emergency' ? t('type_emergency') : ((news.type === 'service_update' || news.type === 'change') ? t('type_update') : t('type_general')) }}
             </span>
             <span v-if="news.related_service_id" class="px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 flex items-center gap-1">
               <i class="fa-solid fa-location-dot text-[10px] text-slate-400"></i>

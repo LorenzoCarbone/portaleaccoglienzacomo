@@ -36,8 +36,9 @@ export function useI18n() {
     }
   }
 
-  const t = (key, params = {}) => {
-    let text = locales[currentLangCode.value]?.[key] || locales.en?.[key] || locales.it?.[key] || key
+  const t = (key, params = {}, lang = null) => {
+    const code = lang || currentLangCode.value
+    let text = locales[code]?.[key] || locales.en?.[key] || locales.it?.[key] || key
     if (typeof text === 'string' && Object.keys(params).length > 0) {
       for (const [k, v] of Object.entries(params)) {
         text = text.replace(new RegExp(`{${k}}`, 'g'), v)
@@ -59,16 +60,44 @@ export function useI18n() {
     return extractText(field, currentLangCode.value)
   }
 
-  const formatHours = (hoursArray, langCode = null) => {
+  const formatHours = (hours, langCode = null) => {
     const code = langCode || currentLangCode.value || 'it'
-    if (!hoursArray || !hoursArray.length) {
+    if (!hours) {
       return locales[code]?.hours_not_available || locales.it?.hours_not_available || 'Orari non inseriti'
     }
-    return hoursArray.map(h => {
-      const dayObj = daysOfWeek.find(d => d.id === h.day)
-      const dayName = dayObj ? (dayObj.label[code] || dayObj.label.en || dayObj.label.it || '') : ''
-      return `${dayName}: ${h.open} - ${h.close}`
-    }).join('\n')
+    if (typeof hours === 'string' && hours.trim() !== '') {
+      return hours
+    }
+    if (typeof hours === 'object' && !Array.isArray(hours)) {
+      const txt = hours[code] || hours.it || hours.en || Object.values(hours)[0]
+      if (txt && typeof txt === 'string' && txt.trim() !== '') {
+        return txt
+      }
+      return locales[code]?.hours_not_available || locales.it?.hours_not_available || 'Orari non inseriti'
+    }
+    if (Array.isArray(hours)) {
+      if (!hours.length) {
+        return locales[code]?.hours_not_available || locales.it?.hours_not_available || 'Orari non inseriti'
+      }
+      const dayMap = new Map()
+      hours.forEach(h => {
+        if (h && typeof h.day === 'number' && h.open && h.close) {
+          if (!dayMap.has(h.day)) dayMap.set(h.day, [])
+          dayMap.get(h.day).push(`${h.open} - ${h.close}`)
+        }
+      })
+      const orderedDays = [1, 2, 3, 4, 5, 6, 0]
+      const lines = []
+      orderedDays.forEach(dayId => {
+        if (dayMap.has(dayId)) {
+          const dayObj = daysOfWeek.find(d => d.id === dayId)
+          const dayName = dayObj ? (dayObj.label[code] || dayObj.label.en || dayObj.label.it || '') : ''
+          lines.push(`${dayName}: ${dayMap.get(dayId).join(' | ')}`)
+        }
+      })
+      return lines.length > 0 ? lines.join('\n') : (locales[code]?.hours_not_available || locales.it?.hours_not_available || 'Orari non inseriti')
+    }
+    return locales[code]?.hours_not_available || locales.it?.hours_not_available || 'Orari non inseriti'
   }
 
   const generateTemplateText = (templateId, params, langCode, isTitle = false) => {

@@ -20,7 +20,6 @@ export function usePushNotifications() {
     isSupported.value = supported
     if (supported) {
       permissionState.value = Notification.permission
-      isSubscribed.value = Notification.permission === 'granted'
     }
     return supported
   }
@@ -29,20 +28,35 @@ export function usePushNotifications() {
     checkSupport()
     if (typeof window !== 'undefined' && window.OneSignalDeferred) {
       window.OneSignalDeferred.push(async function(OneSignal) {
-        if (OneSignal.User && OneSignal.User.PushSubscription) {
-          isSubscribed.value = !!OneSignal.User.PushSubscription.optedIn
-          permissionState.value = Notification.permission
+        try {
+          if (OneSignal.User && OneSignal.User.PushSubscription) {
+            isSubscribed.value = !!OneSignal.User.PushSubscription.optedIn
+            permissionState.value = Notification.permission
 
-          // Se l'utente ha già concesso il permesso a livello browser ma la registrazione OneSignal era inattiva, riattivala subito
-          if (Notification.permission === 'granted' && !OneSignal.User.PushSubscription.optedIn) {
-            try {
+            // Sincronizza lingua corrente su OneSignal
+            const userLang = localStorage.getItem('vicini_lang') || 'it'
+            if (OneSignal.User.setLanguage) {
+              await OneSignal.User.setLanguage(userLang)
+            }
+
+            // Ascolta modifiche alla sottoscrizione in tempo reale
+            if (OneSignal.User.PushSubscription.addEventListener) {
+              OneSignal.User.PushSubscription.addEventListener('change', (change) => {
+                isSubscribed.value = !!(change?.current?.optedIn ?? change?.optedIn)
+              })
+            }
+
+            // Se il browser ha concesso il permesso ma OneSignal non è ancora optedIn (manca token push), prova optIn
+            if (Notification.permission === 'granted' && !OneSignal.User.PushSubscription.optedIn) {
               await OneSignal.User.PushSubscription.optIn()
               isSubscribed.value = !!OneSignal.User.PushSubscription.optedIn
-            } catch (e) {}
+            }
+          } else if (OneSignal.Notifications) {
+            isSubscribed.value = !!OneSignal.Notifications.permission
+            permissionState.value = Notification.permission
           }
-        } else if (OneSignal.Notifications) {
-          isSubscribed.value = OneSignal.Notifications.permission
-          permissionState.value = Notification.permission
+        } catch (e) {
+          console.warn('[OneSignal] checkExistingSubscription error:', e)
         }
       })
     }
@@ -58,38 +72,40 @@ export function usePushNotifications() {
     isPushLoading.value = true
     try {
       if (typeof window !== 'undefined' && window.OneSignalDeferred) {
-        window.OneSignalDeferred.push(async function(OneSignal) {
-          try {
-            // Richiede il permesso nativo al browser e sincronizza il token con OneSignal
-            if (OneSignal.Notifications && OneSignal.Notifications.requestPermission) {
-              await OneSignal.Notifications.requestPermission()
-            }
-            if (OneSignal.User && OneSignal.User.PushSubscription) {
-              await OneSignal.User.PushSubscription.optIn()
-              isSubscribed.value = !!OneSignal.User.PushSubscription.optedIn
-            } else if (OneSignal.Notifications) {
-              isSubscribed.value = OneSignal.Notifications.permission
-            }
-            permissionState.value = Notification.permission
+        return new Promise((resolve) => {
+          window.OneSignalDeferred.push(async function(OneSignal) {
+            try {
+              if (OneSignal.Notifications && OneSignal.Notifications.requestPermission) {
+                await OneSignal.Notifications.requestPermission()
+              }
+              if (OneSignal.User && OneSignal.User.PushSubscription) {
+                await OneSignal.User.PushSubscription.optIn()
+                isSubscribed.value = !!OneSignal.User.PushSubscription.optedIn
+              } else if (OneSignal.Notifications) {
+                isSubscribed.value = !!OneSignal.Notifications.permission
+              }
+              permissionState.value = Notification.permission
 
-            // Sincronizza la lingua scelta dall'utente su OneSignal
-            const userLang = localStorage.getItem('vicini_lang') || 'it'
-            if (OneSignal.User && OneSignal.User.setLanguage) {
-              await OneSignal.User.setLanguage(userLang)
+              const userLang = localStorage.getItem('vicini_lang') || 'it'
+              if (OneSignal.User && OneSignal.User.setLanguage) {
+                await OneSignal.User.setLanguage(userLang)
+              }
+              resolve(isSubscribed.value)
+            } catch (e) {
+              console.error('[OneSignal] Errore sottoscrizione:', e)
+              resolve(false)
+            } finally {
+              isPushLoading.value = false
             }
-          } catch (e) {
-            console.error('[OneSignal] Errore sottoscrizione:', e)
-          } finally {
-            isPushLoading.value = false
-          }
+          })
         })
       } else {
         const perm = await Notification.requestPermission()
         isSubscribed.value = perm === 'granted'
         permissionState.value = perm
         isPushLoading.value = false
+        return isSubscribed.value
       }
-      return true
     } catch (err) {
       console.error('[Push] Errore autorizzazione:', err)
       isPushLoading.value = false
@@ -125,15 +141,23 @@ export function usePushNotifications() {
       const res = await sendOneSignalPush({
         type: 'general',
         priority: 'normal',
-        serviceName: { it: 'Vicini di Strada Como', en: 'Vicini di Strada Como', es: 'Vicini di Strada Como' },
+        serviceName: '',
         title: { it: 'Notifiche Push Attive', en: 'Push Notifications Active', es: 'Notificaciones Push Activas' },
         content: {
-          it: 'Le notifiche push funzionano sia su Smartphone che su PC! Clicca per aprire Notizie & Allerta.',
-          en: 'Push notifications are active on both Smartphone and PC! Click to open News & Alerts.',
-          es: '¡Las notificaciones push están activas en Smartphone y PC! Haz clic para abrir Noticias.'
+          it: 'Le notifiche push funzionano! Clicca per aprire Notizie & Allerta.',
+          en: 'Push notifications are active! Click to open News & Alerts.',
+          es: '¡Las notificaciones push están activas! Haz clic para abrir Noticias.'
         },
         url: 'https://lorenzocarbone.github.io/portaleaccoglienzacomo/?tab=news'
       })
+      if (res?.errors && res.errors.length > 0) {
+        if (res.errors.some(e => e.includes('All included players are not subscribed'))) {
+          alert('Attenzione: nessun dispositivo è attualmente registrato su OneSignal.\nAssicurati di aver aperto il sito dallo smartphone o PC e aver premuto il pulsante verde "Attiva Notifiche".')
+          return res
+        }
+        alert('Attenzione OneSignal: ' + res.errors.join(', '))
+        return res
+      }
       const rec = res?.recipients !== undefined ? res.recipients : (res?.id ? 'inviata' : '0')
       alert(`Notifica di prova inviata con successo! Dispositivi raggiunti: ${rec}`)
       return res
@@ -186,10 +210,8 @@ export async function sendOneSignalPush({ title, content, url, newsId, type = 'g
       if (title[k]) {
         const sName = getServiceNameForLang(k)
         let prefix = ''
-        if (sName) {
+        if (sName && !sName.toLowerCase().includes('vicini di strada')) {
           prefix = !title[k].toLowerCase().includes(sName.toLowerCase()) ? `${sName} • ` : ''
-        } else {
-          prefix = 'Vicini di Strada • '
         }
         headings[k] = `${emoji}${prefix}${title[k]}`
       }
@@ -197,10 +219,8 @@ export async function sendOneSignalPush({ title, content, url, newsId, type = 'g
   } else if (title) {
     const sName = getServiceNameForLang('it')
     let prefix = ''
-    if (sName) {
+    if (sName && !sName.toLowerCase().includes('vicini di strada')) {
       prefix = !title.toLowerCase().includes(sName.toLowerCase()) ? `${sName} • ` : ''
-    } else {
-      prefix = 'Vicini di Strada • '
     }
     const fullTitle = `${emoji}${prefix}${title}`
     headings.it = fullTitle
@@ -213,7 +233,7 @@ export async function sendOneSignalPush({ title, content, url, newsId, type = 'g
       if (content[k]) {
         const sName = getServiceNameForLang(k)
         const text = content[k]
-        if (sName && !text.toLowerCase().includes(sName.toLowerCase())) {
+        if (sName && !sName.toLowerCase().includes('vicini di strada') && !text.toLowerCase().includes(sName.toLowerCase())) {
           contents[k] = `${sName}: ${text}`
         } else {
           contents[k] = text
@@ -222,7 +242,7 @@ export async function sendOneSignalPush({ title, content, url, newsId, type = 'g
     }
   } else if (content) {
     const sName = getServiceNameForLang('it')
-    const formatted = (sName && !content.toLowerCase().includes(sName.toLowerCase()))
+    const formatted = (sName && !sName.toLowerCase().includes('vicini di strada') && !content.toLowerCase().includes(sName.toLowerCase()))
       ? `${sName}: ${content}`
       : content
     contents.it = formatted
@@ -231,7 +251,7 @@ export async function sendOneSignalPush({ title, content, url, newsId, type = 'g
   }
 
   // Fallback intelligenti per tutte le lingue supportate da OneSignal (richiede 'en' obbligatoria)
-  const baseTitle = headings.it || headings.en || headings.es || Object.values(headings)[0] || 'Vicini di Strada Como'
+  const baseTitle = headings.it || headings.en || headings.es || Object.values(headings)[0] || 'Avviso'
   const baseContent = contents.it || contents.en || contents.es || Object.values(contents)[0] || 'Nuovo avviso pubblicato dai servizi'
 
   if (!headings.en) headings.en = baseTitle

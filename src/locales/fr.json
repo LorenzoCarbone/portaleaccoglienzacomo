@@ -94,5 +94,8 @@
   "tpl_title_distribuzione_speciale": "Distribution Spéciale",
   "tpl_desc_distribuzione_speciale": "Distribution spéciale aujourd'hui : {oggetto}.",
   "tpl_title_assenza_medico": "Permanence Médicale Suspendue",
-  "tpl_desc_assenza_medico": "Permanence médicale suspendue le {data}."
+  "tpl_desc_assenza_medico": "Permanence médicale suspendue le {data}.",
+  "type_emergency": "Urgence",
+  "type_update": "Changement",
+  "type_general": "Information"
 }

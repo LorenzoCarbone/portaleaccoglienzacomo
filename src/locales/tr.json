@@ -94,5 +94,8 @@
   "tpl_title_distribuzione_speciale": "Özel Dağıtım",
   "tpl_desc_distribuzione_speciale": "Bugün {oggetto} için özel bir dağıtım var.",
   "tpl_title_assenza_medico": "Tıbbi Masa Kapalı",
-  "tpl_desc_assenza_medico": "Personel eksikliği nedeniyle {data} tarihinde doktor hizmeti yoktur."
+  "tpl_desc_assenza_medico": "Personel eksikliği nedeniyle {data} tarihinde doktor hizmeti yoktur.",
+  "type_emergency": "Acil Durum",
+  "type_update": "Değişiklik",
+  "type_general": "Bilgilendirme"
 }

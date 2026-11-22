@@ -62,9 +62,9 @@
           <div class="flex items-center gap-2 shrink-0">
             <span
               class="px-2.5 py-1 rounded-full text-[11px] font-bold shadow-sm"
-              :class="news.priority === 'high' ? 'bg-red-100 text-red-800 border border-red-300' : 'bg-blue-100 text-blue-800 border border-blue-300'"
+              :class="news.type === 'emergency' ? 'bg-red-100 text-red-800 border border-red-300' : ((news.type === 'service_update' || news.type === 'change') ? 'bg-amber-100 text-amber-800 border border-amber-300' : 'bg-blue-100 text-blue-800 border border-blue-300')"
             >
-              {{ news.priority === 'high' ? 'Urgente' : 'Info' }}
+              {{ news.type === 'emergency' ? 'Emergenza' : ((news.type === 'service_update' || news.type === 'change') ? 'Variazione' : 'Informativa') }}
             </span>
             <button
               @click="$emit('start-editing', news)"
@@ -513,10 +513,8 @@ const pushPreviewTitle = computed(() => {
   if (!rawTitle) rawTitle = 'Avviso per i servizi'
 
   let prefix = ''
-  if (sName) {
+  if (sName && !sName.toLowerCase().includes('vicini di strada')) {
     prefix = !rawTitle.toLowerCase().includes(sName.toLowerCase()) ? `${sName} • ` : ''
-  } else {
-    prefix = 'Vicini di Strada • '
   }
 
   return `${emoji}${prefix}${rawTitle}`

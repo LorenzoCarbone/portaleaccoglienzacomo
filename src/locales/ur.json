@@ -94,5 +94,8 @@
   "tpl_title_distribuzione_speciale": "خصوصی تقسیم",
   "tpl_desc_distribuzione_speciale": "آج خصوصی تقسیم ہوگی: {oggetto}۔",
   "tpl_title_assenza_medico": "طبی ڈیسک بند",
-  "tpl_desc_assenza_medico": "ڈاکٹر کی غیر موجودگی کی وجہ سے {data} کو میڈیکل ڈیسک بند ہے۔"
+  "tpl_desc_assenza_medico": "ڈاکٹر کی غیر موجودگی کی وجہ سے {data} کو میڈیکل ڈیسک بند ہے۔",
+  "type_emergency": "ہنگامی",
+  "type_update": "تبدیلی",
+  "type_general": "اطلاع"
 }

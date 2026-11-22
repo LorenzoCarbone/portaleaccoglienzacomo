@@ -94,5 +94,8 @@
   "tpl_title_distribuzione_speciale": "Special Distribution",
   "tpl_desc_distribuzione_speciale": "A special distribution of {oggetto} is scheduled for today.",
   "tpl_title_assenza_medico": "Medical Desk Suspended",
-  "tpl_desc_assenza_medico": "Medical desk is suspended on {data} due to staff absence."
+  "tpl_desc_assenza_medico": "Medical desk is suspended on {data} due to staff absence.",
+  "type_emergency": "Emergency",
+  "type_update": "Variation",
+  "type_general": "Notice"
 }

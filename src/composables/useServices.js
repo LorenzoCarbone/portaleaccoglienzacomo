@@ -156,15 +156,15 @@ export function useServices(i18nHelpers = {}) {
     const mapLink = address ? getNavigationUrl(address) : ''
     const hours = formatHours(service.hours, langCode)
 
-    let message = `*${t('share_text_intro')}*\n`
+    let message = `*${t('share_text_intro', {}, langCode)}*\n`
     message += `*${name}* (${org})\n\n`
 
-    if (address) message += `${t('share_text_address')} ${address}\n`
-    message += `${t('share_text_hours')}\n${hours}\n\n`
+    if (address) message += `${t('share_text_address', {}, langCode)} ${address}\n`
+    message += `${t('share_text_hours', {}, langCode)}\n${hours}\n\n`
 
-    if (phone) message += `${t('share_text_phone')} ${phone}\n`
-    if (email) message += `${t('share_text_email')} ${email}\n`
-    if (mapLink) message += `\n${t('share_text_map')}\n${mapLink}`
+    if (phone) message += `${t('share_text_phone', {}, langCode)} ${phone}\n`
+    if (email) message += `${t('share_text_email', {}, langCode)} ${email}\n`
+    if (mapLink) message += `\n${t('share_text_map', {}, langCode)}\n${mapLink}`
 
     return message
   }
