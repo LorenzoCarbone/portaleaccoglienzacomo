@@ -87,7 +87,7 @@
         v-for="news in newsList"
         :key="news.id"
         class="bg-white rounded-3xl border border-slate-200 p-6 card-shadow relative overflow-hidden"
-        :class="{'border-red-200 ring-1 ring-red-100': news.type === 'emergency'}"
+        :class="{'border-red-200 ring-1 ring-red-100': news.type === 'emergency', 'border-amber-200 ring-1 ring-amber-100': (news.type === 'service_update' || news.type === 'change')}"
       >
         <div class="flex items-start justify-between gap-4 mb-3">
           <div class="flex items-center flex-wrap gap-2">
@@ -103,7 +103,10 @@
             >
               {{ news.priority === 'high' ? t('priority_urgent') : t('priority_info') }}
             </span>
-            <span class="text-xs font-bold text-slate-400">{{ news.association }}</span>
+            <span v-if="news.related_service_id" class="px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 flex items-center gap-1">
+              <i class="fa-solid fa-location-dot text-[10px] text-slate-400"></i>
+              <span>{{ getServiceName(news.related_service_id) }}</span>
+            </span>
           </div>
           <span class="text-xs text-slate-400 font-medium flex items-center gap-1 shrink-0">
             <i class="fa-regular fa-clock text-[10px]"></i>{{ formatNewsDate(news.created_at) }}

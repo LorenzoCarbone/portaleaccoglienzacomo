@@ -26,6 +26,7 @@ const newsForm = ref({
 const NEWS_TYPES = {
   general: { icon: 'fa-solid fa-circle-info', badgeClass: 'bg-blue-100 text-blue-700' },
   service_update: { icon: 'fa-solid fa-arrows-rotate', badgeClass: 'bg-amber-100 text-amber-700' },
+  change: { icon: 'fa-solid fa-arrows-rotate', badgeClass: 'bg-amber-100 text-amber-700' },
   emergency: { icon: 'fa-solid fa-triangle-exclamation', badgeClass: 'bg-red-100 text-red-700' }
 }
 
@@ -35,8 +36,8 @@ export function useNews(buildMultilangObjFromTemplate = null, servicesRef = null
   const getNewsTypeStyle = (type) => NEWS_TYPES[type] || NEWS_TYPES.general
 
   const isUrgency = (level) => {
-    if (level === 'info' && newsForm.value.type === 'general') return true
-    if (level === 'update' && newsForm.value.type === 'service_update') return true
+    if (level === 'info' && (newsForm.value.type === 'general' || !newsForm.value.type)) return true
+    if (level === 'update' && (newsForm.value.type === 'service_update' || newsForm.value.type === 'change')) return true
     if (level === 'emergency' && newsForm.value.type === 'emergency') return true
     return false
   }
@@ -240,7 +241,7 @@ export function useNews(buildMultilangObjFromTemplate = null, servicesRef = null
       if (newsForm.value.related_service_id && servicesRef?.value) {
         const found = servicesRef.value.find(s => s.id === newsForm.value.related_service_id)
         if (found) {
-          serviceName = typeof found.name === 'object' ? (found.name.it || Object.values(found.name)[0] || '') : (found.name || '')
+          serviceName = found.name || ''
         }
       }
 

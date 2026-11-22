@@ -437,7 +437,7 @@ const deferredPrompt = ref(null)
 const openAppModal = ref(false)
 
 // Push Notifications State & Prompt
-const { subscribeToPush } = usePushNotifications()
+const { subscribeToPush, checkExistingSubscription } = usePushNotifications()
 const showPushPromptModal = ref(false)
 
 const acceptPushPrompt = async () => {
@@ -579,8 +579,9 @@ const getCategoryLabelKey = (catId) => categories.find(c => c.id === catId)?.lab
 onMounted(() => {
   isMobileDevice.value = checkIsMobile()
 
-  // Se l'utente clicca una notifica o link con ?tab=news, apri direttamente la bacheca
-  if (typeof window !== 'undefined') {
+  // Se l'utente clicca una notifica o link con ?tab=news, apri direttamente la sezione Notizie & Allerta
+  const checkTabFromUrl = () => {
+    if (typeof window === 'undefined') return
     const urlParams = new URLSearchParams(window.location.search)
     const tabParam = urlParams.get('tab')
     if (tabParam && ['services', 'news', 'emergency'].includes(tabParam)) {
@@ -591,10 +592,32 @@ onMounted(() => {
     }
   }
 
+  checkTabFromUrl()
+  window.addEventListener('focus', checkTabFromUrl)
+  window.addEventListener('popstate', checkTabFromUrl)
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      checkTabFromUrl()
+    }
+  })
+
+  // Ascolta click su notifiche OneSignal sia su PC che su smartphone
+  if (typeof window !== 'undefined' && window.OneSignalDeferred) {
+    window.OneSignalDeferred.push(function(OneSignal) {
+      if (OneSignal.Notifications && OneSignal.Notifications.addEventListener) {
+        OneSignal.Notifications.addEventListener('click', () => {
+          activeTab.value = 'news'
+          markNewsAsRead()
+        })
+      }
+    })
+  }
+
   fetchTags()
   fetchServices()
   fetchNews()
   checkAuthSession()
+  checkExistingSubscription()
 
   // Sincronizza lingua corrente su OneSignal
   if (typeof window !== 'undefined' && window.OneSignalDeferred) {

@@ -9,7 +9,7 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       injectRegister: 'auto',
-      includeAssets: ['favicon.svg', 'apple-touch-icon.png', 'pwa-192x192.png', 'pwa-512x512.png', 'OneSignalSDKWorker.js', 'onesignal/OneSignalSDKWorker.js'],
+      includeAssets: ['favicon.svg', 'apple-touch-icon.png', 'pwa-192x192.png', 'pwa-512x512.png', 'OneSignalSDKWorker.js'],
       manifest: {
         id: '/portaleaccoglienzacomo/',
         name: 'Vicini di Strada Como',
@@ -59,7 +59,9 @@ export default defineConfig({
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         skipWaiting: true,
-        navigateFallbackDenylist: [/onesignal/, /OneSignalSDKWorker/]
+        importScripts: [
+          'https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js'
+        ]
       }
     })
   ]

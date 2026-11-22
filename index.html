@@ -28,25 +28,27 @@
       window.OneSignalDeferred = window.OneSignalDeferred || [];
       OneSignalDeferred.push(async function(OneSignal) {
         const isGhPages = window.location.pathname.startsWith('/portaleaccoglienzacomo');
-        const basePath = isGhPages ? "portaleaccoglienzacomo/" : "";
-        const baseScope = isGhPages ? "/portaleaccoglienzacomo/" : "/";
+        const basePath = isGhPages ? "/portaleaccoglienzacomo/" : "/";
 
         await OneSignal.init({
           appId: "b454646f-7e4b-4ef3-95f6-f399bf2a3826",
-          serviceWorkerPath: basePath + "onesignal/OneSignalSDKWorker.js",
-          serviceWorkerParam: { scope: baseScope + "onesignal/" },
+          path: basePath,
+          serviceWorkerPath: "sw.js",
+          serviceWorkerParam: { scope: basePath },
           allowLocalhostAsSecureOrigin: true
         });
 
-        // Se l'utente ha già abilitato le notifiche nel browser/telefono, assicurati che la registrazione OneSignal sia attiva
+        // Se l'utente ha già concesso il permesso a livello browser (su PC o telefono),
+        // assicura l'immediata sincronizzazione del token su OneSignal
         if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
-          if (OneSignal.User && OneSignal.User.PushSubscription) {
-            try {
-              if (!OneSignal.User.PushSubscription.optedIn) {
-                await OneSignal.User.PushSubscription.optIn();
-                console.log('[OneSignal] Sottoscrizione push attivata automaticamente con successo');
-              }
-            } catch (e) {}
+          try {
+            await OneSignal.Notifications.requestPermission();
+            if (OneSignal.User && OneSignal.User.PushSubscription) {
+              await OneSignal.User.PushSubscription.optIn();
+              console.log('[OneSignal] Registrazione push attiva su questo dispositivo');
+            }
+          } catch (e) {
+            console.warn('[OneSignal] Errore auto-registrazione:', e);
           }
         }
 

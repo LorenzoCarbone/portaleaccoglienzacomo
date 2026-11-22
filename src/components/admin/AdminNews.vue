@@ -140,10 +140,33 @@
         </div>
       </div>
 
-      <!-- Contenuto Messaggio -->
+      <!-- Step 2: Servizio di Riferimento -->
       <div class="bg-white rounded-3xl border border-slate-200 p-5 sm:p-6 card-shadow">
         <div class="flex items-center gap-3 border-b border-slate-100 pb-3 mb-4">
-          <div class="w-8 h-8 rounded-xl bg-slate-700 text-white flex items-center justify-center text-sm shadow-sm">2</div>
+          <div class="w-8 h-8 rounded-xl bg-slate-700 text-white flex items-center justify-center text-sm shadow-sm font-bold">2</div>
+          <div>
+            <h3 class="font-bold text-slate-800 text-base">Servizio di Riferimento</h3>
+            <p class="text-xs text-slate-500">Specifica a quale servizio fa riferimento l'avviso per includere automaticamente il suo nome nel titolo e nel messaggio della notifica.</p>
+          </div>
+        </div>
+
+        <select
+          v-model="newsForm.related_service_id"
+          class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-amber-500 font-medium"
+        >
+          <option :value="null">📢 Nessun servizio specifico (Avviso generale per la città di Como)</option>
+          <option v-for="s in services" :key="s.id" :value="s.id">🏢 {{ translateField(s, 'name') }}</option>
+        </select>
+        <p class="text-[11px] text-slate-500 mt-2">
+          <i class="fa-solid fa-circle-info text-amber-500 mr-1"></i>
+          {{ newsForm.related_service_id ? 'Il nome del servizio selezionato verrà incluso nel titolo e all\'inizio della notifica.' : 'Seleziona una mensa, un dormitorio o un centro specifico per rendere chiaro chi è interessato dall\'avviso.' }}
+        </p>
+      </div>
+
+      <!-- Step 3: Contenuto Messaggio -->
+      <div class="bg-white rounded-3xl border border-slate-200 p-5 sm:p-6 card-shadow">
+        <div class="flex items-center gap-3 border-b border-slate-100 pb-3 mb-4">
+          <div class="w-8 h-8 rounded-xl bg-slate-700 text-white flex items-center justify-center text-sm shadow-sm font-bold">3</div>
           <h3 class="font-bold text-slate-800 text-base">Contenuto del Messaggio</h3>
         </div>
 
@@ -276,30 +299,18 @@
           </div>
         </div>
 
-        <!-- Servizio Collegato -->
-        <div class="mt-4 pt-4 border-t border-slate-100">
-          <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Collega a un Servizio (Opzionale)</label>
-          <select
-            v-model="newsForm.related_service_id"
-            class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm outline-none focus:ring-2 focus:ring-amber-500"
-          >
-            <option :value="null">Nessun servizio collegato</option>
-            <option v-for="s in services" :key="s.id" :value="s.id">{{ translateField(s, 'name') }}</option>
-          </select>
-        </div>
-
         <!-- Opzione Notifica Push -->
-        <div class="mt-4 pt-4 border-t border-slate-100 space-y-3">
+        <div class="mt-5 pt-5 border-t border-slate-100 space-y-3">
           <div class="flex items-center justify-between gap-4">
             <div>
               <label class="font-bold text-xs uppercase tracking-wider text-slate-700 flex items-center gap-2 cursor-pointer" @click="newsForm.sendPushNotification = !(newsForm.sendPushNotification !== false)">
                 <i class="fa-solid fa-bell text-amber-500"></i>
-                <span>Invia Notifica Push agli Smartphone</span>
+                <span>Invia Notifica Push a Smartphone e PC</span>
               </label>
               <p class="text-xs text-slate-500 mt-0.5">
                 {{ newsForm.sendPushNotification !== false
-                  ? "I telefoni registrati riceveranno l'avviso sulla schermata di blocco."
-                  : "L'avviso apparirà in bacheca SENZA suonare o inviare notifiche sui telefoni." }}
+                  ? "Tutti gli utenti registrati riceveranno l'avviso sulla schermata del telefono o sul desktop."
+                  : "L'avviso apparirà in bacheca SENZA inviare notifiche push ai dispositivi." }}
               </p>
             </div>
             <label class="relative inline-flex items-center cursor-pointer shrink-0">
@@ -312,31 +323,38 @@
             </label>
           </div>
 
-          <!-- Anteprima notifica smartphone -->
+          <!-- Anteprima notifica smartphone e desktop -->
           <div
             v-if="newsForm.sendPushNotification !== false"
-            class="rounded-2xl p-3.5 sm:p-4 border text-xs space-y-2 animate-fadeIn transition-colors"
-            :class="newsForm.type === 'emergency' ? 'bg-red-50/60 border-red-200' : ((newsForm.type === 'service_update' || newsForm.type === 'change') ? 'bg-amber-50/60 border-amber-200' : 'bg-blue-50/60 border-blue-200')"
+            class="rounded-2xl p-4 border text-xs space-y-2.5 animate-fadeIn transition-colors shadow-sm"
+            :class="newsForm.type === 'emergency' ? 'bg-red-50/70 border-red-300' : ((newsForm.type === 'service_update' || newsForm.type === 'change') ? 'bg-amber-50/70 border-amber-300' : 'bg-blue-50/70 border-blue-300')"
           >
-            <div class="flex items-center justify-between text-[11px] font-semibold border-b pb-2" :class="newsForm.type === 'emergency' ? 'border-red-200/80 text-red-800' : ((newsForm.type === 'service_update' || newsForm.type === 'change') ? 'border-amber-200/80 text-amber-800' : 'border-blue-200/80 text-blue-800')">
+            <div class="flex items-center justify-between text-[11px] font-semibold border-b pb-2" :class="newsForm.type === 'emergency' ? 'border-red-200 text-red-800' : ((newsForm.type === 'service_update' || newsForm.type === 'change') ? 'border-amber-200 text-amber-800' : 'border-blue-200 text-blue-800')">
               <span class="flex items-center gap-1.5 font-bold">
                 <i class="fa-solid fa-mobile-screen-button"></i>
-                <span>Anteprima notifica su smartphone</span>
+                <span>Anteprima notifica su Smartphone & PC</span>
               </span>
               <span
                 class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase shadow-sm"
                 :class="newsForm.type === 'emergency' ? 'bg-red-600 text-white' : ((newsForm.type === 'service_update' || newsForm.type === 'change') ? 'bg-amber-500 text-white' : 'bg-blue-600 text-white')"
               >
-                {{ newsForm.type === 'emergency' ? 'Rosso • Emergenza' : ((newsForm.type === 'service_update' || newsForm.type === 'change') ? 'Arancione • Variazione' : 'Blu • Normale') }}
+                {{ newsForm.type === 'emergency' ? '🔴 Emergenza' : ((newsForm.type === 'service_update' || newsForm.type === 'change') ? '🟠 Variazione' : '🔵 Normale') }}
               </span>
             </div>
-            <div class="space-y-1 pt-1">
+            <div class="space-y-1.5 pt-1">
               <div class="font-bold text-slate-900 text-xs sm:text-sm leading-snug">
                 {{ pushPreviewTitle }}
               </div>
-              <p class="text-slate-600 text-xs leading-relaxed line-clamp-2">
+              <p class="text-slate-700 text-xs leading-relaxed">
                 {{ pushPreviewBody }}
               </p>
+            </div>
+            <div class="pt-2 border-t border-slate-200/60 flex items-center justify-between text-[10px] text-slate-500 font-medium">
+              <span>Vicini di Strada Como</span>
+              <span class="text-emerald-700 font-semibold flex items-center gap-1">
+                <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
+                <span>Cliccando apre la sezione Notizie & Allerta</span>
+              </span>
             </div>
           </div>
         </div>
@@ -477,31 +495,53 @@ const pushPreviewTitle = computed(() => {
   const isUpdate = props.newsForm.type === 'service_update' || props.newsForm.type === 'change'
   const emoji = isEmergency ? '🚨 ' : (isUpdate ? '🔄 ' : '📢 ')
 
-  let rawTitle = ''
-  if (props.newsForm.useCustomText) {
-    rawTitle = props.newsForm.customTitle?.it || props.newsForm.customTitle?.es || props.newsForm.customTitle?.en || 'Nuovo Avviso'
-  } else if (props.generateTemplateText && props.newsForm.template) {
-    rawTitle = props.generateTemplateText(props.newsForm.template, props.newsForm.templateParams, 'it', true) || 'Nuovo Avviso'
-  }
-  return emoji + (rawTitle || 'Avviso per i servizi')
-})
-
-const pushPreviewBody = computed(() => {
-  let prefix = ''
+  let sName = ''
   if (props.newsForm?.related_service_id) {
     const s = props.services?.find(srv => srv.id === props.newsForm.related_service_id)
     if (s) {
-      const name = props.translateField ? props.translateField(s, 'name') : (typeof s.name === 'object' ? s.name.it : s.name)
-      if (name) prefix = `${name} • `
+      sName = props.translateField ? props.translateField(s, 'name') : (typeof s.name === 'object' ? (s.name.it || Object.values(s.name)[0]) : s.name)
+    }
+  }
+
+  let rawTitle = ''
+  if (props.newsForm.useCustomText) {
+    rawTitle = props.newsForm.customTitle?.it || props.newsForm.customTitle?.es || props.newsForm.customTitle?.en || ''
+  } else if (props.generateTemplateText && props.newsForm.template) {
+    rawTitle = props.generateTemplateText(props.newsForm.template, props.newsForm.templateParams, 'it', true)
+  }
+
+  if (!rawTitle) rawTitle = 'Avviso per i servizi'
+
+  let prefix = ''
+  if (sName) {
+    prefix = !rawTitle.toLowerCase().includes(sName.toLowerCase()) ? `${sName} • ` : ''
+  } else {
+    prefix = 'Vicini di Strada • '
+  }
+
+  return `${emoji}${prefix}${rawTitle}`
+})
+
+const pushPreviewBody = computed(() => {
+  let sName = ''
+  if (props.newsForm?.related_service_id) {
+    const s = props.services?.find(srv => srv.id === props.newsForm.related_service_id)
+    if (s) {
+      sName = props.translateField ? props.translateField(s, 'name') : (typeof s.name === 'object' ? (s.name.it || Object.values(s.name)[0]) : s.name)
     }
   }
 
   let rawText = ''
   if (props.newsForm.useCustomText) {
-    rawText = props.newsForm.customContent?.it || props.newsForm.customContent?.es || props.newsForm.customContent?.en || 'Testo della notifica...'
+    rawText = props.newsForm.customContent?.it || props.newsForm.customContent?.es || props.newsForm.customContent?.en || ''
   } else if (props.generateTemplateText && props.newsForm.template) {
-    rawText = props.generateTemplateText(props.newsForm.template, props.newsForm.templateParams, 'it', false) || 'Dettagli dell\'avviso...'
+    rawText = props.generateTemplateText(props.newsForm.template, props.newsForm.templateParams, 'it', false)
   }
-  return `${prefix}${rawText || 'Dettagli dell\'avviso...'}`
+
+  if (!rawText) return 'Dettagli dell\'avviso...'
+  if (sName && !rawText.toLowerCase().includes(sName.toLowerCase())) {
+    return `${sName}: ${rawText}`
+  }
+  return rawText
 })
 </script>

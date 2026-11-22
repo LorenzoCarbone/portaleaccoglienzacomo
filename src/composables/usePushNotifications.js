@@ -60,12 +60,14 @@ export function usePushNotifications() {
       if (typeof window !== 'undefined' && window.OneSignalDeferred) {
         window.OneSignalDeferred.push(async function(OneSignal) {
           try {
-            // optIn() richiede il permesso nativo (se non concesso) e registra attivamente il token su OneSignal
+            // Richiede il permesso nativo al browser e sincronizza il token con OneSignal
+            if (OneSignal.Notifications && OneSignal.Notifications.requestPermission) {
+              await OneSignal.Notifications.requestPermission()
+            }
             if (OneSignal.User && OneSignal.User.PushSubscription) {
               await OneSignal.User.PushSubscription.optIn()
               isSubscribed.value = !!OneSignal.User.PushSubscription.optedIn
             } else if (OneSignal.Notifications) {
-              await OneSignal.Notifications.requestPermission()
               isSubscribed.value = OneSignal.Notifications.permission
             }
             permissionState.value = Notification.permission
@@ -121,8 +123,16 @@ export function usePushNotifications() {
     isPushLoading.value = true
     try {
       const res = await sendOneSignalPush({
-        title: { it: 'Prova Notifica - Vicini di Strada', en: 'Test Notification - Vicini di Strada' },
-        content: { it: 'Le notifiche push tramite OneSignal sono configurate e attive!', en: 'Push notifications via OneSignal are active and working!' }
+        type: 'general',
+        priority: 'normal',
+        serviceName: { it: 'Vicini di Strada Como', en: 'Vicini di Strada Como', es: 'Vicini di Strada Como' },
+        title: { it: 'Notifiche Push Attive', en: 'Push Notifications Active', es: 'Notificaciones Push Activas' },
+        content: {
+          it: 'Le notifiche push funzionano sia su Smartphone che su PC! Clicca per aprire Notizie & Allerta.',
+          en: 'Push notifications are active on both Smartphone and PC! Click to open News & Alerts.',
+          es: '¡Las notificaciones push están activas en Smartphone y PC! Haz clic para abrir Noticias.'
+        },
+        url: 'https://lorenzocarbone.github.io/portaleaccoglienzacomo/?tab=news'
       })
       const rec = res?.recipients !== undefined ? res.recipients : (res?.id ? 'inviata' : '0')
       alert(`Notifica di prova inviata con successo! Dispositivi raggiunti: ${rec}`)
@@ -148,7 +158,7 @@ export function usePushNotifications() {
   }
 }
 
-// Funzione globale per spedire notifiche push a tutti gli smartphone tramite l'API OneSignal
+// Funzione globale per spedire notifiche push a tutti gli smartphone e PC tramite l'API OneSignal
 export async function sendOneSignalPush({ title, content, url, newsId, type = 'general', priority = 'normal', serviceName = '' }) {
   const headings = {}
   const contents = {}
@@ -162,41 +172,74 @@ export async function sendOneSignalPush({ title, content, url, newsId, type = 'g
   // Accent color di sistema Android (Rosso per Emergenza, Arancione per Variazione, Blu per Normale)
   const accentColor = isEmergency ? 'FFDC2626' : (isUpdate ? 'FFF59E0B' : 'FF2563EB')
 
+  const getServiceNameForLang = (lang) => {
+    if (!serviceName) return ''
+    if (typeof serviceName === 'object' && serviceName !== null) {
+      return serviceName[lang] || serviceName.it || serviceName.en || Object.values(serviceName)[0] || ''
+    }
+    return String(serviceName)
+  }
+
+  // Costruisci Titolo e Descrizione con pieno contesto (Nome servizio + Evento specifico)
   if (typeof title === 'object' && title !== null) {
     for (const k in title) {
       if (title[k]) {
-        headings[k] = `${emoji}${title[k]}`
+        const sName = getServiceNameForLang(k)
+        let prefix = ''
+        if (sName) {
+          prefix = !title[k].toLowerCase().includes(sName.toLowerCase()) ? `${sName} • ` : ''
+        } else {
+          prefix = 'Vicini di Strada • '
+        }
+        headings[k] = `${emoji}${prefix}${title[k]}`
       }
     }
   } else if (title) {
-    headings.it = `${emoji}${title}`
-    headings.en = `${emoji}${title}`
-    headings.es = `${emoji}${title}`
+    const sName = getServiceNameForLang('it')
+    let prefix = ''
+    if (sName) {
+      prefix = !title.toLowerCase().includes(sName.toLowerCase()) ? `${sName} • ` : ''
+    } else {
+      prefix = 'Vicini di Strada • '
+    }
+    const fullTitle = `${emoji}${prefix}${title}`
+    headings.it = fullTitle
+    headings.en = fullTitle
+    headings.es = fullTitle
   }
-
-  const prefixService = serviceName ? `${serviceName} • ` : ''
 
   if (typeof content === 'object' && content !== null) {
     for (const k in content) {
       if (content[k]) {
+        const sName = getServiceNameForLang(k)
         const text = content[k]
-        contents[k] = text.startsWith(prefixService) ? text : `${prefixService}${text}`
+        if (sName && !text.toLowerCase().includes(sName.toLowerCase())) {
+          contents[k] = `${sName}: ${text}`
+        } else {
+          contents[k] = text
+        }
       }
     }
   } else if (content) {
-    const formatted = content.startsWith(prefixService) ? content : `${prefixService}${content}`
+    const sName = getServiceNameForLang('it')
+    const formatted = (sName && !content.toLowerCase().includes(sName.toLowerCase()))
+      ? `${sName}: ${content}`
+      : content
     contents.it = formatted
     contents.en = formatted
     contents.es = formatted
   }
 
-  // Fallback intelligenti per lingue
-  if (!headings.en) headings.en = headings.es || headings.it || 'Vicini di Strada Como'
-  if (!contents.en) contents.en = contents.es || contents.it || 'Nuovo avviso pubblicato dai servizi'
-  if (!headings.it) headings.it = headings.en || 'Vicini di Strada Como'
-  if (!contents.it) contents.it = contents.en || 'Nuovo avviso pubblicato dai servizi'
-  if (!headings.es && headings.it) headings.es = headings.it
-  if (!contents.es && contents.it) contents.es = contents.it
+  // Fallback intelligenti per tutte le lingue supportate da OneSignal (richiede 'en' obbligatoria)
+  const baseTitle = headings.it || headings.en || headings.es || Object.values(headings)[0] || 'Vicini di Strada Como'
+  const baseContent = contents.it || contents.en || contents.es || Object.values(contents)[0] || 'Nuovo avviso pubblicato dai servizi'
+
+  if (!headings.en) headings.en = baseTitle
+  if (!contents.en) contents.en = baseContent
+  if (!headings.it) headings.it = baseTitle
+  if (!contents.it) contents.it = baseContent
+  if (!headings.es) headings.es = headings.it || baseTitle
+  if (!contents.es) contents.es = contents.it || baseContent
 
   const targetUrl = url || 'https://lorenzocarbone.github.io/portaleaccoglienzacomo/?tab=news'
 
