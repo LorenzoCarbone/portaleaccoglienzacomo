@@ -1,5 +1,4 @@
 import { ref } from 'vue'
-import organizations from '../config/organizations.json'
 
 const ONESIGNAL_APP_ID = 'b454646f-7e4b-4ef3-95f6-f399bf2a3826'
 // Base64-encoded to prevent false positives in GitHub secret scanning
@@ -9,14 +8,35 @@ const ONESIGNAL_REST_KEY = typeof atob !== 'undefined'
 
 const isSupported = ref(true)
 const isSubscribed = ref(false)
+const subscriptionId = ref(null)
 const permissionState = ref('default')
 const isPushLoading = ref(false)
 const pushStatusMessage = ref('')
+let hasAttachedChangeListener = false
+
+const isReallySubscribed = (sub) => {
+  if (!sub) return false
+  return Boolean(sub.optedIn && (sub.id || sub.token))
+}
+
+const syncStateFromOneSignal = (OneSignal) => {
+  if (typeof Notification !== 'undefined') {
+    permissionState.value = Notification.permission
+  }
+  const sub = OneSignal?.User?.PushSubscription
+  if (sub) {
+    subscriptionId.value = sub.id || null
+    isSubscribed.value = isReallySubscribed(sub)
+  } else {
+    subscriptionId.value = null
+    isSubscribed.value = false
+  }
+}
 
 export function usePushNotifications() {
   const checkSupport = () => {
     if (typeof window === 'undefined') return false
-    const supported = 'Notification' in window
+    const supported = 'Notification' in window && 'serviceWorker' in navigator
     isSupported.value = supported
     if (supported) {
       permissionState.value = Notification.permission
@@ -29,31 +49,41 @@ export function usePushNotifications() {
     if (typeof window !== 'undefined' && window.OneSignalDeferred) {
       window.OneSignalDeferred.push(async function(OneSignal) {
         try {
-          if (OneSignal.User && OneSignal.User.PushSubscription) {
-            isSubscribed.value = !!OneSignal.User.PushSubscription.optedIn
-            permissionState.value = Notification.permission
+          syncStateFromOneSignal(OneSignal)
 
-            // Sincronizza lingua corrente su OneSignal
-            const userLang = localStorage.getItem('vicini_lang') || 'it'
-            if (OneSignal.User.setLanguage) {
-              await OneSignal.User.setLanguage(userLang)
-            }
+          // Sincronizza lingua corrente su OneSignal
+          const userLang = localStorage.getItem('vicini_lang') || 'it'
+          if (OneSignal.User?.setLanguage) {
+            await OneSignal.User.setLanguage(userLang)
+          }
 
-            // Ascolta modifiche alla sottoscrizione in tempo reale
-            if (OneSignal.User.PushSubscription.addEventListener) {
-              OneSignal.User.PushSubscription.addEventListener('change', (change) => {
-                isSubscribed.value = !!(change?.current?.optedIn ?? change?.optedIn)
-              })
-            }
+          // Ascolta modifiche reali alla sottoscrizione (id, token, optedIn)
+          const sub = OneSignal.User?.PushSubscription
+          if (sub?.addEventListener && !hasAttachedChangeListener) {
+            hasAttachedChangeListener = true
+            sub.addEventListener('change', (change) => {
+              const current = change?.current || sub
+              subscriptionId.value = current?.id || null
+              isSubscribed.value = isReallySubscribed(current)
+              if (typeof Notification !== 'undefined') {
+                permissionState.value = Notification.permission
+              }
+            })
+          }
 
-            // Se il browser ha concesso il permesso ma OneSignal non è ancora optedIn (manca token push), prova optIn
-            if (Notification.permission === 'granted' && !OneSignal.User.PushSubscription.optedIn) {
-              await OneSignal.User.PushSubscription.optIn()
-              isSubscribed.value = !!OneSignal.User.PushSubscription.optedIn
+          // Se il browser ha già concesso il permesso ma OneSignal non ha ancora id/token, completa la registrazione
+          if (
+            typeof Notification !== 'undefined' &&
+            Notification.permission === 'granted' &&
+            sub &&
+            !isReallySubscribed(sub)
+          ) {
+            try {
+              await sub.optIn()
+              syncStateFromOneSignal(OneSignal)
+            } catch (e) {
+              console.warn('[OneSignal] Errore completamento optIn:', e)
             }
-          } else if (OneSignal.Notifications) {
-            isSubscribed.value = !!OneSignal.Notifications.permission
-            permissionState.value = Notification.permission
           }
         } catch (e) {
           console.warn('[OneSignal] checkExistingSubscription error:', e)
@@ -64,35 +94,67 @@ export function usePushNotifications() {
   }
 
   const subscribeToPush = async () => {
+    if (typeof window === 'undefined') return false
+
+    // Controllo specifico per iOS Safari fuori dalla Home Screen
+    const ua = window.navigator.userAgent.toLowerCase()
+    const isIOS = /iphone|ipad|ipod/.test(ua)
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true
+    if (isIOS && !isStandalone) {
+      alert('Su iPhone/iPad per ricevere le notifiche devi prima aggiungere il sito alla schermata Home (Condividi → Aggiungi a schermata Home) e aprire l\'app da quell\'icona.')
+      return false
+    }
+
     if (!checkSupport()) {
-      alert('Il tuo dispositivo non supporta le notifiche push.')
+      alert('Il tuo browser non supporta le notifiche push.')
+      return false
+    }
+
+    if (Notification.permission === 'denied') {
+      alert('Le notifiche sono bloccate dalle impostazioni del browser per questo sito. Sbloccale dall\'icona del lucchetto/impostazioni nella barra dell\'indirizzo e riprova.')
       return false
     }
 
     isPushLoading.value = true
     try {
-      if (typeof window !== 'undefined' && window.OneSignalDeferred) {
-        return new Promise((resolve) => {
+      if (window.OneSignalDeferred) {
+        return await new Promise((resolve) => {
           window.OneSignalDeferred.push(async function(OneSignal) {
             try {
-              if (OneSignal.Notifications && OneSignal.Notifications.requestPermission) {
+              if (Notification.permission !== 'granted' && OneSignal.Notifications?.requestPermission) {
                 await OneSignal.Notifications.requestPermission()
               }
-              if (OneSignal.User && OneSignal.User.PushSubscription) {
-                await OneSignal.User.PushSubscription.optIn()
-                isSubscribed.value = !!OneSignal.User.PushSubscription.optedIn
-              } else if (OneSignal.Notifications) {
-                isSubscribed.value = !!OneSignal.Notifications.permission
+
+              const sub = OneSignal.User?.PushSubscription
+              if (sub) {
+                await sub.optIn()
+
+                // Attendi fino a 5 secondi che il Service Worker ottenga il token/ID reale da OneSignal
+                const startedAt = Date.now()
+                while (!isReallySubscribed(sub) && Date.now() - startedAt < 5000) {
+                  await new Promise(r => setTimeout(r, 250))
+                }
               }
-              permissionState.value = Notification.permission
+
+              syncStateFromOneSignal(OneSignal)
 
               const userLang = localStorage.getItem('vicini_lang') || 'it'
-              if (OneSignal.User && OneSignal.User.setLanguage) {
+              if (OneSignal.User?.setLanguage) {
                 await OneSignal.User.setLanguage(userLang)
               }
+
+              if (!isSubscribed.value) {
+                if (Notification.permission === 'denied') {
+                  alert('Permesso notifiche negato dal browser.')
+                } else {
+                  alert('Registrazione notifiche non completata. Ricarica la pagina e premi di nuovo "Attiva Notifiche".')
+                }
+              }
+
               resolve(isSubscribed.value)
             } catch (e) {
               console.error('[OneSignal] Errore sottoscrizione:', e)
+              alert('Impossibile attivare le notifiche al momento. Ricarica la pagina e riprova.')
               resolve(false)
             } finally {
               isPushLoading.value = false
@@ -101,10 +163,9 @@ export function usePushNotifications() {
         })
       } else {
         const perm = await Notification.requestPermission()
-        isSubscribed.value = perm === 'granted'
         permissionState.value = perm
         isPushLoading.value = false
-        return isSubscribed.value
+        return false
       }
     } catch (err) {
       console.error('[Push] Errore autorizzazione:', err)
@@ -117,15 +178,22 @@ export function usePushNotifications() {
     isPushLoading.value = true
     try {
       if (typeof window !== 'undefined' && window.OneSignalDeferred) {
-        window.OneSignalDeferred.push(async function(OneSignal) {
-          if (OneSignal.User && OneSignal.User.PushSubscription) {
-            await OneSignal.User.PushSubscription.optOut()
-          }
-          isSubscribed.value = false
-          isPushLoading.value = false
+        await new Promise((resolve) => {
+          window.OneSignalDeferred.push(async function(OneSignal) {
+            try {
+              if (OneSignal.User?.PushSubscription) {
+                await OneSignal.User.PushSubscription.optOut()
+              }
+            } catch (e) {}
+            isSubscribed.value = false
+            subscriptionId.value = null
+            isPushLoading.value = false
+            resolve(true)
+          })
         })
       } else {
         isSubscribed.value = false
+        subscriptionId.value = null
         isPushLoading.value = false
       }
       return true
@@ -151,11 +219,11 @@ export function usePushNotifications() {
         url: 'https://lorenzocarbone.github.io/portaleaccoglienzacomo/?tab=news'
       })
       if (res?.errors && res.errors.length > 0) {
-        if (res.errors.some(e => e.includes('All included players are not subscribed'))) {
-          alert('Attenzione: nessun dispositivo è attualmente registrato su OneSignal.\nAssicurati di aver aperto il sito dallo smartphone o PC e aver premuto il pulsante verde "Attiva Notifiche".')
+        if (res.errors.some(e => typeof e === 'string' && e.includes('All included players are not subscribed'))) {
+          alert('Attenzione: nessun dispositivo risulta ancora registrato su OneSignal.\nRicarica la pagina sullo smartphone e premi il pulsante verde "Attiva Notifiche".')
           return res
         }
-        alert('Attenzione OneSignal: ' + res.errors.join(', '))
+        alert('Attenzione OneSignal: ' + JSON.stringify(res.errors))
         return res
       }
       const rec = res?.recipients !== undefined ? res.recipients : (res?.id ? 'inviata' : '0')
@@ -171,6 +239,7 @@ export function usePushNotifications() {
   return {
     isSupported,
     isSubscribed,
+    subscriptionId,
     permissionState,
     isPushLoading,
     pushStatusMessage,
@@ -272,7 +341,8 @@ export async function sendOneSignalPush({ title, content, url, newsId, type = 'g
       },
       body: JSON.stringify({
         app_id: ONESIGNAL_APP_ID,
-        included_segments: ['Total Subscriptions', 'Subscribed Users'],
+        target_channel: 'push',
+        included_segments: ['Total Subscriptions'],
         headings: headings,
         contents: contents,
         // Priority 10 garantisce consegna immediata su Android/iOS risvegliando il dispositivo da Doze mode

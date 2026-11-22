@@ -34,52 +34,54 @@
         <span class="text-6xl block mb-4">📭</span>
         <h4 class="font-bold text-slate-700 text-lg mb-1">Nessuna notizia pubblicata</h4>
       </div>
-      <div v-else class="bg-white rounded-3xl border border-slate-200 overflow-hidden card-shadow divide-y divide-slate-100">
-        <div class="p-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between text-xs font-bold text-slate-500 uppercase tracking-wider">
+      <div v-else class="bg-white rounded-2xl sm:rounded-3xl border border-slate-200 overflow-hidden card-shadow divide-y divide-slate-100">
+        <div class="px-4 py-3 bg-slate-50 border-b border-slate-100 flex items-center justify-between text-xs font-bold text-slate-500 uppercase tracking-wider">
           <span>Notizie pubblicate ({{ globalNews.length }})</span>
-          <span>Tipo</span>
+          <span class="hidden sm:inline">Tipo & Azioni</span>
         </div>
         <div
           v-for="news in globalNews"
           :key="news.id"
-          class="p-4 sm:p-5 hover:bg-amber-50/50 transition flex items-center justify-between gap-4 group"
+          class="p-4 sm:p-5 hover:bg-amber-50/50 transition flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 group"
         >
-          <div @click="$emit('start-editing', news)" class="flex items-center gap-3.5 overflow-hidden cursor-pointer flex-1">
+          <div @click="$emit('start-editing', news)" class="flex items-start sm:items-center gap-3 overflow-hidden cursor-pointer flex-1 min-w-0">
             <div
-              class="w-12 h-12 rounded-2xl flex items-center justify-center text-xl shrink-0 shadow-sm"
+              class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center text-base sm:text-xl shrink-0 shadow-sm"
               :class="getNewsTypeStyle(news.type).badgeClass"
             >
               <i :class="getNewsTypeStyle(news.type).icon"></i>
             </div>
-            <div class="overflow-hidden">
-              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block truncate">{{ formatNewsDate(news.created_at) }}</span>
-              <h4 class="font-bold text-slate-800 text-sm sm:text-base group-hover:text-amber-700 transition truncate">
+            <div class="overflow-hidden min-w-0 flex-1">
+              <span class="text-[11px] font-medium text-slate-400 block truncate">{{ formatNewsDate(news.created_at) }}</span>
+              <h4 class="font-bold text-slate-800 text-sm sm:text-base group-hover:text-amber-700 transition leading-snug line-clamp-2 sm:truncate">
                 {{ translateField(news, 'title') || '(senza titolo)' }}
               </h4>
-              <p class="text-xs text-slate-500 truncate mt-0.5">{{ translateField(news, 'content') }}</p>
+              <p class="text-xs text-slate-500 line-clamp-2 sm:truncate mt-0.5 leading-relaxed">{{ translateField(news, 'content') }}</p>
             </div>
           </div>
-          <div class="flex items-center gap-2 shrink-0">
+          <div class="flex items-center justify-between sm:justify-end gap-2 shrink-0 pt-2 sm:pt-0 border-t border-slate-100 sm:border-t-0">
             <span
-              class="px-2.5 py-1 rounded-full text-[11px] font-bold shadow-sm"
+              class="px-2.5 py-1 rounded-full text-[11px] font-bold shadow-xs"
               :class="news.type === 'emergency' ? 'bg-red-100 text-red-800 border border-red-300' : ((news.type === 'service_update' || news.type === 'change') ? 'bg-amber-100 text-amber-800 border border-amber-300' : 'bg-blue-100 text-blue-800 border border-blue-300')"
             >
               {{ news.type === 'emergency' ? 'Emergenza' : ((news.type === 'service_update' || news.type === 'change') ? 'Variazione' : 'Informativa') }}
             </span>
-            <button
-              @click="$emit('start-editing', news)"
-              title="Modifica"
-              class="w-8 h-8 rounded-full bg-slate-100 hover:bg-brand-600 text-slate-400 hover:text-white flex items-center justify-center text-xs transition"
-            >
-              <i class="fa-solid fa-pen"></i>
-            </button>
-            <button
-              @click="$emit('delete', news)"
-              title="Elimina"
-              class="w-8 h-8 rounded-full bg-slate-100 hover:bg-red-600 text-slate-400 hover:text-white flex items-center justify-center text-xs transition"
-            >
-              <i class="fa-solid fa-trash"></i>
-            </button>
+            <div class="flex items-center gap-2">
+              <button
+                @click="$emit('start-editing', news)"
+                title="Modifica"
+                class="w-8 h-8 rounded-full bg-slate-100 hover:bg-brand-600 text-slate-500 hover:text-white flex items-center justify-center text-xs transition cursor-pointer"
+              >
+                <i class="fa-solid fa-pen"></i>
+              </button>
+              <button
+                @click="$emit('delete', news)"
+                title="Elimina"
+                class="w-8 h-8 rounded-full bg-slate-100 hover:bg-red-600 text-slate-500 hover:text-white flex items-center justify-center text-xs transition cursor-pointer"
+              >
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            </div>
           </div>
         </div>
       </div>

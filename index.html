@@ -28,36 +28,39 @@
       window.OneSignalDeferred = window.OneSignalDeferred || [];
       OneSignalDeferred.push(async function(OneSignal) {
         const isGhPages = window.location.pathname.startsWith('/portaleaccoglienzacomo');
-        const basePath = isGhPages ? "/portaleaccoglienzacomo/" : "/";
+        const swDir = isGhPages ? "/portaleaccoglienzacomo/push/onesignal/" : "/push/onesignal/";
 
-        await OneSignal.init({
-          appId: "b454646f-7e4b-4ef3-95f6-f399bf2a3826",
-          path: basePath,
-          serviceWorkerPath: "sw.js",
-          serviceWorkerParam: { scope: basePath },
-          allowLocalhostAsSecureOrigin: true
-        });
+        try {
+          await OneSignal.init({
+            appId: "b454646f-7e4b-4ef3-95f6-f399bf2a3826",
+            serviceWorkerOverrideForTypical: true,
+            path: swDir,
+            serviceWorkerPath: "OneSignalSDKWorker.js",
+            serviceWorkerParam: { scope: swDir },
+            allowLocalhostAsSecureOrigin: true
+          });
 
-        // Se l'utente ha già concesso il permesso a livello browser (su PC o telefono),
-        // assicura l'immediata sincronizzazione del token su OneSignal
-        if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
-          try {
-            await OneSignal.Notifications.requestPermission();
-            if (OneSignal.User && OneSignal.User.PushSubscription) {
-              await OneSignal.User.PushSubscription.optIn();
-              console.log('[OneSignal] Registrazione push attiva su questo dispositivo');
+          // Se il browser ha già il permesso notifiche concesso, assicura l'effettiva registrazione
+          // del dispositivo con il Service Worker dedicato di OneSignal
+          if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+            try {
+              const sub = OneSignal.User && OneSignal.User.PushSubscription;
+              if (sub && (!sub.optedIn || !sub.id || !sub.token)) {
+                await sub.optIn();
+              }
+            } catch (e) {
+              console.warn('[OneSignal] Errore auto-registrazione:', e);
             }
-          } catch (e) {
-            console.warn('[OneSignal] Errore auto-registrazione:', e);
           }
-        }
 
-        const currentLang = localStorage.getItem('vicini_lang') || 'it';
-        if (OneSignal.User && OneSignal.User.setLanguage) {
-          try {
-            await OneSignal.User.setLanguage(currentLang);
-            console.log('[OneSignal] Lingua utente sincronizzata:', currentLang);
-          } catch (e) {}
+          const currentLang = localStorage.getItem('vicini_lang') || 'it';
+          if (OneSignal.User && OneSignal.User.setLanguage) {
+            try {
+              await OneSignal.User.setLanguage(currentLang);
+            } catch (e) {}
+          }
+        } catch (initErr) {
+          console.error('[OneSignal] Errore inizializzazione:', initErr);
         }
       });
     </script>
