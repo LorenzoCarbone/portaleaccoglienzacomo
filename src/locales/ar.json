@@ -24,7 +24,7 @@
   "status_active": "متاح",
   "status_notice": "تغيير",
   "status_suspended": "مغلق",
-  "hours_label": "عرض الأوقات",
+  "hours_label": "ساعات العمل",
   "hours_not_available": "الأوقات غير متوفرة أو 24/7",
   "service_update_label": "تنبيه مباشر",
   "service_suspended_label": "الخدمة معلقة",
@@ -97,5 +97,17 @@
   "tpl_desc_assenza_medico": "الخدمة الطبية معلقة في {data}.",
   "type_emergency": "طوارئ",
   "type_update": "تعديل",
-  "type_general": "إشعار"
+  "type_general": "إشعار",
+  "access_label": "طريقة الوصول",
+  "access_free": "دخول مجاني ومباشر",
+  "access_porta_aperta": "عبر مكتب Porta Aperta",
+  "access_servizi_sociali": "بإحالة من الخدمات الاجتماعية",
+  "access_appointment": "بموعد مسبق",
+  "access_tessera": "ببطاقة / تسجيل",
+  "access_custom": "تفاصيل الوصول",
+  "hours_everyday": "كل يوم",
+  "hours_continuous": "خدمة مستمرة 24 ساعة",
+  "hours_by_appointment": "بموعد مسبق",
+  "hours_today": "اليوم",
+  "share_text_access": "🔑 الدخول:"
 }

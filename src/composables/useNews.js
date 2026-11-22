@@ -313,6 +313,28 @@ export function useNews(buildMultilangObjFromTemplate = null, servicesRef = null
     }
   }
 
+  const deleteMultipleNews = async (ids) => {
+    if (!supabase || !Array.isArray(ids) || ids.length === 0) return false
+    const msg = ids.length === globalNews.value.length
+      ? `Sei sicuro di voler svuotare l'intera sezione notizie eliminando tutti i ${ids.length} avvisi?`
+      : `Sei sicuro di voler eliminare definitivamente ${ids.length} avvisi selezionati?`
+    if (!confirm(msg)) return false
+
+    try {
+      const { data, error } = await supabase.from('news').delete().in('id', ids).select()
+      if (error) throw error
+      if (!data || data.length === 0) {
+        throw new Error("Il database ha bloccato l'operazione. Verifica le policy RLS (DELETE) su Supabase.")
+      }
+      const deletedSet = new Set(ids)
+      globalNews.value = globalNews.value.filter(n => !deletedSet.has(n.id))
+      return true
+    } catch (err) {
+      alert('Eliminazione multipla non riuscita: ' + err.message)
+      return false
+    }
+  }
+
   return {
     globalNews,
     isLoadingNews,
@@ -336,6 +358,7 @@ export function useNews(buildMultilangObjFromTemplate = null, servicesRef = null
     startCreatingNews,
     cancelEditingNews,
     saveNewsChanges,
-    deleteNewsItem
+    deleteNewsItem,
+    deleteMultipleNews
   }
 }

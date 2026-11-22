@@ -35,31 +35,73 @@
         <h4 class="font-bold text-slate-700 text-lg mb-1">Nessuna notizia pubblicata</h4>
       </div>
       <div v-else class="bg-white rounded-2xl sm:rounded-3xl border border-slate-200 overflow-hidden card-shadow divide-y divide-slate-100">
-        <div class="px-4 py-3 bg-slate-50 border-b border-slate-100 flex items-center justify-between text-xs font-bold text-slate-500 uppercase tracking-wider">
-          <span>Notizie pubblicate ({{ globalNews.length }})</span>
-          <span class="hidden sm:inline">Tipo & Azioni</span>
+        <!-- Toolbar selezione multipla / svuota tutto -->
+        <div class="px-4 py-3 bg-slate-50 border-b border-slate-100 flex flex-wrap items-center justify-between gap-2.5">
+          <label class="inline-flex items-center gap-2.5 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              :checked="isAllNewsSelected"
+              @change="toggleSelectAllNews"
+              class="w-4 h-4 rounded border-slate-300 text-amber-600 focus:ring-amber-500 cursor-pointer"
+            >
+            <span class="text-xs font-bold text-slate-600 uppercase tracking-wider">
+              {{ selectedNewsIds.length > 0 ? `${selectedNewsIds.length} di ${globalNews.length} selezionate` : `Seleziona tutto (${globalNews.length})` }}
+            </span>
+          </label>
+
+          <div class="flex items-center gap-2">
+            <button
+              v-if="selectedNewsIds.length > 0"
+              @click="handleDeleteSelected"
+              type="button"
+              class="px-3 py-1.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold shadow-sm transition active:scale-95 flex items-center gap-1.5 cursor-pointer"
+            >
+              <i class="fa-solid fa-trash-can"></i>
+              <span>Elimina selezionate ({{ selectedNewsIds.length }})</span>
+            </button>
+            <button
+              v-else
+              @click="handleDeleteAll"
+              type="button"
+              class="px-3 py-1.5 rounded-xl bg-white hover:bg-red-50 text-red-600 border border-red-200 text-xs font-bold transition active:scale-95 flex items-center gap-1.5 cursor-pointer"
+            >
+              <i class="fa-solid fa-broom"></i>
+              <span>Svuota tutto</span>
+            </button>
+          </div>
         </div>
+
         <div
           v-for="news in globalNews"
           :key="news.id"
-          class="p-4 sm:p-5 hover:bg-amber-50/50 transition flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 group"
+          class="p-4 sm:p-5 hover:bg-amber-50/40 transition flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 group"
+          :class="{ 'bg-red-50/40': selectedNewsIds.includes(news.id) }"
         >
-          <div @click="$emit('start-editing', news)" class="flex items-start sm:items-center gap-3 overflow-hidden cursor-pointer flex-1 min-w-0">
-            <div
-              class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center text-base sm:text-xl shrink-0 shadow-sm"
-              :class="getNewsTypeStyle(news.type).badgeClass"
+          <div class="flex items-start sm:items-center gap-3 overflow-hidden flex-1 min-w-0">
+            <input
+              type="checkbox"
+              :checked="selectedNewsIds.includes(news.id)"
+              @change="toggleSelectNews(news.id)"
+              @click.stop
+              class="w-4 h-4 mt-2.5 sm:mt-0 rounded border-slate-300 text-amber-600 focus:ring-amber-500 shrink-0 cursor-pointer"
             >
-              <i :class="getNewsTypeStyle(news.type).icon"></i>
-            </div>
-            <div class="overflow-hidden min-w-0 flex-1">
-              <span class="text-[11px] font-medium text-slate-400 block truncate">{{ formatNewsDate(news.created_at) }}</span>
-              <h4 class="font-bold text-slate-800 text-sm sm:text-base group-hover:text-amber-700 transition leading-snug line-clamp-2 sm:truncate">
-                {{ translateField(news, 'title') || '(senza titolo)' }}
-              </h4>
-              <p class="text-xs text-slate-500 line-clamp-2 sm:truncate mt-0.5 leading-relaxed">{{ translateField(news, 'content') }}</p>
+            <div @click="$emit('start-editing', news)" class="flex items-start sm:items-center gap-3 overflow-hidden cursor-pointer flex-1 min-w-0">
+              <div
+                class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center text-base sm:text-xl shrink-0 shadow-sm"
+                :class="getNewsTypeStyle(news.type).badgeClass"
+              >
+                <i :class="getNewsTypeStyle(news.type).icon"></i>
+              </div>
+              <div class="overflow-hidden min-w-0 flex-1">
+                <span class="text-[11px] font-medium text-slate-400 block truncate">{{ formatNewsDate(news.created_at) }}</span>
+                <h4 class="font-bold text-slate-800 text-sm sm:text-base group-hover:text-amber-700 transition leading-snug line-clamp-2 sm:truncate">
+                  {{ translateField(news, 'title') || '(senza titolo)' }}
+                </h4>
+                <p class="text-xs text-slate-500 line-clamp-2 sm:truncate mt-0.5 leading-relaxed">{{ translateField(news, 'content') }}</p>
+              </div>
             </div>
           </div>
-          <div class="flex items-center justify-between sm:justify-end gap-2 shrink-0 pt-2 sm:pt-0 border-t border-slate-100 sm:border-t-0">
+          <div class="flex items-center justify-between sm:justify-end gap-2 shrink-0 pt-2 sm:pt-0 border-t border-slate-100 sm:border-t-0 pl-7 sm:pl-0">
             <span
               class="px-2.5 py-1 rounded-full text-[11px] font-bold shadow-xs"
               :class="news.type === 'emergency' ? 'bg-red-100 text-red-800 border border-red-300' : ((news.type === 'service_update' || news.type === 'change') ? 'bg-amber-100 text-amber-800 border border-amber-300' : 'bg-blue-100 text-blue-800 border border-blue-300')"
@@ -244,7 +286,22 @@
         </div>
 
         <!-- Testo Libero Manuale -->
-        <div v-else class="space-y-6 animate-fadeIn">
+        <div v-else class="space-y-5 animate-fadeIn">
+          <!-- Collegamento rapido al servizio di riferimento anche nel testo libero -->
+          <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+              <i class="fa-solid fa-link text-brand-600"></i>
+              <span>Servizio collegato a questo avviso</span>
+            </label>
+            <select
+              v-model="newsForm.related_service_id"
+              class="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm outline-none focus:ring-2 focus:ring-amber-500 font-medium"
+            >
+              <option :value="null">📢 Nessun servizio specifico (Avviso generale)</option>
+              <option v-for="s in services" :key="s.id" :value="s.id">🏢 {{ translateField(s, 'name') }}</option>
+            </select>
+          </div>
+
           <div class="flex flex-col sm:flex-row sm:items-center justify-between bg-amber-100/50 p-3 rounded-xl border border-amber-200 gap-3">
             <div>
               <h4 class="text-sm font-bold uppercase text-amber-800">Gestione Lingue (Titolo e Testo)</h4>
@@ -343,13 +400,20 @@
                 {{ newsForm.type === 'emergency' ? '🔴 Emergenza' : ((newsForm.type === 'service_update' || newsForm.type === 'change') ? '🟠 Variazione' : '🔵 Normale') }}
               </span>
             </div>
-            <div class="space-y-1.5 pt-1">
-              <div class="font-bold text-slate-900 text-xs sm:text-sm leading-snug">
-                {{ pushPreviewTitle }}
+            <div class="flex items-start gap-3 pt-1">
+              <img
+                :src="newsForm.type === 'emergency' ? '/portaleaccoglienzacomo/alert-emergency.png' : '/portaleaccoglienzacomo/pwa-192x192.png'"
+                alt="Icona notifica"
+                class="w-10 h-10 rounded-xl shrink-0 object-contain bg-white/80 p-1 border border-slate-200/70 shadow-xs"
+              >
+              <div class="space-y-1 min-w-0 flex-1">
+                <div class="font-bold text-slate-900 text-xs sm:text-sm leading-snug">
+                  {{ pushPreviewTitle }}
+                </div>
+                <p class="text-slate-700 text-xs leading-relaxed">
+                  {{ pushPreviewBody }}
+                </p>
               </div>
-              <p class="text-slate-700 text-xs leading-relaxed">
-                {{ pushPreviewBody }}
-              </p>
             </div>
             <div class="pt-2 border-t border-slate-200/60 flex items-center justify-between text-[10px] text-slate-500 font-medium">
               <span>Vicini di Strada Como</span>
@@ -403,7 +467,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { usePushNotifications } from '../../composables/usePushNotifications'
 import organizations from '../../config/organizations.json'
 
@@ -434,11 +498,50 @@ const emit = defineEmits([
   'cancel',
   'save',
   'delete',
+  'delete-multiple',
   'add-lang',
   'delete-lang'
 ])
 
 const { sendTestNotification } = usePushNotifications()
+
+const selectedNewsIds = ref([])
+
+watch(() => props.globalNews, (list) => {
+  const validIds = new Set((list || []).map(n => n.id))
+  selectedNewsIds.value = selectedNewsIds.value.filter(id => validIds.has(id))
+})
+
+const isAllNewsSelected = computed(() => {
+  return props.globalNews?.length > 0 && selectedNewsIds.value.length === props.globalNews.length
+})
+
+const toggleSelectNews = (id) => {
+  if (selectedNewsIds.value.includes(id)) {
+    selectedNewsIds.value = selectedNewsIds.value.filter(item => item !== id)
+  } else {
+    selectedNewsIds.value = [...selectedNewsIds.value, id]
+  }
+}
+
+const toggleSelectAllNews = () => {
+  if (isAllNewsSelected.value) {
+    selectedNewsIds.value = []
+  } else {
+    selectedNewsIds.value = (props.globalNews || []).map(n => n.id)
+  }
+}
+
+const handleDeleteSelected = () => {
+  if (selectedNewsIds.value.length === 0) return
+  emit('delete-multiple', [...selectedNewsIds.value])
+}
+
+const handleDeleteAll = () => {
+  const allIds = (props.globalNews || []).map(n => n.id)
+  if (allIds.length === 0) return
+  emit('delete-multiple', allIds)
+}
 
 const testPushAlert = async () => {
   await sendTestNotification()
@@ -495,7 +598,7 @@ const handleDeleteLang = (lang) => {
 const pushPreviewTitle = computed(() => {
   const isEmergency = props.newsForm.type === 'emergency'
   const isUpdate = props.newsForm.type === 'service_update' || props.newsForm.type === 'change'
-  const emoji = isEmergency ? '🚨 ' : (isUpdate ? '🔄 ' : '📢 ')
+  const emoji = isEmergency ? '⚠️ ' : (isUpdate ? '🔄 ' : '📢 ')
 
   let sName = ''
   if (props.newsForm?.related_service_id) {

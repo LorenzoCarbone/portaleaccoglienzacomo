@@ -99,6 +99,7 @@
       @cancel="$emit('news-cancel')"
       @save="$emit('news-save')"
       @delete="$emit('news-delete', $event)"
+      @delete-multiple="$emit('news-delete-multiple', $event)"
       @add-lang="$emit('news-add-lang', $event)"
       @delete-lang="$emit('news-delete-lang', $event)"
     />
@@ -204,6 +205,7 @@ defineEmits([
   'news-cancel',
   'news-save',
   'news-delete',
+  'news-delete-multiple',
   'news-add-lang',
   'news-delete-lang',
   'tag-start-creating',

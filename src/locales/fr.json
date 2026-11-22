@@ -24,7 +24,7 @@
   "status_active": "Actif",
   "status_notice": "Changement",
   "status_suspended": "Suspendu",
-  "hours_label": "Voir Horaires",
+  "hours_label": "Horaires d'ouverture",
   "hours_not_available": "Horaires non disponibles ou 24/7",
   "service_update_label": "Alerte en temps réel",
   "service_suspended_label": "Service Suspendu",
@@ -97,5 +97,17 @@
   "tpl_desc_assenza_medico": "Permanence médicale suspendue le {data}.",
   "type_emergency": "Urgence",
   "type_update": "Changement",
-  "type_general": "Information"
+  "type_general": "Information",
+  "access_label": "Modalités d'accès",
+  "access_free": "Accès libre",
+  "access_porta_aperta": "Via le guichet Porta Aperta",
+  "access_servizi_sociali": "Sur orientation des Services Sociaux",
+  "access_appointment": "Sur rendez-vous",
+  "access_tessera": "Avec carte / inscription",
+  "access_custom": "Modalités d'accès",
+  "hours_everyday": "Tous les jours",
+  "hours_continuous": "Service continu 24h/24",
+  "hours_by_appointment": "Sur rendez-vous",
+  "hours_today": "Aujourd'hui",
+  "share_text_access": "🔑 Accès :"
 }

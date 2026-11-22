@@ -24,7 +24,7 @@
   "status_active": "Active",
   "status_notice": "Notice",
   "status_suspended": "Suspended",
-  "hours_label": "Show Hours / Access",
+  "hours_label": "Opening Hours",
   "hours_not_available": "Hours not provided or 24/7 service",
   "service_update_label": "Real-time alert",
   "service_suspended_label": "Service Suspended / Notice",
@@ -97,5 +97,17 @@
   "tpl_desc_assenza_medico": "Medical desk is suspended on {data} due to staff absence.",
   "type_emergency": "Emergency",
   "type_update": "Variation",
-  "type_general": "Notice"
+  "type_general": "Notice",
+  "access_label": "How to Access",
+  "access_free": "Open access",
+  "access_porta_aperta": "Via Porta Aperta desk",
+  "access_servizi_sociali": "Social Services referral",
+  "access_appointment": "By appointment",
+  "access_tessera": "Card / Registration required",
+  "access_custom": "Access details",
+  "hours_everyday": "Every day",
+  "hours_continuous": "24/7 Continuous service",
+  "hours_by_appointment": "By appointment",
+  "hours_today": "Today",
+  "share_text_access": "🔑 Access:"
 }

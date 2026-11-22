@@ -16,6 +16,68 @@ const locales = { it, en, fr, es, ar, ur, hi, sw, tr }
 
 const currentLangCode = ref(localStorage.getItem('vicini_lang') || 'it')
 
+/**
+ * Normalizza il campo JSONB `hours` di un servizio, supportando sia il formato legacy (array di fasce orarie)
+ * sia il formato esteso { mode: 'schedule' | 'continuous' | 'appointment', schedule: [...], access: { type, note } }.
+ */
+export function parseServiceHoursData(hours) {
+  if (!hours) {
+    return { mode: 'schedule', schedule: [], access: null }
+  }
+  if (Array.isArray(hours)) {
+    const valid = hours.filter(h => h && typeof h.day === 'number' && h.open && h.close)
+    const isAllDay24 = valid.length === 7 && valid.every(h => h.open === '00:00' && (h.close === '24:00' || h.close === '23:59'))
+    return {
+      mode: isAllDay24 ? 'continuous' : 'schedule',
+      schedule: isAllDay24 ? [] : valid,
+      access: null
+    }
+  }
+  if (typeof hours === 'object') {
+    if ('schedule' in hours || 'access' in hours || 'mode' in hours) {
+      const rawSchedule = Array.isArray(hours.schedule)
+        ? hours.schedule.filter(h => h && typeof h.day === 'number' && h.open && h.close)
+        : []
+      const isAllDay24 = rawSchedule.length === 7 && rawSchedule.every(h => h.open === '00:00' && (h.close === '24:00' || h.close === '23:59'))
+      const mode = hours.mode || (isAllDay24 ? 'continuous' : 'schedule')
+      return {
+        mode,
+        schedule: mode === 'continuous' ? [] : rawSchedule,
+        access: hours.access && (hours.access.type || hours.access.note) ? hours.access : null
+      }
+    }
+  }
+  return { mode: 'schedule', schedule: [], access: null }
+}
+
+export function getStructuredScheduleRows(hours, langCode = 'it') {
+  const parsed = parseServiceHoursData(hours)
+  if (!parsed.schedule.length) return []
+
+  const today = new Date().getDay()
+  const dayMap = new Map()
+  parsed.schedule.forEach(h => {
+    if (!dayMap.has(h.day)) dayMap.set(h.day, [])
+    dayMap.get(h.day).push(`${h.open} – ${h.close}`)
+  })
+
+  const orderedDays = [1, 2, 3, 4, 5, 6, 0]
+  const rows = []
+  orderedDays.forEach(dayId => {
+    if (dayMap.has(dayId)) {
+      const dayObj = daysOfWeek.find(d => d.id === dayId)
+      const dayName = dayObj ? (dayObj.label[langCode] || dayObj.label.en || dayObj.label.it || '') : ''
+      rows.push({
+        dayId,
+        dayName,
+        slots: dayMap.get(dayId),
+        isToday: dayId === today
+      })
+    }
+  })
+  return rows
+}
+
 export function useI18n() {
   const currentLang = computed(() => languages[currentLangCode.value] || languages.it)
   const isRTL = computed(() => Boolean(currentLang.value?.rtl))
@@ -68,34 +130,23 @@ export function useI18n() {
     if (typeof hours === 'string' && hours.trim() !== '') {
       return hours
     }
-    if (typeof hours === 'object' && !Array.isArray(hours)) {
+    const parsed = parseServiceHoursData(hours)
+    if (parsed.mode === 'continuous') {
+      return locales[code]?.hours_continuous || locales.en?.hours_continuous || 'Servizio continuativo H24'
+    }
+    if (parsed.mode === 'appointment' && !parsed.schedule.length) {
+      return locales[code]?.hours_by_appointment || locales.en?.hours_by_appointment || 'Su appuntamento'
+    }
+    const rows = getStructuredScheduleRows(hours, code)
+    if (rows.length > 0) {
+      return rows.map(r => `${r.dayName}: ${r.slots.join(' | ')}`).join('\n')
+    }
+    // Fallback se hours fosse un oggetto multilingua testuale puro
+    if (typeof hours === 'object' && !Array.isArray(hours) && !('schedule' in hours) && !('access' in hours)) {
       const txt = hours[code] || hours.it || hours.en || Object.values(hours)[0]
       if (txt && typeof txt === 'string' && txt.trim() !== '') {
         return txt
       }
-      return locales[code]?.hours_not_available || locales.it?.hours_not_available || 'Orari non inseriti'
-    }
-    if (Array.isArray(hours)) {
-      if (!hours.length) {
-        return locales[code]?.hours_not_available || locales.it?.hours_not_available || 'Orari non inseriti'
-      }
-      const dayMap = new Map()
-      hours.forEach(h => {
-        if (h && typeof h.day === 'number' && h.open && h.close) {
-          if (!dayMap.has(h.day)) dayMap.set(h.day, [])
-          dayMap.get(h.day).push(`${h.open} - ${h.close}`)
-        }
-      })
-      const orderedDays = [1, 2, 3, 4, 5, 6, 0]
-      const lines = []
-      orderedDays.forEach(dayId => {
-        if (dayMap.has(dayId)) {
-          const dayObj = daysOfWeek.find(d => d.id === dayId)
-          const dayName = dayObj ? (dayObj.label[code] || dayObj.label.en || dayObj.label.it || '') : ''
-          lines.push(`${dayName}: ${dayMap.get(dayId).join(' | ')}`)
-        }
-      })
-      return lines.length > 0 ? lines.join('\n') : (locales[code]?.hours_not_available || locales.it?.hours_not_available || 'Orari non inseriti')
     }
     return locales[code]?.hours_not_available || locales.it?.hours_not_available || 'Orari non inseriti'
   }

@@ -24,7 +24,7 @@
   "status_active": "Açık",
   "status_notice": "Değişiklik",
   "status_suspended": "Kapalı",
-  "hours_label": "Saatleri Göster",
+  "hours_label": "Çalışma Saatleri",
   "hours_not_available": "Saatler belirtilmemiş veya 24/7",
   "service_update_label": "Anlık uyarı",
   "service_suspended_label": "Hizmet Askıya Alındı",
@@ -97,5 +97,17 @@
   "tpl_desc_assenza_medico": "Personel eksikliği nedeniyle {data} tarihinde doktor hizmeti yoktur.",
   "type_emergency": "Acil Durum",
   "type_update": "Değişiklik",
-  "type_general": "Bilgilendirme"
+  "type_general": "Bilgilendirme",
+  "access_label": "Erişim Koşulları",
+  "access_free": "Serbest erişim",
+  "access_porta_aperta": "Porta Aperta masası aracılığıyla",
+  "access_servizi_sociali": "Sosyal Hizmetler yönlendirmesiyle",
+  "access_appointment": "Randevu ile",
+  "access_tessera": "Kart / kayıt ile",
+  "access_custom": "Erişim bilgisi",
+  "hours_everyday": "Her gün",
+  "hours_continuous": "7/24 Kesintisiz hizmet",
+  "hours_by_appointment": "Randevu ile",
+  "hours_today": "Bugün",
+  "share_text_access": "🔑 Erişim:"
 }

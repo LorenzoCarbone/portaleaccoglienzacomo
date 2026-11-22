@@ -375,13 +375,102 @@
             <i class="fa-regular fa-clock"></i>
           </div>
           <div>
-            <h3 class="font-bold text-slate-800 text-base">Orari e Operatività</h3>
-            <p class="text-xs text-slate-500">Imposta i giorni e le fasce orarie in cui il servizio è attivo.</p>
+            <h3 class="font-bold text-slate-800 text-base">Modalità di Accesso & Orari</h3>
+            <p class="text-xs text-slate-500">Distingui chiaramente come si accede al servizio (es. accesso libero, Porta Aperta, Servizi Sociali) e gli orari di apertura.</p>
           </div>
         </div>
 
-        <div class="space-y-4">
+        <div class="space-y-5">
+          <!-- Modalità di Accesso -->
+          <div class="p-4 rounded-2xl bg-sky-50/60 border border-sky-200/80 space-y-3">
+            <label class="block text-xs font-bold uppercase tracking-wider text-sky-900 flex items-center gap-1.5">
+              <i class="fa-solid fa-key text-sky-600"></i>
+              <span>Modalità di Accesso (sempre visibile in scheda)</span>
+            </label>
+            <select
+              v-model="editForm.accessType"
+              class="w-full bg-white border border-sky-200 rounded-xl px-3.5 py-2.5 text-sm outline-none focus:ring-2 focus:ring-sky-500 font-medium text-slate-800"
+            >
+              <option value="">-- Non specificata --</option>
+              <option value="free">🟢 Accesso libero (senza appuntamento)</option>
+              <option value="porta_aperta">🔑 Tramite Porta Aperta</option>
+              <option value="servizi_sociali">📋 Su invio Servizi Sociali</option>
+              <option value="tessera">🪪 Con tessera / iscrizione</option>
+              <option value="appointment">📅 Su appuntamento / contatto telefonico</option>
+              <option value="custom">ℹ️ Modalità specifica (vedi nota sotto)</option>
+            </select>
+
+            <div class="space-y-2 pt-1">
+              <div class="flex items-center justify-between gap-2">
+                <span class="text-[11px] font-bold text-slate-600">Dettaglio / Nota accesso (opzionale)</span>
+                <div class="flex items-center gap-1.5">
+                  <select v-model="selectedNewLangAccess" class="text-xs border border-sky-200 rounded-lg px-2 py-1 bg-white outline-none">
+                    <option value="">Aggiungi lingua...</option>
+                    <option v-for="(l, code) in availableLangsForAccess" :key="code" :value="code">{{ l.name }}</option>
+                  </select>
+                  <button
+                    @click="handleAddLangAccess"
+                    type="button"
+                    class="bg-sky-600 hover:bg-sky-700 text-white text-[10px] font-bold px-2.5 py-1.5 rounded-lg shadow-sm transition"
+                  >
+                    <i class="fa-solid fa-plus"></i>
+                  </button>
+                </div>
+              </div>
+              <div v-for="(text, lang) in editForm.accessNote" :key="'access_' + lang" class="relative">
+                <label class="block text-[10px] font-bold text-slate-500 mb-1 uppercase flex items-center gap-1">
+                  <span class="flag-emoji">{{ languages[lang]?.flag }}</span> {{ languages[lang]?.name }}
+                </label>
+                <input
+                  v-model="editForm.accessNote[lang]"
+                  type="text"
+                  placeholder="Es: Presentarsi allo sportello Porta Aperta per il rilascio della tessera."
+                  class="w-full text-sm py-2 px-3 rounded-lg border border-sky-200 bg-white text-slate-800 focus:ring-2 focus:ring-sky-500 outline-none"
+                >
+                <button
+                  v-if="lang !== 'it'"
+                  @click="delete editForm.accessNote[lang]"
+                  type="button"
+                  class="absolute top-6 right-2 text-red-500 hover:text-red-700 p-1 bg-white rounded-md shadow-sm"
+                >
+                  <i class="fa-solid fa-trash text-xs"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tipologia Orario -->
           <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">Tipologia Orario</label>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-4">
+              <button
+                type="button"
+                @click="editForm.hoursMode = 'schedule'"
+                class="py-2.5 px-3 rounded-xl text-xs font-bold border transition"
+                :class="(editForm.hoursMode || 'schedule') === 'schedule' ? 'bg-brand-600 border-brand-700 text-white shadow-sm' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'"
+              >
+                🕒 Fasce settimanali
+              </button>
+              <button
+                type="button"
+                @click="editForm.hoursMode = 'continuous'"
+                class="py-2.5 px-3 rounded-xl text-xs font-bold border transition"
+                :class="editForm.hoursMode === 'continuous' ? 'bg-emerald-600 border-emerald-700 text-white shadow-sm' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'"
+              >
+                ♾️ Continuativo H24
+              </button>
+              <button
+                type="button"
+                @click="editForm.hoursMode = 'appointment'"
+                class="py-2.5 px-3 rounded-xl text-xs font-bold border transition"
+                :class="editForm.hoursMode === 'appointment' ? 'bg-amber-500 border-amber-600 text-white shadow-sm' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'"
+              >
+                📅 Su appuntamento
+              </button>
+            </div>
+          </div>
+
+          <div v-if="(editForm.hoursMode || 'schedule') !== 'continuous'">
             <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">Costruttore Orari</label>
             <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3">
               <div v-for="(slot, index) in editForm.hoursList" :key="index" class="flex flex-wrap sm:flex-nowrap items-center gap-2">
@@ -630,6 +719,7 @@ const selectedNewLangName = ref('')
 const selectedNewLangDesc = ref('')
 const selectedNewLangTemp = ref('')
 const selectedNewLangService = ref('')
+const selectedNewLangAccess = ref('')
 
 const selectedNoticeTemplate = computed(() => {
   return props.templates?.find(t => t.id === props.editForm.noticeTemplate)
@@ -693,6 +783,24 @@ const handleAddLangTemp = () => {
   if (selectedNewLangTemp.value) {
     props.editForm.temp_info[selectedNewLangTemp.value] = ''
     selectedNewLangTemp.value = ''
+  }
+}
+
+const availableLangsForAccess = computed(() => {
+  const available = {}
+  for (const code in props.languages) {
+    if (code !== 'it' && props.editForm.accessNote && props.editForm.accessNote[code] === undefined) {
+      available[code] = props.languages[code]
+    }
+  }
+  return available
+})
+
+const handleAddLangAccess = () => {
+  if (selectedNewLangAccess.value) {
+    if (!props.editForm.accessNote) props.editForm.accessNote = { it: '' }
+    props.editForm.accessNote[selectedNewLangAccess.value] = ''
+    selectedNewLangAccess.value = ''
   }
 }
 

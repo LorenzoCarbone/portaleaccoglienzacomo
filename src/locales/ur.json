@@ -24,7 +24,7 @@
   "status_active": "فعال",
   "status_notice": "تبدیلی",
   "status_suspended": "معطل",
-  "hours_label": "اوقات دیکھیں",
+  "hours_label": "کھلنے کے اوقات",
   "hours_not_available": "اوقات دستیاب نہیں یا 24/7",
   "service_update_label": "تازہ ترین الرٹ",
   "service_suspended_label": "سروس معطل",
@@ -97,5 +97,17 @@
   "tpl_desc_assenza_medico": "ڈاکٹر کی غیر موجودگی کی وجہ سے {data} کو میڈیکل ڈیسک بند ہے۔",
   "type_emergency": "ہنگامی",
   "type_update": "تبدیلی",
-  "type_general": "اطلاع"
+  "type_general": "اطلاع",
+  "access_label": "رسائی کا طریقہ",
+  "access_free": "بغیر اپائنٹمنٹ براہ راست رسائی",
+  "access_porta_aperta": "Porta Aperta ڈیسک کے ذریعے",
+  "access_servizi_sociali": "سوشل سروسز کی سفارش پر",
+  "access_appointment": "اپائنٹمنٹ کے ساتھ",
+  "access_tessera": "کارڈ / رجسٹریشن کے ساتھ",
+  "access_custom": "رسائی کی تفصیلات",
+  "hours_everyday": "ہر روز",
+  "hours_continuous": "24 گھنٹے مسلسل سروس",
+  "hours_by_appointment": "اپائنٹمنٹ کے ساتھ",
+  "hours_today": "آج",
+  "share_text_access": "🔑 رسائی:"
 }

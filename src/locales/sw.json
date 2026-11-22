@@ -24,7 +24,7 @@
   "status_active": "Inafanya kazi",
   "status_notice": "Mabadiliko",
   "status_suspended": "Imesimamishwa",
-  "hours_label": "Onyesha Saa",
+  "hours_label": "Saa za kufungua",
   "hours_not_available": "Saa hazipatikani au 24/7",
   "service_update_label": "Arifa mpya",
   "service_suspended_label": "Imesimamishwa",
@@ -97,5 +97,17 @@
   "tpl_desc_assenza_medico": "Daktari hayupo, huduma imesimamishwa tarehe {data}.",
   "type_emergency": "Dharura",
   "type_update": "Mabadiliko",
-  "type_general": "Taarifa"
+  "type_general": "Taarifa",
+  "access_label": "Namna ya kuingia",
+  "access_free": "Ufikiaji huru",
+  "access_porta_aperta": "Kupitia ofisi ya Porta Aperta",
+  "access_servizi_sociali": "Kwa rufaa ya Huduma za Jamii",
+  "access_appointment": "Kwa miadi",
+  "access_tessera": "Kwa kadi / usajili",
+  "access_custom": "Maelezo ya ufikiaji",
+  "hours_everyday": "Kila siku",
+  "hours_continuous": "Huduma ya saa 24",
+  "hours_by_appointment": "Kwa miadi",
+  "hours_today": "Leo",
+  "share_text_access": "🔑 Ufikiaji:"
 }

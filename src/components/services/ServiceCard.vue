@@ -35,12 +35,14 @@
         </div>
       </div>
 
-      <div class="p-5 space-y-4">
+      <div class="p-5 space-y-3.5">
+        <!-- Indirizzo -->
         <div class="flex items-center gap-2.5 text-slate-800 text-sm bg-brand-50/70 p-3 rounded-xl border border-brand-100">
           <i class="fa-solid fa-location-dot text-brand-600 text-base shrink-0"></i>
           <span class="font-bold tracking-wide text-brand-900 leading-tight">{{ service.address }}</span>
         </div>
 
+        <!-- Info / Orari Temporanei -->
         <div v-if="hasTempInfo(service)" class="bg-amber-100 border border-amber-300 rounded-xl p-3 text-sm text-amber-900 shadow-sm flex items-start gap-2.5">
           <i class="fa-solid fa-clock-rotate-left mt-[3px] shrink-0 text-amber-600"></i>
           <div>
@@ -49,26 +51,124 @@
           </div>
         </div>
 
+        <!-- Descrizione -->
         <div>
           <p class="text-slate-600 text-sm leading-relaxed whitespace-pre-line" v-html="translateField(service, 'description')"></p>
         </div>
 
-        <div class="bg-slate-50 rounded-2xl border border-slate-100 text-xs text-slate-600 overflow-hidden">
-          <button
-            @click="$emit('toggle-hours', service.id)"
-            class="w-full flex items-center justify-between p-3 bg-slate-100/50 hover:bg-slate-100 transition font-bold text-slate-700"
+        <!-- SEZIONE 1: MODALITÀ DI ACCESSO (Sempre visibile e ben differenziata) -->
+        <div
+          v-if="accessDisplay"
+          class="rounded-2xl p-3 border flex items-start gap-2.5 transition"
+          :class="accessDisplay.boxClass"
+        >
+          <div
+            class="w-8 h-8 rounded-xl flex items-center justify-center text-xs shrink-0 shadow-xs"
+            :class="accessDisplay.iconClass"
           >
-            <div class="flex items-center gap-2">
-              <i class="fa-regular fa-clock text-slate-400 text-sm"></i>
-              <span>{{ t('hours_label') }}</span>
-            </div>
-            <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 transition-transform" :class="{'rotate-180': isHoursExpanded}"></i>
-          </button>
-          <div v-show="isHoursExpanded" class="p-3 border-t border-slate-100">
-            <span class="whitespace-pre-line leading-relaxed block">{{ formatHours(service.hours, currentLangCode) }}</span>
+            <i :class="accessDisplay.icon"></i>
+          </div>
+          <div class="min-w-0 flex-1">
+            <span class="text-[10px] uppercase tracking-wider font-bold block leading-none mb-1 opacity-75">
+              {{ t('access_label') }}
+            </span>
+            <span class="text-xs sm:text-[13px] font-bold block leading-snug">
+              {{ accessDisplay.title }}
+            </span>
+            <p v-if="accessDisplay.note" class="text-xs leading-relaxed mt-0.5 opacity-90">
+              {{ accessDisplay.note }}
+            </p>
           </div>
         </div>
 
+        <!-- SEZIONE 2: ORARI DI APERTURA (Separati dall'accesso, con riepilogo e tabella chiara) -->
+        <!-- Caso A: Servizio Continuativo H24 o Solo su Appuntamento -->
+        <div
+          v-if="parsedHours.mode === 'continuous' || (parsedHours.mode === 'appointment' && scheduleRows.length === 0)"
+          class="rounded-2xl border border-slate-200/80 bg-slate-50/90 px-3.5 py-2.5 flex items-center justify-between gap-2 text-xs"
+        >
+          <div class="flex items-center gap-2 font-bold text-slate-700">
+            <i class="fa-regular fa-clock text-brand-600 text-sm"></i>
+            <span>{{ t('hours_label') }}</span>
+          </div>
+          <span
+            class="px-2.5 py-1 rounded-full text-[11px] font-bold border shrink-0"
+            :class="parsedHours.mode === 'continuous' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-800 border-amber-200'"
+          >
+            {{ parsedHours.mode === 'continuous' ? t('hours_continuous') : t('hours_by_appointment') }}
+          </span>
+        </div>
+
+        <!-- Caso B: Fasce orarie settimanali strutturate (Accordion con tabella 2 colonne) -->
+        <div
+          v-else-if="scheduleRows.length > 0"
+          class="rounded-2xl border border-slate-200/80 bg-slate-50/80 text-xs overflow-hidden"
+        >
+          <button
+            type="button"
+            @click="$emit('toggle-hours', service.id)"
+            class="w-full flex items-center justify-between gap-2 px-3.5 py-3 hover:bg-slate-100/80 transition font-bold text-slate-700 cursor-pointer"
+          >
+            <div class="flex items-center gap-2 min-w-0">
+              <i class="fa-regular fa-clock text-brand-600 text-sm shrink-0"></i>
+              <span class="truncate">{{ t('hours_label') }}</span>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              <span class="px-2 py-0.5 rounded-full bg-white border border-slate-200 text-[11px] font-semibold text-slate-600 shadow-xs">
+                {{ scheduleSummary }}
+              </span>
+              <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 transition-transform" :class="{'rotate-180': isHoursExpanded}"></i>
+            </div>
+          </button>
+
+          <div v-show="isHoursExpanded" class="border-t border-slate-200/70 bg-white divide-y divide-slate-100">
+            <div
+              v-for="row in scheduleRows"
+              :key="row.dayId"
+              class="px-3.5 py-2 flex items-center justify-between gap-2"
+              :class="row.isToday ? 'bg-brand-50/70' : ''"
+            >
+              <div class="flex items-center gap-1.5 min-w-0">
+                <span
+                  class="text-xs truncate"
+                  :class="row.isToday ? 'font-bold text-brand-900' : 'font-medium text-slate-600'"
+                >
+                  {{ row.dayName }}
+                </span>
+                <span
+                  v-if="row.isToday"
+                  class="px-1.5 py-0.5 rounded-full bg-brand-600 text-white text-[9px] font-bold uppercase tracking-wider shrink-0"
+                >
+                  {{ t('hours_today') }}
+                </span>
+              </div>
+              <div class="flex flex-wrap justify-end gap-1 shrink-0">
+                <span
+                  v-for="(slot, idx) in row.slots"
+                  :key="idx"
+                  class="px-2 py-0.5 rounded-md text-[11px] font-semibold tabular-nums"
+                  :class="row.isToday ? 'bg-brand-100 text-brand-900' : 'bg-slate-100 text-slate-700'"
+                >
+                  {{ slot }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Caso C: Nessun orario inserito -->
+        <div
+          v-else
+          class="rounded-2xl border border-slate-200/70 bg-slate-50/70 px-3.5 py-2.5 flex items-center justify-between gap-2 text-xs text-slate-500"
+        >
+          <div class="flex items-center gap-2 font-semibold text-slate-600">
+            <i class="fa-regular fa-clock text-slate-400 text-sm"></i>
+            <span>{{ t('hours_label') }}</span>
+          </div>
+          <span class="text-[11px] text-slate-500 text-right">{{ formatHours(service.hours, currentLangCode) }}</span>
+        </div>
+
+        <!-- Avviso in tempo reale sulla scheda -->
         <div
           v-if="service.latestUpdate"
           class="rounded-2xl p-3.5 border text-xs flex items-start gap-2.5 transition"
@@ -102,7 +202,7 @@
       <button
         @click="$emit('open-contact', service)"
         :title="t('btn_contact')"
-        class="w-full h-full bg-slate-100 hover:bg-slate-200 text-brand-600 sm:text-slate-800 sm:font-semibold py-3 px-1.5 rounded-2xl flex flex-col xl:flex-row items-center justify-center gap-1.5 transition active:scale-95 border border-slate-200/80 shadow-sm sm:shadow-none hover:shadow"
+        class="w-full h-full bg-slate-100 hover:bg-slate-200 text-brand-600 sm:text-slate-800 sm:font-semibold py-3 px-1.5 rounded-2xl flex flex-col xl:flex-row items-center justify-center gap-1.5 transition active:scale-95 border border-slate-200/80 shadow-sm sm:shadow-none hover:shadow cursor-pointer"
       >
         <i class="fa-solid fa-phone text-xl sm:text-lg sm:text-brand-600 shrink-0"></i>
         <span class="text-[11px] sm:text-xs font-medium sm:font-semibold leading-tight truncate">{{ t('btn_contact') }}</span>
@@ -124,7 +224,7 @@
       <button
         @click="$emit('open-share', service)"
         :title="t('btn_share')"
-        class="w-full h-full bg-slate-100 hover:bg-slate-200 text-brand-600 sm:text-slate-800 sm:font-semibold py-3 px-1.5 rounded-2xl flex flex-col xl:flex-row items-center justify-center gap-1.5 transition active:scale-95 border border-slate-200/80 shadow-sm sm:shadow-none hover:shadow"
+        class="w-full h-full bg-slate-100 hover:bg-slate-200 text-brand-600 sm:text-slate-800 sm:font-semibold py-3 px-1.5 rounded-2xl flex flex-col xl:flex-row items-center justify-center gap-1.5 transition active:scale-95 border border-slate-200/80 shadow-sm sm:shadow-none hover:shadow cursor-pointer"
       >
         <i class="fa-solid fa-share-nodes text-xl sm:text-lg sm:text-brand-600 shrink-0"></i>
         <span class="text-[11px] sm:text-xs font-medium sm:font-semibold leading-tight truncate">{{ t('btn_share') }}</span>
@@ -134,7 +234,10 @@
 </template>
 
 <script setup>
-defineProps({
+import { computed } from 'vue'
+import { parseServiceHoursData, getStructuredScheduleRows } from '../../composables/useI18n'
+
+const props = defineProps({
   service: Object,
   isHoursExpanded: Boolean,
   currentLangCode: String,
@@ -149,4 +252,84 @@ defineProps({
 })
 
 defineEmits(['toggle-hours', 'open-contact', 'open-share'])
+
+const parsedHours = computed(() => parseServiceHoursData(props.service?.hours))
+
+const scheduleRows = computed(() => {
+  return getStructuredScheduleRows(props.service?.hours, props.currentLangCode || 'it')
+})
+
+const scheduleSummary = computed(() => {
+  const rows = scheduleRows.value
+  if (rows.length === 7) return props.t('hours_everyday')
+  if (rows.length <= 3) {
+    return rows.map(r => r.dayName.slice(0, 3)).join(', ')
+  }
+  return `${rows.length}/7`
+})
+
+const ACCESS_STYLES = {
+  free: {
+    key: 'access_free',
+    icon: 'fa-solid fa-door-open',
+    boxClass: 'bg-emerald-50/80 border-emerald-200/80 text-emerald-950',
+    iconClass: 'bg-emerald-100 text-emerald-700'
+  },
+  porta_aperta: {
+    key: 'access_porta_aperta',
+    icon: 'fa-solid fa-key',
+    boxClass: 'bg-sky-50/80 border-sky-200/80 text-sky-950',
+    iconClass: 'bg-sky-100 text-sky-700'
+  },
+  servizi_sociali: {
+    key: 'access_servizi_sociali',
+    icon: 'fa-solid fa-clipboard-check',
+    boxClass: 'bg-indigo-50/80 border-indigo-200/80 text-indigo-950',
+    iconClass: 'bg-indigo-100 text-indigo-700'
+  },
+  tessera: {
+    key: 'access_tessera',
+    icon: 'fa-solid fa-id-card',
+    boxClass: 'bg-teal-50/80 border-teal-200/80 text-teal-950',
+    iconClass: 'bg-teal-100 text-teal-700'
+  },
+  appointment: {
+    key: 'access_appointment',
+    icon: 'fa-solid fa-calendar-check',
+    boxClass: 'bg-amber-50/80 border-amber-200/80 text-amber-950',
+    iconClass: 'bg-amber-100 text-amber-700'
+  },
+  custom: {
+    key: 'access_custom',
+    icon: 'fa-solid fa-circle-info',
+    boxClass: 'bg-slate-50 border-slate-200 text-slate-800',
+    iconClass: 'bg-slate-200/70 text-slate-700'
+  }
+}
+
+const accessDisplay = computed(() => {
+  const acc = parsedHours.value.access
+  if (!acc) return null
+
+  const style = ACCESS_STYLES[acc.type] || ACCESS_STYLES.custom
+  let note = ''
+  if (acc.note) {
+    if (typeof acc.note === 'string') {
+      note = acc.note.trim()
+    } else if (typeof acc.note === 'object') {
+      const lang = props.currentLangCode || 'it'
+      note = (acc.note[lang] || acc.note.en || acc.note.it || Object.values(acc.note)[0] || '').trim()
+    }
+  }
+
+  if (!acc.type && !note) return null
+
+  return {
+    title: acc.type ? props.t(style.key) : props.t('access_label'),
+    note,
+    icon: style.icon,
+    boxClass: style.boxClass,
+    iconClass: style.iconClass
+  }
+})
 </script>

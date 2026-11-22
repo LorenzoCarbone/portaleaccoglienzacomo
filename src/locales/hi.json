@@ -24,7 +24,7 @@
   "status_active": "सक्रिय",
   "status_notice": "परिवर्तन",
   "status_suspended": "निलंबित",
-  "hours_label": "समय देखें",
+  "hours_label": "खुलने का समय",
   "hours_not_available": "समय उपलब्ध नहीं या 24/7",
   "service_update_label": "ताज़ा अलर्ट",
   "service_suspended_label": "सेवा निलंबित",
@@ -97,5 +97,17 @@
   "tpl_desc_assenza_medico": "कर्मचारियों की अनुपस्थिति के कारण मेडिकल डेस्क {data} को निलंबित है।",
   "type_emergency": "आपातकाल",
   "type_update": "बदलाव",
-  "type_general": "सूचना"
+  "type_general": "सूचना",
+  "access_label": "प्रवेश की विधि",
+  "access_free": "सीधा प्रवेश (निःशुल्क)",
+  "access_porta_aperta": "Porta Aperta डेस्क के माध्यम से",
+  "access_servizi_sociali": "समाज सेवा रेफरल द्वारा",
+  "access_appointment": "अपॉइंटमेंट द्वारा",
+  "access_tessera": "कार्ड / पंजीकरण के साथ",
+  "access_custom": "प्रवेश जानकारी",
+  "hours_everyday": "प्रतिदिन",
+  "hours_continuous": "24 घंटे निरंतर सेवा",
+  "hours_by_appointment": "अपॉइंटमेंट द्वारा",
+  "hours_today": "आज",
+  "share_text_access": "🔑 प्रवेश:"
 }

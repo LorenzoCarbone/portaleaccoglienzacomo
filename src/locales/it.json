@@ -24,7 +24,7 @@
   "status_active": "Regolare",
   "status_notice": "Variazione",
   "status_suspended": "Sospeso",
-  "hours_label": "Mostra Orari / Accesso",
+  "hours_label": "Orari di apertura",
   "hours_not_available": "Orari non inseriti o servizio continuativo",
   "service_update_label": "Avviso in tempo reale",
   "service_suspended_label": "Servizio Sospeso / Avviso",
@@ -97,5 +97,17 @@
   "tpl_desc_assenza_medico": "Il presidio medico è sospeso in data {data} per assenza del personale.",
   "type_emergency": "Emergenza",
   "type_update": "Variazione",
-  "type_general": "Informativa"
+  "type_general": "Informativa",
+  "access_label": "Modalità di accesso",
+  "access_free": "Accesso libero",
+  "access_porta_aperta": "Tramite Porta Aperta",
+  "access_servizi_sociali": "Su invio Servizi Sociali",
+  "access_appointment": "Su appuntamento",
+  "access_tessera": "Con tessera / iscrizione",
+  "access_custom": "Modalità di accesso",
+  "hours_everyday": "Tutti i giorni",
+  "hours_continuous": "Servizio continuativo H24",
+  "hours_by_appointment": "Su appuntamento",
+  "hours_today": "Oggi",
+  "share_text_access": "🔑 Accesso:"
 }

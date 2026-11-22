@@ -167,6 +167,7 @@
       @news-cancel="cancelEditingNews"
       @news-save="saveNewsChanges"
       @news-delete="deleteNewsItem"
+      @news-delete-multiple="deleteMultipleNews"
       @news-add-lang="addLangToNews"
       @news-delete-lang="deleteLangFromNews"
       @tag-start-creating="startCreatingTag"
@@ -402,7 +403,8 @@ const {
   startCreatingNews,
   cancelEditingNews,
   saveNewsChanges,
-  deleteNewsItem
+  deleteNewsItem,
+  deleteMultipleNews
 } = useNews(buildMultilangObjFromTemplate, services)
 
 // PWA State & Installation

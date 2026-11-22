@@ -211,11 +211,27 @@ export function usePushNotifications() {
         type: 'general',
         priority: 'normal',
         serviceName: '',
-        title: { it: 'Notifiche Push Attive', en: 'Push Notifications Active', es: 'Notificaciones Push Activas' },
+        title: {
+          it: 'Test sistema di notifica',
+          en: 'Notification System Test',
+          es: 'Prueba del sistema de notificaciones',
+          fr: 'Test du système de notification',
+          ar: 'اختبار نظام الإشعارات',
+          ur: 'نوٹیفکیشن سسٹم ٹیسٹ',
+          hi: 'सूचना प्रणाली परीक्षण',
+          sw: 'Jaribio la mfumo wa arifa',
+          tr: 'Bildirim Sistemi Testi'
+        },
         content: {
-          it: 'Le notifiche push funzionano! Clicca per aprire Notizie & Allerta.',
-          en: 'Push notifications are active! Click to open News & Alerts.',
-          es: '¡Las notificaciones push están activas! Haz clic para abrir Noticias.'
+          it: 'Questo è un messaggio di TEST del sistema di notifica di Vicini di Strada Como. Non è richiesta alcuna azione.',
+          en: 'This is a TEST message from the Vicini di Strada Como notification system. No action is required.',
+          es: 'Este es un mensaje de PRUEBA del sistema de notificaciones de Vicini di Strada Como. No se requiere ninguna acción.',
+          fr: 'Ceci est un message de TEST du système de notification Vicini di Strada Como. Aucune action n\'est requise.',
+          ar: 'هذه رسالة تجريبية لنظام الإشعارات الخاص بـ Vicini di Strada Como. لا يلزم اتخاذ أي إجراء.',
+          ur: 'یہ Vicini di Strada Como نوٹیفکیشن سسٹم کا ٹیسٹ پیغام ہے۔ کسی کارروائی کی ضرورت نہیں ہے۔',
+          hi: 'यह Vicini di Strada Como सूचना प्रणाली का एक परीक्षण संदेश है। किसी कार्रवाई की आवश्यकता नहीं है।',
+          sw: 'Huu ni ujumbe wa MAJARIBIO kutoka kwa mfumo wa arifa wa Vicini di Strada Como. Hakuna hatua inayohitajika.',
+          tr: 'Bu, Vicini di Strada Como bildirim sisteminin bir TEST mesajıdır. Herhangi bir işlem gerekmemektedir.'
         },
         url: 'https://lorenzocarbone.github.io/portaleaccoglienzacomo/?tab=news'
       })
@@ -270,11 +286,16 @@ export async function sendOneSignalPush({ title, content, url, newsId, type = 'g
   const isEmergency = type === 'emergency'
   const isUpdate = type === 'service_update' || type === 'change'
 
-  // Emoji distintiva per tipologia
-  const emoji = isEmergency ? '🚨 ' : (isUpdate ? '🔄 ' : '📢 ')
+  // Emoji distintiva per tipologia (triangolo pericolo per Emergenza invece della sirena)
+  const emoji = isEmergency ? '⚠️ ' : (isUpdate ? '🔄 ' : '📢 ')
 
   // Accent color di sistema Android (Rosso per Emergenza, Arancione per Variazione, Blu per Normale)
   const accentColor = isEmergency ? 'FFDC2626' : (isUpdate ? 'FFF59E0B' : 'FF2563EB')
+
+  // Icona notifica: cartello pericolo rosso dedicato per Emergenze, icona app per gli altri casi
+  const notifIcon = isEmergency
+    ? 'https://lorenzocarbone.github.io/portaleaccoglienzacomo/alert-emergency.png'
+    : 'https://lorenzocarbone.github.io/portaleaccoglienzacomo/pwa-192x192.png'
 
   const getServiceNameForLang = (lang) => {
     if (!serviceName) return ''
@@ -361,7 +382,7 @@ export async function sendOneSignalPush({ title, content, url, newsId, type = 'g
         ttl: 259200,
         android_accent_color: accentColor,
         web_url: targetUrl,
-        chrome_web_icon: 'https://lorenzocarbone.github.io/portaleaccoglienzacomo/pwa-192x192.png',
+        chrome_web_icon: notifIcon,
         chrome_web_badge: 'https://lorenzocarbone.github.io/portaleaccoglienzacomo/pwa-192x192.png',
         data: {
           url: targetUrl,

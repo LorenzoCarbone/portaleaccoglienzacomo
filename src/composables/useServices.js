@@ -2,6 +2,7 @@ import { ref, computed } from 'vue'
 import { supabase, IMAGE_BUCKET } from '../lib/supabase'
 import organizations from '../config/organizations.json'
 import languages from '../config/languages.json'
+import { parseServiceHoursData } from './useI18n'
 
 const dbServices = ref([])
 const isLoading = ref(true)
@@ -31,7 +32,10 @@ const editForm = ref({
   address: '',
   phone: '',
   email: '',
-  hoursList: [{ day: 1, open: '', close: '' }],
+  hoursMode: 'schedule',
+      hoursList: [{ day: 1, open: '', close: '' }],
+      accessType: '',
+      accessNote: { it: '' },
   status: 'active',
   noticeTemplate: 'none',
   noticeParams: {},
@@ -160,6 +164,14 @@ export function useServices(i18nHelpers = {}) {
     message += `*${name}* (${org})\n\n`
 
     if (address) message += `${t('share_text_address', {}, langCode)} ${address}\n`
+    const parsedH = parseServiceHoursData(service.hours)
+    if (parsedH.access && (parsedH.access.type || parsedH.access.note)) {
+      const accKey = parsedH.access.type ? 'access_' + parsedH.access.type : 'access_label'
+      const accTitle = t(accKey, {}, langCode)
+      const accNote = parsedH.access.note ? extractText(parsedH.access.note, langCode) : ''
+      const accLine = accNote ? `${accTitle} (${accNote})` : accTitle
+      message += `${t('share_text_access', {}, langCode)} ${accLine}\n`
+    }
     message += `${t('share_text_hours', {}, langCode)}\n${hours}\n\n`
 
     if (phone) message += `${t('share_text_phone', {}, langCode)} ${phone}\n`
@@ -296,7 +308,12 @@ export function useServices(i18nHelpers = {}) {
     if (typeof initTempInfo === 'string') initTempInfo = { it: initTempInfo }
     if (!initTempInfo.it) initTempInfo.it = ''
 
-    let dbHoursList = Array.isArray(service.hours) && service.hours.length > 0 ? [...service.hours] : [{ day: 1, open: '', close: '' }]
+    const parsedHours = parseServiceHoursData(service.hours)
+    let dbHoursList = parsedHours.schedule.length > 0 ? parsedHours.schedule.map(h => ({ ...h })) : [{ day: 1, open: '', close: '' }]
+    let initAccessType = parsedHours.access?.type || ''
+    let initAccessNote = parsedHours.access?.note ? JSON.parse(JSON.stringify(parsedHours.access.note)) : { it: '' }
+    if (typeof initAccessNote === 'string') initAccessNote = { it: initAccessNote }
+    if (!initAccessNote.it) initAccessNote.it = ''
 
     let initName = service.name ? JSON.parse(JSON.stringify(service.name)) : { it: '' }
     if (typeof initName === 'string') initName = { it: initName }
@@ -312,7 +329,10 @@ export function useServices(i18nHelpers = {}) {
       address: service.address || '',
       phone: service.phone || '',
       email: service.email || '',
+      hoursMode: parsedHours.mode || 'schedule',
       hoursList: dbHoursList,
+      accessType: initAccessType,
+      accessNote: initAccessNote,
       status: service.status || 'active',
       noticeTemplate: initNoticeTpl,
       noticeParams: {},
@@ -404,7 +424,18 @@ export function useServices(i18nHelpers = {}) {
     if (!supabase || !editingService.value) return
     savingServiceId.value = true
     try {
-      const validHours = editForm.value.hoursList.filter(h => h.open && h.close)
+      const validHours = (editForm.value.hoursList || []).filter(h => h.open && h.close)
+      const hoursMode = editForm.value.hoursMode || 'schedule'
+      const accessType = editForm.value.accessType || ''
+      const accessNote = JSON.parse(JSON.stringify(editForm.value.accessNote || { it: '' }))
+      const hasAccessNote = Object.values(accessNote).some(v => typeof v === 'string' && v.trim() !== '')
+      const hoursPayload = (accessType || hasAccessNote || hoursMode !== 'schedule')
+        ? {
+            mode: hoursMode,
+            schedule: hoursMode === 'continuous' ? [] : validHours,
+            access: (accessType || hasAccessNote) ? { type: accessType || 'custom', note: accessNote } : null
+          }
+        : validHours
 
       const payload = {
         id: editForm.value.id,
@@ -415,7 +446,7 @@ export function useServices(i18nHelpers = {}) {
         org_id: editForm.value.organization_id,
         category: editForm.value.category,
         image: String(editForm.value.image || '').trim(),
-        hours: validHours,
+        hours: hoursPayload,
         temp_info: JSON.parse(JSON.stringify(editForm.value.temp_info)),
         name: JSON.parse(JSON.stringify(editForm.value.name)),
         description: JSON.parse(JSON.stringify(editForm.value.description)),
