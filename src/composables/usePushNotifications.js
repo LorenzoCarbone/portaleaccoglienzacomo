@@ -205,6 +205,7 @@ export function usePushNotifications() {
 
   const sendTestNotification = async () => {
     isPushLoading.value = true
+    pushStatusMessage.value = ''
     try {
       const res = await sendOneSignalPush({
         type: 'general',
@@ -220,16 +221,26 @@ export function usePushNotifications() {
       })
       if (res?.errors && res.errors.length > 0) {
         if (res.errors.some(e => typeof e === 'string' && e.includes('All included players are not subscribed'))) {
-          alert('Attenzione: nessun dispositivo risulta ancora registrato su OneSignal.\nRicarica la pagina sullo smartphone e premi il pulsante verde "Attiva Notifiche".')
+          const msg = 'Nessun dispositivo registrato su OneSignal. Premi "Attiva Notifiche" dallo smartphone.'
+          pushStatusMessage.value = msg
+          alert(msg)
           return res
         }
-        alert('Attenzione OneSignal: ' + JSON.stringify(res.errors))
+        const errMsg = 'Errore OneSignal: ' + res.errors.join(', ')
+        pushStatusMessage.value = errMsg
+        alert(errMsg)
         return res
       }
-      const rec = res?.recipients !== undefined ? res.recipients : (res?.id ? 'inviata' : '0')
-      alert(`Notifica di prova inviata con successo! Dispositivi raggiunti: ${rec}`)
+      if (res?.id) {
+        pushStatusMessage.value = 'Notifica di prova inviata! Controlla la barra notifiche.'
+        alert('Notifica di prova inviata con successo!')
+      } else {
+        pushStatusMessage.value = 'Invio non riuscito: risposta inattesa da OneSignal.'
+        alert('Invio non riuscito: ' + JSON.stringify(res))
+      }
       return res
     } catch (e) {
+      pushStatusMessage.value = 'Errore invio notifica: ' + e.message
       alert('Errore invio notifica di prova: ' + e.message)
     } finally {
       isPushLoading.value = false
@@ -349,7 +360,6 @@ export async function sendOneSignalPush({ title, content, url, newsId, type = 'g
         priority: 10,
         ttl: 259200,
         android_accent_color: accentColor,
-        url: targetUrl,
         web_url: targetUrl,
         chrome_web_icon: 'https://lorenzocarbone.github.io/portaleaccoglienzacomo/pwa-192x192.png',
         chrome_web_badge: 'https://lorenzocarbone.github.io/portaleaccoglienzacomo/pwa-192x192.png',

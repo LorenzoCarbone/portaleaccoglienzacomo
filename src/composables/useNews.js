@@ -260,12 +260,14 @@ export function useNews(buildMultilangObjFromTemplate = null, servicesRef = null
             url: 'https://lorenzocarbone.github.io/portaleaccoglienzacomo/?tab=news',
             newsId: insertedItem?.id || newsForm.value.id
           })
-          if (pushRes && pushRes.recipients !== undefined) {
-            pushFeedback = ` (inviata a ${pushRes.recipients} dispositivi)`
-          } else if (pushRes?.errors && pushRes.errors.length > 0) {
-            if (pushRes.errors.some(e => e.includes('All included players are not subscribed'))) {
-              pushFeedback = ' (Attenzione: nessun dispositivo è attualmente iscritto alle notifiche. Ricordati di attivarle dal telefono!)'
+          if (pushRes?.errors && pushRes.errors.length > 0) {
+            if (pushRes.errors.some(e => typeof e === 'string' && e.includes('All included players are not subscribed'))) {
+              pushFeedback = ' (Attenzione: nessun dispositivo è attualmente iscritto alle notifiche!)'
+            } else {
+              pushFeedback = ` (Errore invio notifica: ${pushRes.errors.join(', ')})`
             }
+          } else if (pushRes?.id) {
+            pushFeedback = ' (notifica push inviata!)'
           }
         } catch (pushErr) {
           console.warn('[OneSignal] Errore invio push:', pushErr)

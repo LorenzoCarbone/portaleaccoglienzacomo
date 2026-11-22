@@ -37,6 +37,9 @@
           <p class="text-xs text-slate-500 mt-1 leading-relaxed">
             {{ isSubscribed ? 'Riceverai una notifica sul dispositivo per emergenze e variazioni orari.' : 'Attiva le notifiche per non perdere cambi orari e allerte urgenti a Como.' }}
           </p>
+          <p v-if="pushStatusMessage" class="text-xs font-semibold text-emerald-700 mt-1.5">
+            {{ pushStatusMessage }}
+          </p>
         </div>
       </div>
 
@@ -204,6 +207,7 @@ const {
   isSupported,
   isSubscribed,
   isPushLoading,
+  pushStatusMessage,
   checkExistingSubscription,
   subscribeToPush,
   unsubscribeFromPush,
