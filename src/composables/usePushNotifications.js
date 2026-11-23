@@ -14,6 +14,20 @@ const isPushLoading = ref(false)
 const pushStatusMessage = ref('')
 const pushErrorMessage = ref('')
 let hasAttachedChangeListener = false
+let hasAttachedVisibilityRecovery = false
+
+const getDeviceContext = () => {
+  if (typeof window === 'undefined') return 'desktop'
+  const ua = window.navigator.userAgent.toLowerCase()
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true
+  const isIOS = /iphone|ipad|ipod/.test(ua)
+  const isAndroid = /android/.test(ua)
+  if (isIOS) return isStandalone ? 'ios_pwa' : 'ios_browser'
+  if (isAndroid) return isStandalone ? 'android_pwa' : 'android_browser'
+  return 'desktop'
+}
+
+const deviceContext = ref(getDeviceContext())
 
 const isReallySubscribed = (sub) => {
   if (!sub) return false
@@ -68,6 +82,7 @@ const syncStateFromOneSignal = (OneSignal) => {
 export function usePushNotifications() {
   const checkSupport = () => {
     if (typeof window === 'undefined') return false
+    deviceContext.value = getDeviceContext()
     const supported = 'Notification' in window && 'serviceWorker' in navigator
     isSupported.value = supported
     if (supported) {
@@ -76,8 +91,46 @@ export function usePushNotifications() {
     return supported
   }
 
+  const attachAutoRecoveryListeners = () => {
+    if (typeof window === 'undefined' || hasAttachedVisibilityRecovery) return
+    hasAttachedVisibilityRecovery = true
+
+    const handleReturnToApp = async () => {
+      if (document.visibilityState === 'hidden') return
+      if (typeof Notification === 'undefined') return
+      const currentPerm = Notification.permission
+      const prevPerm = permissionState.value
+      permissionState.value = currentPerm
+
+      // Se l'utente ha appena sbloccato le notifiche dalle impostazioni del telefono e torna sull'app,
+      // completa subito l'attivazione in automatico senza fargli fare altro!
+      if (currentPerm === 'granted' && (!isSubscribed.value || prevPerm !== 'granted')) {
+        pushErrorMessage.value = ''
+        await checkExistingSubscription()
+        if (isSubscribed.value) {
+          pushStatusMessage.value = 'Notifiche sbloccate e attivate automaticamente!'
+        }
+      } else if (currentPerm === 'default' && prevPerm === 'denied') {
+        pushErrorMessage.value = ''
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleReturnToApp)
+    window.addEventListener('focus', handleReturnToApp)
+
+    // Dove supportato (Chrome Android/Desktop), rileva in tempo reale il cambio permesso
+    if (navigator.permissions && navigator.permissions.query) {
+      navigator.permissions.query({ name: 'notifications' }).then((status) => {
+        status.onchange = () => {
+          handleReturnToApp()
+        }
+      }).catch(() => {})
+    }
+  }
+
   const checkExistingSubscription = async () => {
     checkSupport()
+    attachAutoRecoveryListeners()
     if (typeof window === 'undefined') return false
 
     try {
@@ -151,8 +204,8 @@ export function usePushNotifications() {
 
     // 3. Controllo permesso già negato
     if (Notification.permission === 'denied') {
-      const msg = 'Le notifiche sono bloccate per questa app. Sbloccale dalle Impostazioni del telefono (App / Browser → Notifiche) e riprova.'
-      pushErrorMessage.value = msg
+      permissionState.value = 'denied'
+      pushErrorMessage.value = 'Il telefono segnala ancora le notifiche come bloccate. Segui i passaggi qui sopra per abilitarle e poi riprova.'
       return false
     }
 
@@ -298,17 +351,30 @@ export function usePushNotifications() {
     }
   }
 
+  const recheckPermissionAndSubscribe = async () => {
+    pushErrorMessage.value = ''
+    pushStatusMessage.value = ''
+    checkSupport()
+    if (typeof Notification !== 'undefined' && Notification.permission === 'denied') {
+      pushErrorMessage.value = 'Le notifiche risultano ancora bloccate nelle impostazioni del dispositivo. Controlla di aver attivato anche le notifiche di Chrome (Impostazioni → App → Chrome → Notifiche).'
+      return false
+    }
+    return await subscribeToPush()
+  }
+
   return {
     isSupported,
     isSubscribed,
     subscriptionId,
     permissionState,
+    deviceContext,
     isPushLoading,
     pushStatusMessage,
     pushErrorMessage,
     checkSupport,
     checkExistingSubscription,
     subscribeToPush,
+    recheckPermissionAndSubscribe,
     unsubscribeFromPush,
     sendTestNotification
   }

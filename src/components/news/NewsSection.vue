@@ -12,72 +12,195 @@
     <!-- Banner Notifiche Push per Notizie Urgenti -->
     <div
       v-if="isSupported"
-      class="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-5 border border-slate-200 card-shadow flex flex-col md:flex-row md:items-center justify-between gap-3.5 sm:gap-4"
+      class="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-5 border card-shadow space-y-3.5"
+      :class="!isSubscribed && permissionState === 'denied' ? 'border-amber-200 ring-1 ring-amber-100' : 'border-slate-200'"
     >
-      <div class="flex items-start sm:items-center gap-3 min-w-0">
-        <div
-          class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center text-lg sm:text-xl shrink-0 transition shadow-sm"
-          :class="isSubscribed ? 'bg-emerald-500 text-white shadow-emerald-500/20' : 'bg-amber-100 text-amber-700'"
-        >
-          <i :class="isSubscribed ? 'fa-solid fa-bell' : 'fa-regular fa-bell'"></i>
-        </div>
-        <div class="min-w-0 flex-1">
-          <div class="flex items-center gap-2 flex-wrap">
-            <h4 class="font-bold text-slate-800 text-sm sm:text-base leading-snug">
-              {{ isSubscribed ? 'Notifiche attive' : 'Ricevi avvisi e allerte' }}
-            </h4>
-            <span
-              v-if="isSubscribed"
-              class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[11px] font-bold border border-emerald-300 shrink-0 whitespace-nowrap"
-            >
-              <i class="fa-solid fa-check text-[10px] text-emerald-600"></i>
-              <span>Attive</span>
-            </span>
-          </div>
-          <p class="text-xs text-slate-500 mt-1 leading-relaxed">
-            {{ isSubscribed ? 'Riceverai una notifica sul dispositivo per emergenze e variazioni orari.' : 'Attiva le notifiche per non perdere cambi orari e allerte urgenti a Como.' }}
-          </p>
-          <p v-if="pushStatusMessage" class="text-xs font-semibold text-emerald-700 mt-1.5 flex items-center gap-1.5">
-            <i class="fa-solid fa-circle-check shrink-0"></i>
-            <span>{{ pushStatusMessage }}</span>
-          </p>
-          <p v-if="pushErrorMessage" class="text-xs font-semibold text-red-700 bg-red-50 border border-red-200 rounded-xl px-2.5 py-2 mt-2 leading-relaxed flex items-start gap-1.5">
-            <i class="fa-solid fa-triangle-exclamation shrink-0 mt-0.5 text-red-600"></i>
-            <span>{{ pushErrorMessage }}</span>
-          </p>
-        </div>
-      </div>
-
-      <div class="flex items-center gap-2 shrink-0 w-full md:w-auto pt-3 md:pt-0 border-t border-slate-100 md:border-t-0">
-        <template v-if="!isSubscribed">
-          <button
-            @click="subscribeToPush"
-            :disabled="isPushLoading"
-            class="w-full md:w-auto justify-center px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-700/20 active:scale-95 transition flex items-center gap-2 whitespace-nowrap cursor-pointer disabled:opacity-60"
-          >
-            <i :class="isPushLoading ? 'fa-solid fa-circle-notch fa-spin' : 'fa-solid fa-bell'"></i>
-            <span>{{ isPushLoading ? 'Attivazione...' : 'Attiva Notifiche' }}</span>
-          </button>
-        </template>
-        <template v-else>
-          <button
-            @click="sendTestNotification()"
-            :disabled="isPushLoading"
-            class="flex-1 md:flex-none justify-center px-3.5 py-2.5 md:py-2 rounded-xl font-semibold text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 transition flex items-center gap-1.5 whitespace-nowrap active:scale-95 border border-slate-200 cursor-pointer disabled:opacity-60"
-            title="Invia subito una notifica di prova"
-          >
-            <i class="fa-solid fa-paper-plane text-[11px] text-emerald-600"></i>
-            <span>Prova notifica</span>
-          </button>
-          <button
-            @click="unsubscribeFromPush"
-            :disabled="isPushLoading"
-            class="px-3 py-2.5 md:py-2 rounded-xl font-semibold text-xs text-slate-500 hover:text-red-600 bg-slate-50 hover:bg-red-50 transition border border-slate-200 hover:border-red-200 cursor-pointer shrink-0"
-            title="Disattiva notifiche"
-          >
+      <!-- Caso 1: Notifiche bloccate sul telefono -> Guida guidata in 2 passi su misura per il dispositivo -->
+      <template v-if="!isSubscribed && permissionState === 'denied'">
+        <div class="flex items-start gap-3">
+          <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center text-lg shrink-0 shadow-xs">
             <i class="fa-solid fa-bell-slash"></i>
-          </button>
-        </template>
+          </div>
+          <div class="min-w-0 flex-1">
+            <h4 class="font-bold text-slate-900 text-sm sm:text-base leading-snug">
+              Notifiche disattivate sul dispositivo
+            </h4>
+            <p class="text-xs text-slate-500 mt-0.5 leading-relaxed">
+              Il tuo dispositivo sta bloccando le notifiche per questa app. Puoi sbloccarle in autonomia in 2 passaggi:
+            </p>
+          </div>
+        </div>
+
+        <!-- Istruzioni semplici specifiche per dispositivo -->
+        <div class="bg-amber-50/70 border border-amber-200/80 rounded-2xl p-3.5 space-y-2.5 text-xs text-slate-700">
+          <!-- Android App Installata -->
+          <template v-if="deviceContext === 'android_pwa'">
+            <div class="flex items-start gap-2.5">
+              <span class="w-5 h-5 rounded-full bg-amber-500 text-white text-[11px] font-bold flex items-center justify-center shrink-0 mt-0.5">1</span>
+              <p class="leading-relaxed">
+                Torna alla Home, <strong>tieni premuta l'icona "Vicini di Strada"</strong> → tocca <strong>Informazioni app (ⓘ)</strong> → <strong>Notifiche</strong> e attiva <strong>Consenti</strong>.
+              </p>
+            </div>
+            <div class="flex items-start gap-2.5">
+              <span class="w-5 h-5 rounded-full bg-amber-500 text-white text-[11px] font-bold flex items-center justify-center shrink-0 mt-0.5">2</span>
+              <p class="leading-relaxed">
+                Controlla anche in <strong>Impostazioni → App → Chrome → Notifiche</strong> che siano <strong>attive</strong>, poi torna qui: si attiveranno da sole.
+              </p>
+            </div>
+          </template>
+
+          <!-- Android Browser -->
+          <template v-else-if="deviceContext === 'android_browser'">
+            <div class="flex items-start gap-2.5">
+              <span class="w-5 h-5 rounded-full bg-amber-500 text-white text-[11px] font-bold flex items-center justify-center shrink-0 mt-0.5">1</span>
+              <p class="leading-relaxed">
+                Tocca l'icona <strong>impostazioni / lucchetto</strong> in alto a sinistra accanto all'indirizzo web → <strong>Autorizzazioni</strong> → <strong>Notifiche</strong> → <strong>Consenti</strong>.
+              </p>
+            </div>
+            <div class="flex items-start gap-2.5">
+              <span class="w-5 h-5 rounded-full bg-amber-500 text-white text-[11px] font-bold flex items-center justify-center shrink-0 mt-0.5">2</span>
+              <p class="leading-relaxed">
+                Se restano bloccate, verifica in <strong>Impostazioni del telefono → App → Chrome → Notifiche</strong> che siano attive, poi premi il pulsante qui sotto.
+              </p>
+            </div>
+          </template>
+
+          <!-- iPhone / iPad -->
+          <template v-else-if="deviceContext === 'ios_pwa' || deviceContext === 'ios_browser'">
+            <div class="flex items-start gap-2.5">
+              <span class="w-5 h-5 rounded-full bg-amber-500 text-white text-[11px] font-bold flex items-center justify-center shrink-0 mt-0.5">1</span>
+              <p class="leading-relaxed">
+                Apri <strong>Impostazioni</strong> di iPhone → <strong>Notifiche</strong> → <strong>Vicini di Strada</strong>.
+              </p>
+            </div>
+            <div class="flex items-start gap-2.5">
+              <span class="w-5 h-5 rounded-full bg-amber-500 text-white text-[11px] font-bold flex items-center justify-center shrink-0 mt-0.5">2</span>
+              <p class="leading-relaxed">
+                Attiva <strong>Consenti notifiche</strong> e torna su questa schermata.
+              </p>
+            </div>
+          </template>
+
+          <!-- Computer / Desktop -->
+          <template v-else>
+            <div class="flex items-start gap-2.5">
+              <span class="w-5 h-5 rounded-full bg-amber-500 text-white text-[11px] font-bold flex items-center justify-center shrink-0 mt-0.5">1</span>
+              <p class="leading-relaxed">
+                Clicca l'icona delle <strong>impostazioni / lucchetto</strong> in alto a sinistra nella barra dell'indirizzo del browser.
+              </p>
+            </div>
+            <div class="flex items-start gap-2.5">
+              <span class="w-5 h-5 rounded-full bg-amber-500 text-white text-[11px] font-bold flex items-center justify-center shrink-0 mt-0.5">2</span>
+              <p class="leading-relaxed">
+                Imposta <strong>Notifiche → Consenti</strong> e premi il pulsante qui sotto.
+              </p>
+            </div>
+          </template>
+        </div>
+
+        <p v-if="pushErrorMessage" class="text-xs font-semibold text-red-700 bg-red-50 border border-red-200 rounded-xl px-3 py-2 leading-relaxed flex items-start gap-1.5">
+          <i class="fa-solid fa-circle-info shrink-0 mt-0.5 text-red-500"></i>
+          <span>{{ pushErrorMessage }}</span>
+        </p>
+
+        <button
+          @click="recheckPermissionAndSubscribe"
+          :disabled="isPushLoading"
+          class="w-full justify-center px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-700/20 active:scale-95 transition flex items-center gap-2 cursor-pointer disabled:opacity-60"
+        >
+          <i :class="isPushLoading ? 'fa-solid fa-circle-notch fa-spin' : 'fa-solid fa-rotate-right'"></i>
+          <span>{{ isPushLoading ? 'Verifica in corso...' : 'Ho sbloccato, attiva ora' }}</span>
+        </button>
+      </template>
+
+      <!-- Caso 2: iPhone Safari fuori dalla schermata Home -->
+      <template v-else-if="!isSubscribed && deviceContext === 'ios_browser'">
+        <div class="flex items-start gap-3">
+          <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center text-lg shrink-0">
+            <i class="fa-regular fa-bell"></i>
+          </div>
+          <div class="min-w-0 flex-1">
+            <h4 class="font-bold text-slate-900 text-sm sm:text-base leading-snug">
+              Attiva le notifiche su iPhone
+            </h4>
+            <p class="text-xs text-slate-500 mt-1 leading-relaxed">
+              Su iPhone Apple richiede di aggiungere prima l'app alla Home:
+            </p>
+            <div class="mt-2.5 bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-1.5 text-xs text-slate-700">
+              <p><strong>1.</strong> Tocca <strong>Condividi</strong> (<i class="fa-solid fa-arrow-up-from-bracket text-brand-600"></i>) in basso su Safari → <strong>Aggiungi alla schermata Home</strong>.</p>
+              <p><strong>2.</strong> Apri l'app dalla nuova icona e premi <strong>Attiva Notifiche</strong>.</p>
+            </div>
+          </div>
+        </div>
+      </template>
+
+      <!-- Caso 3: Stato normale (Da attivare con 1 tap oppure Già attive) -->
+      <div v-else class="flex flex-col md:flex-row md:items-center justify-between gap-3.5 sm:gap-4">
+        <div class="flex items-start sm:items-center gap-3 min-w-0">
+          <div
+            class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center text-lg sm:text-xl shrink-0 transition shadow-sm"
+            :class="isSubscribed ? 'bg-emerald-500 text-white shadow-emerald-500/20' : 'bg-amber-100 text-amber-700'"
+          >
+            <i :class="isSubscribed ? 'fa-solid fa-bell' : 'fa-regular fa-bell'"></i>
+          </div>
+          <div class="min-w-0 flex-1">
+            <div class="flex items-center gap-2 flex-wrap">
+              <h4 class="font-bold text-slate-800 text-sm sm:text-base leading-snug">
+                {{ isSubscribed ? 'Notifiche attive' : 'Ricevi avvisi e allerte' }}
+              </h4>
+              <span
+                v-if="isSubscribed"
+                class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[11px] font-bold border border-emerald-300 shrink-0 whitespace-nowrap"
+              >
+                <i class="fa-solid fa-check text-[10px] text-emerald-600"></i>
+                <span>Attive</span>
+              </span>
+            </div>
+            <p class="text-xs text-slate-500 mt-1 leading-relaxed">
+              {{ isSubscribed ? 'Riceverai una notifica sul dispositivo per emergenze e variazioni orari.' : 'Attiva le notifiche per non perdere cambi orari e allerte urgenti a Como.' }}
+            </p>
+            <p v-if="pushStatusMessage" class="text-xs font-semibold text-emerald-700 mt-1.5 flex items-center gap-1.5">
+              <i class="fa-solid fa-circle-check shrink-0"></i>
+              <span>{{ pushStatusMessage }}</span>
+            </p>
+            <p v-if="pushErrorMessage" class="text-xs font-semibold text-red-700 bg-red-50 border border-red-200 rounded-xl px-2.5 py-2 mt-2 leading-relaxed flex items-start gap-1.5">
+              <i class="fa-solid fa-triangle-exclamation shrink-0 mt-0.5 text-red-600"></i>
+              <span>{{ pushErrorMessage }}</span>
+            </p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2 shrink-0 w-full md:w-auto pt-3 md:pt-0 border-t border-slate-100 md:border-t-0">
+          <template v-if="!isSubscribed">
+            <button
+              @click="subscribeToPush"
+              :disabled="isPushLoading"
+              class="w-full md:w-auto justify-center px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-700/20 active:scale-95 transition flex items-center gap-2 whitespace-nowrap cursor-pointer disabled:opacity-60"
+            >
+              <i :class="isPushLoading ? 'fa-solid fa-circle-notch fa-spin' : 'fa-solid fa-bell'"></i>
+              <span>{{ isPushLoading ? 'Attivazione...' : 'Attiva Notifiche' }}</span>
+            </button>
+          </template>
+          <template v-else>
+            <button
+              @click="sendTestNotification()"
+              :disabled="isPushLoading"
+              class="flex-1 md:flex-none justify-center px-3.5 py-2.5 md:py-2 rounded-xl font-semibold text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 transition flex items-center gap-1.5 whitespace-nowrap active:scale-95 border border-slate-200 cursor-pointer disabled:opacity-60"
+              title="Invia subito una notifica di prova"
+            >
+              <i class="fa-solid fa-paper-plane text-[11px] text-emerald-600"></i>
+              <span>Prova notifica</span>
+            </button>
+            <button
+              @click="unsubscribeFromPush"
+              :disabled="isPushLoading"
+              class="px-3 py-2.5 md:py-2 rounded-xl font-semibold text-xs text-slate-500 hover:text-red-600 bg-slate-50 hover:bg-red-50 transition border border-slate-200 hover:border-red-200 cursor-pointer shrink-0"
+              title="Disattiva notifiche"
+            >
+              <i class="fa-solid fa-bell-slash"></i>
+            </button>
+          </template>
+        </div>
       </div>
     </div>
 
@@ -211,11 +334,14 @@ const getTypeLabel = (type) => {
 const {
   isSupported,
   isSubscribed,
+  permissionState,
+  deviceContext,
   isPushLoading,
   pushStatusMessage,
   pushErrorMessage,
   checkExistingSubscription,
   subscribeToPush,
+  recheckPermissionAndSubscribe,
   unsubscribeFromPush,
   sendTestNotification
 } = usePushNotifications()

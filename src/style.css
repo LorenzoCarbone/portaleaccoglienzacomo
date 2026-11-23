@@ -1,3 +1,8 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Nasconde il popup automatico in inglese di OneSignal: usiamo solo i controlli nativi in italiano dell'app */
+#onesignal-slidedown-container {
+  display: none !important;
+}
