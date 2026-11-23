@@ -37,8 +37,13 @@
           <p class="text-xs text-slate-500 mt-1 leading-relaxed">
             {{ isSubscribed ? 'Riceverai una notifica sul dispositivo per emergenze e variazioni orari.' : 'Attiva le notifiche per non perdere cambi orari e allerte urgenti a Como.' }}
           </p>
-          <p v-if="pushStatusMessage" class="text-xs font-semibold text-emerald-700 mt-1.5">
-            {{ pushStatusMessage }}
+          <p v-if="pushStatusMessage" class="text-xs font-semibold text-emerald-700 mt-1.5 flex items-center gap-1.5">
+            <i class="fa-solid fa-circle-check shrink-0"></i>
+            <span>{{ pushStatusMessage }}</span>
+          </p>
+          <p v-if="pushErrorMessage" class="text-xs font-semibold text-red-700 bg-red-50 border border-red-200 rounded-xl px-2.5 py-2 mt-2 leading-relaxed flex items-start gap-1.5">
+            <i class="fa-solid fa-triangle-exclamation shrink-0 mt-0.5 text-red-600"></i>
+            <span>{{ pushErrorMessage }}</span>
           </p>
         </div>
       </div>
@@ -208,6 +213,7 @@ const {
   isSubscribed,
   isPushLoading,
   pushStatusMessage,
+  pushErrorMessage,
   checkExistingSubscription,
   subscribeToPush,
   unsubscribeFromPush,
