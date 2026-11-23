@@ -684,14 +684,8 @@ onMounted(() => {
     }
   })
 
-  // Se l'utente non ha ancora deciso sulle notifiche, proponile all'avvio dell'app
-  if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
-    if (!localStorage.getItem('vds_push_prompt_dismissed')) {
-      setTimeout(() => {
-        showPushPromptModal.value = true
-      }, 1500)
-    }
-  }
+  // Nota: non mostriamo popup automatici all'avvio per evitare blocchi "Quiet UI" su Chrome/Android.
+  // Gli utenti attivano le notifiche volontariamente dalla sezione Notizie & Allerta.
 
   // Canale Realtime condiviso per ricezione istantanea notizie e notifiche
   alertsChannel.on('broadcast', { event: 'news_published' }, (event) => {

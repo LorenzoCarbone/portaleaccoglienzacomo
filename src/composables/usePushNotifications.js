@@ -27,7 +27,23 @@ const getDeviceContext = () => {
   return 'desktop'
 }
 
+const getBrowserName = () => {
+  if (typeof window === 'undefined') return ''
+  const ua = window.navigator.userAgent
+  if (/MiuiBrowser|XiaoMi/i.test(ua)) return 'Mi Browser (Xiaomi)'
+  if (/Brave/i.test(ua) || window.navigator.brave) return 'Brave'
+  if (/SamsungBrowser/i.test(ua)) return 'Samsung Internet'
+  if (/OPR|Opera/i.test(ua)) return 'Opera'
+  if (/EdgA|Edg/i.test(ua)) return 'Edge'
+  if (/Firefox|FxiOS/i.test(ua)) return 'Firefox'
+  if (/DuckDuckGo/i.test(ua)) return 'DuckDuckGo'
+  if (/Chrome|CriOS/i.test(ua)) return 'Chrome'
+  if (/Safari/i.test(ua)) return 'Safari'
+  return 'Browser'
+}
+
 const deviceContext = ref(getDeviceContext())
+const browserName = ref(getBrowserName())
 
 const isReallySubscribed = (sub) => {
   if (!sub) return false
@@ -356,7 +372,7 @@ export function usePushNotifications() {
     pushStatusMessage.value = ''
     checkSupport()
     if (typeof Notification !== 'undefined' && Notification.permission === 'denied') {
-      pushErrorMessage.value = 'Le notifiche risultano ancora bloccate nelle impostazioni del dispositivo. Controlla di aver attivato anche le notifiche di Chrome (Impostazioni → App → Chrome → Notifiche).'
+      pushErrorMessage.value = `Il sito risulta ancora bloccato su ${browserName.value}. Apri ${browserName.value} → ⋮ → Impostazioni → Impostazioni sito → Notifiche → sblocca lorenzocarbone.github.io.`
       return false
     }
     return await subscribeToPush()
@@ -368,6 +384,7 @@ export function usePushNotifications() {
     subscriptionId,
     permissionState,
     deviceContext,
+    browserName,
     isPushLoading,
     pushStatusMessage,
     pushErrorMessage,

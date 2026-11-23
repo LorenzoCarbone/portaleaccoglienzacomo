@@ -33,34 +33,21 @@
 
         <!-- Istruzioni semplici specifiche per dispositivo -->
         <div class="bg-amber-50/70 border border-amber-200/80 rounded-2xl p-3.5 space-y-2.5 text-xs text-slate-700">
-          <!-- Android App Installata -->
-          <template v-if="deviceContext === 'android_pwa'">
+          <!-- Android (sia App/Scorciatoia che Browser) -->
+          <template v-if="deviceContext === 'android_pwa' || deviceContext === 'android_browser'">
+            <div v-if="browserName && browserName !== 'Chrome'" class="p-2.5 rounded-xl bg-amber-100/80 border border-amber-300 text-amber-950 font-semibold leading-relaxed">
+              Stai usando <strong>{{ browserName }}</strong>, che spesso blocca le notifiche dei siti. Per riceverle senza problemi ti consigliamo di aprire l'app da <strong>Google Chrome</strong>.
+            </div>
             <div class="flex items-start gap-2.5">
               <span class="w-5 h-5 rounded-full bg-amber-500 text-white text-[11px] font-bold flex items-center justify-center shrink-0 mt-0.5">1</span>
               <p class="leading-relaxed">
-                Torna alla Home, <strong>tieni premuta l'icona "Vicini di Strada"</strong> → tocca <strong>Informazioni app (ⓘ)</strong> → <strong>Notifiche</strong> e attiva <strong>Consenti</strong>.
+                Apri <strong>{{ browserName || 'Chrome' }}</strong> → tocca i <strong>3 puntini (⋮)</strong> in alto a destra → <strong>Impostazioni</strong> → <strong>Impostazioni sito</strong> → <strong>Notifiche</strong>.
               </p>
             </div>
             <div class="flex items-start gap-2.5">
               <span class="w-5 h-5 rounded-full bg-amber-500 text-white text-[11px] font-bold flex items-center justify-center shrink-0 mt-0.5">2</span>
               <p class="leading-relaxed">
-                Controlla anche in <strong>Impostazioni → App → Chrome → Notifiche</strong> che siano <strong>attive</strong>, poi torna qui: si attiveranno da sole.
-              </p>
-            </div>
-          </template>
-
-          <!-- Android Browser -->
-          <template v-else-if="deviceContext === 'android_browser'">
-            <div class="flex items-start gap-2.5">
-              <span class="w-5 h-5 rounded-full bg-amber-500 text-white text-[11px] font-bold flex items-center justify-center shrink-0 mt-0.5">1</span>
-              <p class="leading-relaxed">
-                Tocca l'icona <strong>impostazioni / lucchetto</strong> in alto a sinistra accanto all'indirizzo web → <strong>Autorizzazioni</strong> → <strong>Notifiche</strong> → <strong>Consenti</strong>.
-              </p>
-            </div>
-            <div class="flex items-start gap-2.5">
-              <span class="w-5 h-5 rounded-full bg-amber-500 text-white text-[11px] font-bold flex items-center justify-center shrink-0 mt-0.5">2</span>
-              <p class="leading-relaxed">
-                Se restano bloccate, verifica in <strong>Impostazioni del telefono → App → Chrome → Notifiche</strong> che siano attive, poi premi il pulsante qui sotto.
+                Cerca <strong>lorenzocarbone.github.io</strong> nella lista dei siti bloccati, tocca <strong>Consenti</strong>, poi torna qui e premi il tasto sotto.
               </p>
             </div>
           </template>
@@ -336,6 +323,7 @@ const {
   isSubscribed,
   permissionState,
   deviceContext,
+  browserName,
   isPushLoading,
   pushStatusMessage,
   pushErrorMessage,
