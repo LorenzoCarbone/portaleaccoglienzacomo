@@ -43,7 +43,7 @@
       <!-- Loading State -->
       <div v-if="isLoadingServices" class="text-center py-16">
         <i class="fa-solid fa-circle-notch fa-spin text-4xl text-brand-600 mb-4 inline-block"></i>
-        <p class="text-sm text-slate-500 font-medium">Caricamento servizi di Como in corso...</p>
+        <p class="text-sm text-slate-500 font-medium">{{ t('services_loading') }}</p>
       </div>
 
       <!-- Services Grid / Empty State -->

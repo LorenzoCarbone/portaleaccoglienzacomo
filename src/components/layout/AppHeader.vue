@@ -28,7 +28,7 @@
             :title="isMobileDevice ? 'L\'applicazione è già presente sullo smartphone' : 'L\'applicazione è già installata su questo computer'"
           >
             <i class="fa-solid fa-circle-check text-emerald-400 text-xs"></i>
-            <span class="hidden sm:inline">{{ isMobileDevice ? 'App sul telefono' : 'App su computer' }}</span>
+            <span class="hidden sm:inline">{{ t('app_btn_installed') }}</span>
             <span class="sm:hidden">App</span>
           </button>
 
@@ -40,7 +40,7 @@
             :title="isMobileDevice ? 'Scarica subito l\'app sul tuo telefono' : 'Installa l\'applicazione sul tuo computer'"
           >
             <i class="fa-solid fa-download text-xs"></i>
-            <span>{{ isMobileDevice ? 'Scarica' : 'Installa su PC' }}</span>
+            <span>{{ isMobileDevice ? t('app_btn_download') : t('app_btn_install_pc') }}</span>
           </button>
         </template>
 

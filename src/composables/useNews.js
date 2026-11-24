@@ -58,7 +58,8 @@ export function useNews(buildMultilangObjFromTemplate = null, servicesRef = null
   const formatNewsDate = (isoDate) => {
     if (!isoDate) return ''
     try {
-      return new Date(isoDate).toLocaleString('it-IT', {
+      const lang = (typeof localStorage !== 'undefined' && localStorage.getItem('vicini_lang')) || 'it'
+      return new Date(isoDate).toLocaleString(lang, {
         day: 'numeric',
         month: 'long',
         year: 'numeric',

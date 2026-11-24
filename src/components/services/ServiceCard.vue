@@ -46,7 +46,7 @@
         <div v-if="hasTempInfo(service)" class="bg-amber-100 border border-amber-300 rounded-xl p-3 text-sm text-amber-900 shadow-sm flex items-start gap-2.5">
           <i class="fa-solid fa-clock-rotate-left mt-[3px] shrink-0 text-amber-600"></i>
           <div>
-            <span class="font-bold text-[10px] uppercase tracking-wider block text-amber-700 mb-0.5">Info / Orari Temporanei</span>
+            <span class="font-bold text-[10px] uppercase tracking-wider block text-amber-700 mb-0.5">{{ t('temp_info_label') }}</span>
             <span class="font-semibold whitespace-pre-line leading-snug">{{ translateField(service, 'temp_info') }}</span>
           </div>
         </div>

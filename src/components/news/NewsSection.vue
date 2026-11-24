@@ -23,10 +23,10 @@
           </div>
           <div class="min-w-0 flex-1">
             <h4 class="font-bold text-slate-900 text-sm sm:text-base leading-snug">
-              Notifiche disattivate sul dispositivo
+              {{ t('push_blocked_title') }}
             </h4>
             <p class="text-xs text-slate-500 mt-0.5 leading-relaxed">
-              Il tuo dispositivo sta bloccando le notifiche per questa app. Puoi sbloccarle in autonomia in 2 passaggi:
+              {{ t('push_blocked_sub') }}
             </p>
           </div>
         </div>
@@ -96,7 +96,7 @@
           class="w-full justify-center px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-700/20 active:scale-95 transition flex items-center gap-2 cursor-pointer disabled:opacity-60"
         >
           <i :class="isPushLoading ? 'fa-solid fa-circle-notch fa-spin' : 'fa-solid fa-rotate-right'"></i>
-          <span>{{ isPushLoading ? 'Verifica in corso...' : 'Ho sbloccato, attiva ora' }}</span>
+          <span>{{ isPushLoading ? t('push_btn_rechecking') : t('push_btn_recheck') }}</span>
         </button>
       </template>
 
@@ -133,18 +133,18 @@
           <div class="min-w-0 flex-1">
             <div class="flex items-center gap-2 flex-wrap">
               <h4 class="font-bold text-slate-800 text-sm sm:text-base leading-snug">
-                {{ isSubscribed ? 'Notifiche attive' : 'Ricevi avvisi e allerte' }}
+                {{ isSubscribed ? t('push_active_title') : t('push_inactive_title') }}
               </h4>
               <span
                 v-if="isSubscribed"
                 class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[11px] font-bold border border-emerald-300 shrink-0 whitespace-nowrap"
               >
                 <i class="fa-solid fa-check text-[10px] text-emerald-600"></i>
-                <span>Attive</span>
+                <span>{{ t('push_active_badge') }}</span>
               </span>
             </div>
             <p class="text-xs text-slate-500 mt-1 leading-relaxed">
-              {{ isSubscribed ? 'Riceverai una notifica sul dispositivo per emergenze e variazioni orari.' : 'Attiva le notifiche per non perdere cambi orari e allerte urgenti a Como.' }}
+              {{ isSubscribed ? t('push_active_sub') : t('push_inactive_sub') }}
             </p>
             <p v-if="pushStatusMessage" class="text-xs font-semibold text-emerald-700 mt-1.5 flex items-center gap-1.5">
               <i class="fa-solid fa-circle-check shrink-0"></i>
@@ -165,7 +165,7 @@
               class="w-full md:w-auto justify-center px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-700/20 active:scale-95 transition flex items-center gap-2 whitespace-nowrap cursor-pointer disabled:opacity-60"
             >
               <i :class="isPushLoading ? 'fa-solid fa-circle-notch fa-spin' : 'fa-solid fa-bell'"></i>
-              <span>{{ isPushLoading ? 'Attivazione...' : 'Attiva Notifiche' }}</span>
+              <span>{{ isPushLoading ? t('push_btn_activating') : t('push_btn_activate') }}</span>
             </button>
           </template>
           <template v-else>
@@ -173,16 +173,16 @@
               @click="sendTestNotification()"
               :disabled="isPushLoading"
               class="flex-1 md:flex-none justify-center px-3.5 py-2.5 md:py-2 rounded-xl font-semibold text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 transition flex items-center gap-1.5 whitespace-nowrap active:scale-95 border border-slate-200 cursor-pointer disabled:opacity-60"
-              title="Invia subito una notifica di prova"
+              :title="t('push_btn_test')"
             >
               <i class="fa-solid fa-paper-plane text-[11px] text-emerald-600"></i>
-              <span>Prova notifica</span>
+              <span>{{ t('push_btn_test') }}</span>
             </button>
             <button
               @click="unsubscribeFromPush"
               :disabled="isPushLoading"
               class="px-3 py-2.5 md:py-2 rounded-xl font-semibold text-xs text-slate-500 hover:text-red-600 bg-slate-50 hover:bg-red-50 transition border border-slate-200 hover:border-red-200 cursor-pointer shrink-0"
-              title="Disattiva notifiche"
+              :title="t('push_btn_disable')"
             >
               <i class="fa-solid fa-bell-slash"></i>
             </button>
@@ -194,14 +194,14 @@
     <!-- Stato Caricamento -->
     <div v-if="isLoading" class="text-center py-14">
       <i class="fa-solid fa-circle-notch fa-spin text-4xl text-amber-500 mb-3 inline-block"></i>
-      <p class="text-sm text-slate-500 font-medium">Caricamento notizie in corso...</p>
+      <p class="text-sm text-slate-500 font-medium">{{ t('news_loading') }}</p>
     </div>
 
     <!-- Stato Vuoto -->
     <div v-else-if="newsList.length === 0" class="text-center py-14 bg-white rounded-2xl sm:rounded-3xl border border-slate-200 p-6 shadow-sm">
       <span class="text-5xl block mb-3">📭</span>
-      <h4 class="font-bold text-slate-700 text-base sm:text-lg mb-1">Nessuna notizia al momento</h4>
-      <p class="text-xs sm:text-sm text-slate-500 max-w-sm mx-auto leading-relaxed">Gli aggiornamenti dalle unità di strada e dai servizi compariranno qui.</p>
+      <h4 class="font-bold text-slate-700 text-base sm:text-lg mb-1">{{ t('news_empty_title') }}</h4>
+      <p class="text-xs sm:text-sm text-slate-500 max-w-sm mx-auto leading-relaxed">{{ t('news_empty_sub') }}</p>
     </div>
 
     <!-- Lista Schede Avvisi (Mobile-first ordinata) -->
