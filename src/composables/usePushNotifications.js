@@ -183,6 +183,9 @@ export function usePushNotifications() {
         !isReallySubscribed(sub)
       ) {
         try {
+          if (OneSignal.Notifications?.requestPermission) {
+            await withTimeout(OneSignal.Notifications.requestPermission(), 6000, 'auto_req_perm_timeout')
+          }
           await withTimeout(sub.optIn(), 5000, 'auto_optin_timeout')
           syncStateFromOneSignal(OneSignal)
         } catch (e) {
@@ -248,7 +251,13 @@ export function usePushNotifications() {
         return false
       }
 
-      // 6. Completa la registrazione su OneSignal (timeout 6s)
+      // 6. Completa la registrazione del Service Worker e del token PushManager su OneSignal:
+      // NOTA CRITICA: in OneSignal v16 quando Notification.permission è già 'granted',
+      // sub.optIn() da solo NON installa il Service Worker né sottoscrive PushManager!
+      // È obbligatorio invocare anche OneSignal.Notifications.requestPermission() che esegue kr() + Di().
+      if (OneSignal.Notifications?.requestPermission) {
+        await withTimeout(OneSignal.Notifications.requestPermission(), 8000, 'OS_REQ_TIMEOUT')
+      }
       await withTimeout(sub.optIn(), 6000, 'OPTIN_TIMEOUT')
 
       // Attendi fino a 6 secondi che il dispositivo riceva id/token push reali da FCM/APNs

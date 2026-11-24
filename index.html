@@ -54,11 +54,14 @@
           window.__oneSignalReady = true;
 
           // Se il browser ha già il permesso notifiche concesso, assicura l'effettiva registrazione
-          // del dispositivo con il Service Worker dedicato di OneSignal
+          // del Service Worker e del token PushManager su OneSignal (requestPermission esegue kr() + Di())
           if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
             try {
               const sub = OneSignal.User && OneSignal.User.PushSubscription;
               if (sub && (!sub.optedIn || !sub.id || !sub.token)) {
+                if (OneSignal.Notifications && OneSignal.Notifications.requestPermission) {
+                  await OneSignal.Notifications.requestPermission();
+                }
                 await sub.optIn();
               }
             } catch (e) {
