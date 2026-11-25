@@ -22,7 +22,7 @@ const currentLangCode = ref(localStorage.getItem('vicini_lang') || 'it')
  */
 export function parseServiceHoursData(hours) {
   if (!hours) {
-    return { mode: 'schedule', schedule: [], access: null }
+    return { mode: 'schedule', schedule: [], access: null, customText: null }
   }
   if (Array.isArray(hours)) {
     const valid = hours.filter(h => h && typeof h.day === 'number' && h.open && h.close)
@@ -30,24 +30,27 @@ export function parseServiceHoursData(hours) {
     return {
       mode: isAllDay24 ? 'continuous' : 'schedule',
       schedule: isAllDay24 ? [] : valid,
-      access: null
+      access: null,
+      customText: null
     }
   }
   if (typeof hours === 'object') {
-    if ('schedule' in hours || 'access' in hours || 'mode' in hours) {
+    if ('schedule' in hours || 'access' in hours || 'mode' in hours || 'customText' in hours) {
       const rawSchedule = Array.isArray(hours.schedule)
         ? hours.schedule.filter(h => h && typeof h.day === 'number' && h.open && h.close)
         : []
       const isAllDay24 = rawSchedule.length === 7 && rawSchedule.every(h => h.open === '00:00' && (h.close === '24:00' || h.close === '23:59'))
-      const mode = hours.mode || (isAllDay24 ? 'continuous' : 'schedule')
+      const customText = hours.customText || null
+      const mode = hours.mode || (isAllDay24 ? 'continuous' : (customText ? 'custom' : 'schedule'))
       return {
         mode,
         schedule: mode === 'continuous' ? [] : rawSchedule,
-        access: hours.access && (hours.access.type || hours.access.note) ? hours.access : null
+        access: hours.access && (hours.access.type || hours.access.note) ? hours.access : null,
+        customText
       }
     }
   }
-  return { mode: 'schedule', schedule: [], access: null }
+  return { mode: 'schedule', schedule: [], access: null, customText: null }
 }
 
 export function getStructuredScheduleRows(hours, langCode = 'it') {
@@ -133,6 +136,12 @@ export function useI18n() {
     const parsed = parseServiceHoursData(hours)
     if (parsed.mode === 'continuous') {
       return locales[code]?.hours_continuous || locales.en?.hours_continuous || 'Servizio continuativo H24'
+    }
+    if (parsed.mode === 'custom' && parsed.customText) {
+      const txt = typeof parsed.customText === 'string'
+        ? parsed.customText
+        : (parsed.customText[code] || parsed.customText.en || parsed.customText.it || Object.values(parsed.customText)[0] || '')
+      if (txt && txt.trim() !== '') return txt.trim()
     }
     if (parsed.mode === 'appointment' && !parsed.schedule.length) {
       return locales[code]?.hours_by_appointment || locales.en?.hours_by_appointment || 'Su appuntamento'

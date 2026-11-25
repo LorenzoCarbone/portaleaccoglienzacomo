@@ -442,7 +442,7 @@
           <!-- Tipologia Orario -->
           <div>
             <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">Tipologia Orario</label>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-4">
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
               <button
                 type="button"
                 @click="editForm.hoursMode = 'schedule'"
@@ -450,6 +450,14 @@
                 :class="(editForm.hoursMode || 'schedule') === 'schedule' ? 'bg-brand-600 border-brand-700 text-white shadow-sm' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'"
               >
                 🕒 Fasce settimanali
+              </button>
+              <button
+                type="button"
+                @click="editForm.hoursMode = 'custom'"
+                class="py-2.5 px-3 rounded-xl text-xs font-bold border transition"
+                :class="editForm.hoursMode === 'custom' ? 'bg-indigo-600 border-indigo-700 text-white shadow-sm' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'"
+              >
+                🗓️ Orario periodico
               </button>
               <button
                 type="button"
@@ -470,7 +478,45 @@
             </div>
           </div>
 
-          <div v-if="(editForm.hoursMode || 'schedule') !== 'continuous'">
+          <div v-if="editForm.hoursMode === 'custom'" class="p-4 rounded-2xl bg-indigo-50/70 border border-indigo-200/80 space-y-2.5">
+            <div class="flex items-center justify-between gap-2">
+              <label class="block text-xs font-bold uppercase tracking-wider text-indigo-900">Testo Orario Periodico / Personalizzato</label>
+              <div class="flex items-center gap-1.5">
+                <select v-model="selectedNewLangHoursCustom" class="text-xs border border-indigo-200 rounded-lg px-2 py-1 bg-white outline-none">
+                  <option value="">Aggiungi lingua...</option>
+                  <option v-for="(l, code) in availableLangsForHoursCustom" :key="code" :value="code">{{ l.name }}</option>
+                </select>
+                <button
+                  @click="handleAddLangHoursCustom"
+                  type="button"
+                  class="bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-bold px-2.5 py-1.5 rounded-lg shadow-sm transition"
+                >
+                  <i class="fa-solid fa-plus"></i>
+                </button>
+              </div>
+            </div>
+            <div v-for="(text, lang) in editForm.hoursCustomText" :key="'hcustom_' + lang" class="relative">
+              <label class="block text-[10px] font-bold text-slate-500 mb-1 uppercase flex items-center gap-1">
+                <span class="flag-emoji">{{ languages[lang]?.flag }}</span> {{ languages[lang]?.name }}
+              </label>
+              <input
+                v-model="editForm.hoursCustomText[lang]"
+                type="text"
+                placeholder="Es: 3° sabato del mese alle 20:00"
+                class="w-full text-sm py-2 px-3 rounded-lg border border-indigo-200 bg-white text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none"
+              >
+              <button
+                v-if="lang !== 'it'"
+                @click="delete editForm.hoursCustomText[lang]"
+                type="button"
+                class="absolute top-6 right-2 text-red-500 hover:text-red-700 p-1 bg-white rounded-md shadow-sm"
+              >
+                <i class="fa-solid fa-trash text-xs"></i>
+              </button>
+            </div>
+          </div>
+
+          <div v-else-if="(editForm.hoursMode || 'schedule') !== 'continuous'">
             <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">Costruttore Orari</label>
             <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3">
               <div v-for="(slot, index) in editForm.hoursList" :key="index" class="flex flex-wrap sm:flex-nowrap items-center gap-2">
@@ -720,6 +766,7 @@ const selectedNewLangDesc = ref('')
 const selectedNewLangTemp = ref('')
 const selectedNewLangService = ref('')
 const selectedNewLangAccess = ref('')
+const selectedNewLangHoursCustom = ref('')
 
 const selectedNoticeTemplate = computed(() => {
   return props.templates?.find(t => t.id === props.editForm.noticeTemplate)
@@ -801,6 +848,24 @@ const handleAddLangAccess = () => {
     if (!props.editForm.accessNote) props.editForm.accessNote = { it: '' }
     props.editForm.accessNote[selectedNewLangAccess.value] = ''
     selectedNewLangAccess.value = ''
+  }
+}
+
+const availableLangsForHoursCustom = computed(() => {
+  const available = {}
+  for (const code in props.languages) {
+    if (code !== 'it' && props.editForm.hoursCustomText && props.editForm.hoursCustomText[code] === undefined) {
+      available[code] = props.languages[code]
+    }
+  }
+  return available
+})
+
+const handleAddLangHoursCustom = () => {
+  if (selectedNewLangHoursCustom.value) {
+    if (!props.editForm.hoursCustomText) props.editForm.hoursCustomText = { it: '' }
+    props.editForm.hoursCustomText[selectedNewLangHoursCustom.value] = ''
+    selectedNewLangHoursCustom.value = ''
   }
 }
 

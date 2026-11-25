@@ -33,9 +33,10 @@ const editForm = ref({
   phone: '',
   email: '',
   hoursMode: 'schedule',
-      hoursList: [{ day: 1, open: '', close: '' }],
-      accessType: '',
-      accessNote: { it: '' },
+  hoursList: [{ day: 1, open: '', close: '' }],
+  hoursCustomText: { it: '' },
+  accessType: '',
+  accessNote: { it: '' },
   status: 'active',
   noticeTemplate: 'none',
   noticeParams: {},
@@ -310,6 +311,9 @@ export function useServices(i18nHelpers = {}) {
 
     const parsedHours = parseServiceHoursData(service.hours)
     let dbHoursList = parsedHours.schedule.length > 0 ? parsedHours.schedule.map(h => ({ ...h })) : [{ day: 1, open: '', close: '' }]
+    let initHoursCustomText = parsedHours.customText ? JSON.parse(JSON.stringify(parsedHours.customText)) : { it: '' }
+    if (typeof initHoursCustomText === 'string') initHoursCustomText = { it: initHoursCustomText }
+    if (!initHoursCustomText.it) initHoursCustomText.it = ''
     let initAccessType = parsedHours.access?.type || ''
     let initAccessNote = parsedHours.access?.note ? JSON.parse(JSON.stringify(parsedHours.access.note)) : { it: '' }
     if (typeof initAccessNote === 'string') initAccessNote = { it: initAccessNote }
@@ -331,6 +335,7 @@ export function useServices(i18nHelpers = {}) {
       email: service.email || '',
       hoursMode: parsedHours.mode || 'schedule',
       hoursList: dbHoursList,
+      hoursCustomText: initHoursCustomText,
       accessType: initAccessType,
       accessNote: initAccessNote,
       status: service.status || 'active',
@@ -356,7 +361,11 @@ export function useServices(i18nHelpers = {}) {
       address: '',
       phone: '',
       email: '',
+      hoursMode: 'schedule',
       hoursList: [{ day: 1, open: '', close: '' }],
+      hoursCustomText: { it: '' },
+      accessType: '',
+      accessNote: { it: '' },
       status: 'active',
       noticeTemplate: 'none',
       noticeParams: {},
@@ -429,10 +438,13 @@ export function useServices(i18nHelpers = {}) {
       const accessType = editForm.value.accessType || ''
       const accessNote = JSON.parse(JSON.stringify(editForm.value.accessNote || { it: '' }))
       const hasAccessNote = Object.values(accessNote).some(v => typeof v === 'string' && v.trim() !== '')
-      const hoursPayload = (accessType || hasAccessNote || hoursMode !== 'schedule')
+      const customText = JSON.parse(JSON.stringify(editForm.value.hoursCustomText || { it: '' }))
+      const hasCustomText = Object.values(customText).some(v => typeof v === 'string' && v.trim() !== '')
+      const hoursPayload = (accessType || hasAccessNote || hoursMode !== 'schedule' || hasCustomText)
         ? {
             mode: hoursMode,
-            schedule: hoursMode === 'continuous' ? [] : validHours,
+            schedule: (hoursMode === 'continuous' || hoursMode === 'custom') ? [] : validHours,
+            ...(hoursMode === 'custom' && hasCustomText ? { customText } : {}),
             access: (accessType || hasAccessNote) ? { type: accessType || 'custom', note: accessNote } : null
           }
         : validHours

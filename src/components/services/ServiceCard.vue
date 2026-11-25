@@ -82,20 +82,20 @@
         </div>
 
         <!-- SEZIONE 2: ORARI DI APERTURA (Separati dall'accesso, con riepilogo e tabella chiara) -->
-        <!-- Caso A: Servizio Continuativo H24 o Solo su Appuntamento -->
+        <!-- Caso A: Servizio Continuativo H24, Orario personalizzato/periodico o Solo su Appuntamento -->
         <div
-          v-if="parsedHours.mode === 'continuous' || (parsedHours.mode === 'appointment' && scheduleRows.length === 0)"
+          v-if="parsedHours.mode === 'continuous' || (parsedHours.mode === 'custom' && customHoursDisplay) || (parsedHours.mode === 'appointment' && scheduleRows.length === 0)"
           class="rounded-2xl border border-slate-200/80 bg-slate-50/90 px-3.5 py-2.5 flex items-center justify-between gap-2 text-xs"
         >
-          <div class="flex items-center gap-2 font-bold text-slate-700">
+          <div class="flex items-center gap-2 font-bold text-slate-700 shrink-0">
             <i class="fa-regular fa-clock text-brand-600 text-sm"></i>
             <span>{{ t('hours_label') }}</span>
           </div>
           <span
-            class="px-2.5 py-1 rounded-full text-[11px] font-bold border shrink-0"
-            :class="parsedHours.mode === 'continuous' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-800 border-amber-200'"
+            class="px-2.5 py-1 rounded-xl text-[11px] font-bold border text-right leading-snug"
+            :class="parsedHours.mode === 'continuous' ? 'bg-emerald-50 text-emerald-700 border-emerald-200 shrink-0 rounded-full' : (parsedHours.mode === 'custom' ? 'bg-brand-50 text-brand-800 border-brand-200' : 'bg-amber-50 text-amber-800 border-amber-200 shrink-0 rounded-full')"
           >
-            {{ parsedHours.mode === 'continuous' ? t('hours_continuous') : t('hours_by_appointment') }}
+            {{ parsedHours.mode === 'continuous' ? t('hours_continuous') : (parsedHours.mode === 'custom' ? customHoursDisplay : t('hours_by_appointment')) }}
           </span>
         </div>
 
@@ -254,6 +254,14 @@ const props = defineProps({
 defineEmits(['toggle-hours', 'open-contact', 'open-share'])
 
 const parsedHours = computed(() => parseServiceHoursData(props.service?.hours))
+
+const customHoursDisplay = computed(() => {
+  const ct = parsedHours.value.customText
+  if (!ct) return ''
+  if (typeof ct === 'string') return ct.trim()
+  const lang = props.currentLangCode || 'it'
+  return (ct[lang] || ct.en || ct.it || Object.values(ct)[0] || '').trim()
+})
 
 const scheduleRows = computed(() => {
   return getStructuredScheduleRows(props.service?.hours, props.currentLangCode || 'it')
