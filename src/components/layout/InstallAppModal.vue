@@ -14,8 +14,8 @@
             <i class="fa-solid fa-hands-holding-circle"></i>
           </div>
           <div>
-            <h3 class="font-bold text-slate-900 text-base leading-tight">App Vicini di Strada</h3>
-            <p class="text-xs text-slate-500 font-medium">Coordinamento Servizi Como</p>
+            <h3 class="font-bold text-slate-900 text-base leading-tight">Vicini di Strada</h3>
+            <p class="text-xs text-slate-500 font-medium">{{ t('header_subtitle') }}</p>
           </div>
         </div>
         <button
@@ -34,10 +34,10 @@
           </div>
           <div>
             <h4 class="font-bold text-emerald-950 text-base">
-              App già installata!
+              {{ t('pwa_modal_installed_title') }}
             </h4>
             <p class="text-xs text-emerald-800 mt-1 leading-relaxed">
-              L'applicazione è già stata installata e salvata su questo dispositivo.
+              {{ t('pwa_modal_installed_sub') }}
             </p>
           </div>
         </div>
@@ -45,16 +45,16 @@
         <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 text-xs text-slate-600 space-y-2">
           <p class="font-medium text-slate-700 flex items-center gap-2">
             <i :class="isMobileDevice ? 'fa-solid fa-mobile-screen-button' : 'fa-solid fa-desktop'" class="text-brand-600 text-sm"></i>
-            <span>Come aprirla:</span>
+            <span>{{ t('pwa_modal_how_to_open') }}</span>
           </p>
           <p class="leading-relaxed" v-if="isMobileDevice">
-            Cerca l'icona verde <strong>Vicini di Strada</strong> nella schermata Home o tra le app del tuo smartphone.
+            {{ t('pwa_modal_open_mobile') }}
           </p>
           <p class="leading-relaxed" v-else>
-            Cerca l'icona <strong>Vicini di Strada</strong> sul Desktop o nel menu Start del computer. Puoi avviarla direttamente come qualsiasi applicazione.
+            {{ t('pwa_modal_open_pc') }}
           </p>
           <p class="leading-relaxed text-slate-500">
-            Aprendola da lì, l'app funzionerà a schermo intero senza barre del browser e sarà consultabile anche senza connessione internet.
+            {{ t('pwa_modal_offline_note') }}
           </p>
         </div>
 
@@ -62,7 +62,7 @@
           @click="$emit('close')"
           class="w-full bg-brand-800 hover:bg-brand-900 text-white font-bold py-3.5 px-4 rounded-xl text-sm transition shadow"
         >
-          Ho capito, grazie
+          {{ t('pwa_modal_btn_ok') }}
         </button>
 
         <div class="text-center pt-1">
@@ -70,7 +70,7 @@
             @click="$emit('force-reinstall')"
             class="text-xs text-slate-400 hover:text-brand-600 underline font-medium transition"
           >
-            {{ isMobileDevice ? 'Non la trovi? Clicca qui per riscaricarla' : 'Vuoi reinstallarla sul computer? Clicca qui' }}
+            {{ isMobileDevice ? t('pwa_modal_reinstall_mobile') : t('pwa_modal_reinstall_pc') }}
           </button>
         </div>
       </div>
@@ -78,7 +78,7 @@
       <!-- CASO 2: L'APP NON È ANCORA INSTALLATA -->
       <div v-else class="space-y-4 py-1">
         <p class="text-xs text-slate-600 leading-relaxed">
-          Installa l'app per avere sempre a portata di mano mense, dormitori, docce e numeri d'emergenza di Como, consultabili anche offline.
+          {{ t('pwa_modal_intro') }}
         </p>
 
         <!-- Android / Desktop con prompt nativo disponibile -->
@@ -88,7 +88,7 @@
             class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 px-4 rounded-2xl text-sm sm:text-base flex items-center justify-center gap-2.5 shadow-lg shadow-emerald-600/30 active:scale-95 transition"
           >
             <i class="fa-solid fa-download"></i>
-            <span>Scarica e Installa Ora</span>
+            <span>{{ t('pwa_modal_btn_install_now') }}</span>
           </button>
         </div>
 
@@ -96,21 +96,21 @@
         <div v-else-if="isIOS" class="bg-brand-50/70 border border-brand-200/80 rounded-2xl p-4 space-y-3">
           <div class="flex items-center gap-2 text-brand-900 font-bold text-xs uppercase tracking-wider">
             <i class="fa-brands fa-apple text-base text-brand-700"></i>
-            <span>Istruzioni per iPhone / Safari</span>
+            <span>{{ t('pwa_modal_ios_title') }}</span>
           </div>
 
           <ol class="space-y-2.5 text-xs text-slate-700">
             <li class="flex items-start gap-2.5">
               <span class="w-5 h-5 rounded-full bg-brand-600 text-white font-bold flex items-center justify-center text-[10px] shrink-0 mt-0.5">1</span>
-              <span>In basso tocca il tasto <strong>Condividi</strong> (<i class="fa-solid fa-arrow-up-from-bracket text-brand-700"></i> icona del quadrato con freccia in su).</span>
+              <span>{{ t('pwa_modal_ios_step1') }}</span>
             </li>
             <li class="flex items-start gap-2.5">
               <span class="w-5 h-5 rounded-full bg-brand-600 text-white font-bold flex items-center justify-center text-[10px] shrink-0 mt-0.5">2</span>
-              <span>Scorri il menu e tocca <strong>"Aggiungi alla schermata Home"</strong> (<i class="fa-regular fa-square-plus text-brand-700"></i>).</span>
+              <span>{{ t('pwa_modal_ios_step2') }}</span>
             </li>
             <li class="flex items-start gap-2.5">
               <span class="w-5 h-5 rounded-full bg-brand-600 text-white font-bold flex items-center justify-center text-[10px] shrink-0 mt-0.5">3</span>
-              <span>Tocca <strong>"Aggiungi"</strong> in alto a destra. L'app comparirà subito insieme alle tue app!</span>
+              <span>{{ t('pwa_modal_ios_step3') }}</span>
             </li>
           </ol>
         </div>
@@ -119,10 +119,10 @@
         <div v-else class="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2.5 text-xs text-slate-600">
           <p class="font-bold text-slate-800 flex items-center gap-1.5">
             <i class="fa-solid fa-circle-info text-brand-600"></i>
-            <span>Come installarla dal tuo browser:</span>
+            <span>{{ t('pwa_modal_browser_title') }}</span>
           </p>
           <p class="leading-relaxed">
-            Apri il menu del browser (i <strong>tre puntini</strong> <i class="fa-solid fa-ellipsis-vertical"></i> in alto a destra) e seleziona <strong>"Installa app"</strong> o <strong>"Aggiungi a schermata Home"</strong>.
+            {{ t('pwa_modal_browser_desc') }}
           </p>
         </div>
 
@@ -131,7 +131,7 @@
             @click="$emit('close')"
             class="w-full py-2.5 text-center text-xs font-semibold text-slate-400 hover:text-slate-600 transition"
           >
-            Chiudi
+            {{ t('close') }}
           </button>
         </div>
       </div>
@@ -149,6 +149,10 @@ defineProps({
   isMobileDevice: {
     type: Boolean,
     default: true
+  },
+  t: {
+    type: Function,
+    default: (k) => k
   }
 })
 

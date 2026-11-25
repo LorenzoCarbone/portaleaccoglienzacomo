@@ -11,7 +11,7 @@
             VICINI DI STRADA
           </h1>
           <p class="text-[9px] xs:text-[10px] sm:text-xs text-brand-200/90 font-medium truncate leading-tight">
-            Coordinamento Servizi Como
+            {{ t('header_subtitle') }}
           </p>
         </div>
       </div>
@@ -69,7 +69,7 @@
             v-if="showLangMenu"
             class="absolute mt-2 w-56 max-w-[calc(100vw-2rem)] bg-white rounded-2xl shadow-2xl border border-slate-100 py-2 z-50 max-h-80 overflow-y-auto no-scrollbar text-slate-800 origin-top-right right-0 rtl:left-0 rtl:right-auto rtl:origin-top-left"
           >
-            <div class="px-3 py-1 text-xs font-semibold text-slate-400 uppercase tracking-wider">Seleziona Lingua / Language</div>
+            <div class="px-3 py-1 text-xs font-semibold text-slate-400 uppercase tracking-wider">{{ t('select_language_label') }}</div>
             <button
               v-for="(lang, code) in languages"
               :key="code"

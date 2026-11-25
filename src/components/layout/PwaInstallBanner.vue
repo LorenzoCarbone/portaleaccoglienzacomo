@@ -13,11 +13,11 @@
       </div>
       <div class="min-w-0">
         <h4 class="font-bold text-sm leading-tight text-white flex items-center gap-1.5">
-          <span>Installa l'App</span>
+          <span>{{ t('pwa_banner_title') }}</span>
           <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-brand-300"></i>
         </h4>
         <p class="text-xs text-brand-200 mt-0.5 truncate">
-          {{ isIOS ? "Tocca qui per le istruzioni iPhone" : "Accesso rapido ai servizi anche offline" }}
+          {{ isIOS ? t('pwa_banner_sub_ios') : t('pwa_banner_sub_default') }}
         </p>
       </div>
     </div>
@@ -28,14 +28,14 @@
         @click="$emit('install')"
         class="bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs py-2 px-3.5 rounded-xl shadow transition active:scale-95"
       >
-        Installa
+        {{ t('pwa_banner_btn_install') }}
       </button>
       <button
         v-else
         @click="$emit('open-modal')"
         class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs py-2 px-3 rounded-xl shadow transition active:scale-95"
       >
-        Info
+        {{ t('pwa_banner_btn_info') }}
       </button>
       <button
         @click="dismissBanner"
@@ -54,7 +54,11 @@ import { ref, onMounted, watch } from 'vue'
 const props = defineProps({
   isInstalled: Boolean,
   isIOS: Boolean,
-  deferredPrompt: Object
+  deferredPrompt: Object,
+  t: {
+    type: Function,
+    default: (k) => k
+  }
 })
 
 defineEmits(['open-modal', 'install'])

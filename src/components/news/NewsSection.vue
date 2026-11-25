@@ -35,19 +35,16 @@
         <div class="bg-amber-50/70 border border-amber-200/80 rounded-2xl p-3.5 space-y-2.5 text-xs text-slate-700">
           <!-- Android (sia App/Scorciatoia che Browser) -->
           <template v-if="deviceContext === 'android_pwa' || deviceContext === 'android_browser'">
-            <div v-if="browserName && browserName !== 'Chrome'" class="p-2.5 rounded-xl bg-amber-100/80 border border-amber-300 text-amber-950 font-semibold leading-relaxed">
-              Stai usando <strong>{{ browserName }}</strong>, che spesso blocca le notifiche dei siti. Per riceverle senza problemi ti consigliamo di aprire l'app da <strong>Google Chrome</strong>.
-            </div>
             <div class="flex items-start gap-2.5">
               <span class="w-5 h-5 rounded-full bg-amber-500 text-white text-[11px] font-bold flex items-center justify-center shrink-0 mt-0.5">1</span>
               <p class="leading-relaxed">
-                Apri <strong>{{ browserName || 'Chrome' }}</strong> → tocca i <strong>3 puntini (⋮)</strong> in alto a destra → <strong>Impostazioni</strong> → <strong>Impostazioni sito</strong> → <strong>Notifiche</strong>.
+                {{ t('push_blocked_android_step1') }}
               </p>
             </div>
             <div class="flex items-start gap-2.5">
               <span class="w-5 h-5 rounded-full bg-amber-500 text-white text-[11px] font-bold flex items-center justify-center shrink-0 mt-0.5">2</span>
               <p class="leading-relaxed">
-                Cerca <strong>lorenzocarbone.github.io</strong> nella lista dei siti bloccati, tocca <strong>Consenti</strong>, poi torna qui e premi il tasto sotto.
+                {{ t('push_blocked_android_step2') }}
               </p>
             </div>
           </template>
@@ -57,13 +54,13 @@
             <div class="flex items-start gap-2.5">
               <span class="w-5 h-5 rounded-full bg-amber-500 text-white text-[11px] font-bold flex items-center justify-center shrink-0 mt-0.5">1</span>
               <p class="leading-relaxed">
-                Apri <strong>Impostazioni</strong> di iPhone → <strong>Notifiche</strong> → <strong>Vicini di Strada</strong>.
+                {{ t('push_blocked_ios_step1') }}
               </p>
             </div>
             <div class="flex items-start gap-2.5">
               <span class="w-5 h-5 rounded-full bg-amber-500 text-white text-[11px] font-bold flex items-center justify-center shrink-0 mt-0.5">2</span>
               <p class="leading-relaxed">
-                Attiva <strong>Consenti notifiche</strong> e torna su questa schermata.
+                {{ t('push_blocked_ios_step2') }}
               </p>
             </div>
           </template>
@@ -73,13 +70,13 @@
             <div class="flex items-start gap-2.5">
               <span class="w-5 h-5 rounded-full bg-amber-500 text-white text-[11px] font-bold flex items-center justify-center shrink-0 mt-0.5">1</span>
               <p class="leading-relaxed">
-                Clicca l'icona delle <strong>impostazioni / lucchetto</strong> in alto a sinistra nella barra dell'indirizzo del browser.
+                {{ t('push_blocked_pc_step1') }}
               </p>
             </div>
             <div class="flex items-start gap-2.5">
               <span class="w-5 h-5 rounded-full bg-amber-500 text-white text-[11px] font-bold flex items-center justify-center shrink-0 mt-0.5">2</span>
               <p class="leading-relaxed">
-                Imposta <strong>Notifiche → Consenti</strong> e premi il pulsante qui sotto.
+                {{ t('push_blocked_pc_step2') }}
               </p>
             </div>
           </template>
@@ -108,14 +105,14 @@
           </div>
           <div class="min-w-0 flex-1">
             <h4 class="font-bold text-slate-900 text-sm sm:text-base leading-snug">
-              Attiva le notifiche su iPhone
+              {{ t('push_ios_home_title') }}
             </h4>
             <p class="text-xs text-slate-500 mt-1 leading-relaxed">
-              Su iPhone Apple richiede di aggiungere prima l'app alla Home:
+              {{ t('push_ios_home_sub') }}
             </p>
             <div class="mt-2.5 bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-1.5 text-xs text-slate-700">
-              <p><strong>1.</strong> Tocca <strong>Condividi</strong> (<i class="fa-solid fa-arrow-up-from-bracket text-brand-600"></i>) in basso su Safari → <strong>Aggiungi alla schermata Home</strong>.</p>
-              <p><strong>2.</strong> Apri l'app dalla nuova icona e premi <strong>Attiva Notifiche</strong>.</p>
+              <p><strong>1.</strong> {{ t('push_ios_home_step1') }}</p>
+              <p><strong>2.</strong> {{ t('push_ios_home_step2') }}</p>
             </div>
           </div>
         </div>

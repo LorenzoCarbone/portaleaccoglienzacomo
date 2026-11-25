@@ -225,6 +225,7 @@
       :is-mobile-device="isMobileDevice"
       :is-i-o-s="isIOS"
       :deferred-prompt="deferredPrompt"
+      :t="t"
       @close="openAppModal = false"
       @install="installPwa"
       @force-reinstall="forceReinstall"
@@ -235,6 +236,7 @@
       :is-installed="isInstalled"
       :is-i-o-s="isIOS"
       :deferred-prompt="deferredPrompt"
+      :t="t"
       @open-modal="openAppModal = true"
       @install="installPwa"
     />
