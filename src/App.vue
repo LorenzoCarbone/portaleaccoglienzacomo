@@ -162,6 +162,7 @@
       @service-toggle-select="toggleServiceSelection"
       @service-delete-selected="deleteSelectedServices"
       @service-delete-single="deleteSingleService"
+      @service-toggle-visibility="toggleServiceVisibility"
       @service-upload-image="handleImageUpload"
       @service-paste-image="handlePaste"
       @news-start-creating="startCreatingNews"
@@ -348,6 +349,7 @@ const {
   isAllSelected,
   deleteSelectedServices,
   deleteSingleService,
+  toggleServiceVisibility,
   editingService,
   editForm,
   savingServiceId,

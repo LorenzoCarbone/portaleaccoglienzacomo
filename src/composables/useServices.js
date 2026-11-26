@@ -84,6 +84,7 @@ export function useServices(i18nHelpers = {}) {
   const filteredServices = computed(() => {
     const q = searchQuery.value.toLowerCase().trim()
     const list = services.value.filter(s => {
+      if (s.status === 'hidden') return false
       const matchesCategory = selectedCategory.value === 'all' || s.category === selectedCategory.value
       if (!q) return matchesCategory
 
@@ -108,7 +109,7 @@ export function useServices(i18nHelpers = {}) {
     return list
   })
 
-  const getServiceCount = (catId) => services.value.filter(s => s.category === catId).length
+  const getServiceCount = (catId) => services.value.filter(s => s.status !== 'hidden' && s.category === catId).length
 
   const getServiceName = (serviceId) => {
     const s = services.value.find(item => item.id === serviceId)
@@ -154,7 +155,7 @@ export function useServices(i18nHelpers = {}) {
 
   const goToService = (serviceId) => {
     const s = services.value.find(item => item.id === serviceId)
-    if (s) {
+    if (s && s.status !== 'hidden') {
       selectedCategory.value = s.category
       activeTab.value = 'services'
       setTimeout(() => openContactModal(s), 200)
@@ -334,6 +335,26 @@ export function useServices(i18nHelpers = {}) {
       alert("Errore durante l'eliminazione: " + err.message)
     } finally {
       isDeleting.value = false
+    }
+  }
+
+  const toggleServiceVisibility = async (service, event) => {
+    if (event) event.stopPropagation()
+    if (!supabase || !service?.id) return
+    const nextStatus = service.status === 'hidden' ? 'active' : 'hidden'
+    try {
+      const { data, error } = await supabase
+        .from('services')
+        .update({ status: nextStatus })
+        .eq('id', service.id)
+        .select()
+      if (error) throw error
+      if (!data || data.length === 0) {
+        throw new Error("Il database ha bloccato l'operazione. Verifica le policy RLS su Supabase.")
+      }
+      dbServices.value = dbServices.value.map(s => s.id === service.id ? { ...s, status: nextStatus } : s)
+    } catch (err) {
+      alert("Errore cambio visibilità: " + err.message)
     }
   }
 
@@ -575,6 +596,7 @@ export function useServices(i18nHelpers = {}) {
     isAllSelected,
     deleteSelectedServices,
     deleteSingleService,
+    toggleServiceVisibility,
     editingService,
     editForm,
     savingServiceId,

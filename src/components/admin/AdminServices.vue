@@ -27,6 +27,7 @@
               class="w-4 h-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500 cursor-pointer"
             >
             <span>Servizi ({{ services.length }})</span>
+            <span v-if="hiddenCount > 0" class="px-2 py-0.5 rounded-full bg-slate-200/80 text-slate-600 text-[10px] font-bold normal-case">{{ hiddenCount }} nascosti</span>
           </div>
           <div class="flex items-center gap-3">
             <button
@@ -48,6 +49,7 @@
           :key="service.id"
           @click="$emit('start-editing', service)"
           class="p-4 sm:p-5 hover:bg-brand-50/60 transition cursor-pointer flex items-center justify-between gap-4 group active:bg-brand-100/50"
+          :class="service.status === 'hidden' ? 'bg-slate-50/80 opacity-75' : ''"
         >
           <div class="flex items-center gap-3.5 overflow-hidden flex-1">
             <div class="shrink-0" @click.stop>
@@ -69,19 +71,29 @@
               </p>
             </div>
           </div>
-          <div class="flex items-center gap-2 sm:gap-3 shrink-0">
+          <div class="flex items-center gap-2 sm:gap-2.5 shrink-0">
             <span
               class="px-2.5 py-1 rounded-full text-[11px] font-bold shadow-sm flex items-center gap-1.5"
               :class="[
-                service.status === 'active' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : service.status === 'notice' ? 'bg-amber-100 text-amber-800 border border-amber-300' : 'bg-red-100 text-red-800 border border-red-300'
+                service.status === 'active' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : service.status === 'notice' ? 'bg-amber-100 text-amber-800 border border-amber-300' : service.status === 'hidden' ? 'bg-slate-200 text-slate-700 border border-slate-300' : 'bg-red-100 text-red-800 border border-red-300'
               ]"
             >
+              <i v-if="service.status === 'hidden'" class="fa-solid fa-eye-slash text-[10px] text-slate-600"></i>
               <span
+                v-else
                 class="w-1.5 h-1.5 rounded-full"
                 :class="service.status === 'active' ? 'bg-emerald-500' : (service.status === 'notice' ? 'bg-amber-500' : 'bg-red-500')"
               ></span>
-              <span class="hidden sm:inline">{{ service.status === 'active' ? 'Regolare' : (service.status === 'notice' ? 'Variazione' : 'Sospeso') }}</span>
+              <span class="hidden sm:inline">{{ service.status === 'active' ? 'Regolare' : (service.status === 'notice' ? 'Variazione' : (service.status === 'hidden' ? 'Non visibile' : 'Sospeso')) }}</span>
             </span>
+            <button
+              @click.stop="$emit('toggle-visibility', service, $event)"
+              class="w-8 h-8 rounded-full flex items-center justify-center text-xs transition border"
+              :class="service.status === 'hidden' ? 'bg-slate-700 hover:bg-emerald-600 text-white border-slate-700 hover:border-emerald-600' : 'bg-slate-100 hover:bg-slate-700 text-slate-500 hover:text-white border-transparent'"
+              :title="service.status === 'hidden' ? 'Rendi visibile agli utenti' : 'Nascondi agli utenti (senza eliminare)'"
+            >
+              <i class="fa-solid" :class="service.status === 'hidden' ? 'fa-eye-slash' : 'fa-eye'"></i>
+            </button>
             <button
               @click.stop="$emit('delete-single', service, $event)"
               class="w-8 h-8 rounded-full bg-slate-100 hover:bg-red-600 text-slate-400 hover:text-white flex items-center justify-center text-xs transition"
@@ -255,7 +267,7 @@
 
         <div>
           <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Stato Accessibilità:</label>
-          <div class="grid grid-cols-3 gap-2">
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
             <button
               @click="editForm.status = 'active'"
               type="button"
@@ -283,7 +295,20 @@
               <span class="w-2.5 h-2.5 rounded-full" :class="editForm.status === 'suspended' ? 'bg-white' : 'bg-red-600'"></span>
               <span>Sospeso</span>
             </button>
+            <button
+              @click="editForm.status = 'hidden'"
+              type="button"
+              class="py-3 px-2 rounded-xl text-xs font-bold border flex flex-col sm:flex-row items-center justify-center gap-1.5 transition active:scale-95"
+              :class="editForm.status === 'hidden' ? 'bg-slate-700 border-slate-800 text-white shadow-md' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'"
+            >
+              <i class="fa-solid fa-eye-slash text-[11px]" :class="editForm.status === 'hidden' ? 'text-white' : 'text-slate-500'"></i>
+              <span>Non visibile</span>
+            </button>
           </div>
+          <p v-if="editForm.status === 'hidden'" class="mt-2.5 text-xs text-slate-600 bg-slate-100 border border-slate-200 rounded-xl px-3 py-2 flex items-center gap-2">
+            <i class="fa-solid fa-eye-slash text-slate-500 shrink-0"></i>
+            <span>Questa scheda è salvata in archivio ma non sarà visibile agli utenti finché non verrà rimessa attiva.</span>
+          </p>
         </div>
 
         <div class="mt-4 border-t border-slate-100 pt-4">
@@ -764,6 +789,7 @@ const emit = defineEmits([
   'toggle-select',
   'delete-selected',
   'delete-single',
+  'toggle-visibility',
   'upload-image',
   'paste-image'
 ])
@@ -774,6 +800,8 @@ const selectedNewLangTemp = ref('')
 const selectedNewLangService = ref('')
 const selectedNewLangAccess = ref('')
 const selectedNewLangHoursCustom = ref('')
+
+const hiddenCount = computed(() => (props.services || []).filter(s => s.status === 'hidden').length)
 
 const selectedNoticeTemplate = computed(() => {
   return props.templates?.find(t => t.id === props.editForm.noticeTemplate)

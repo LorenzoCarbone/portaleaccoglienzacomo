@@ -69,6 +69,7 @@
       @toggle-select="$emit('service-toggle-select', $event)"
       @delete-selected="$emit('service-delete-selected')"
       @delete-single="$emit('service-delete-single', $event)"
+      @toggle-visibility="$emit('service-toggle-visibility', $event)"
       @upload-image="$emit('service-upload-image', $event)"
       @paste-image="$emit('service-paste-image', $event)"
     />
@@ -198,6 +199,7 @@ defineEmits([
   'service-toggle-select',
   'service-delete-selected',
   'service-delete-single',
+  'service-toggle-visibility',
   'service-upload-image',
   'service-paste-image',
   'news-start-creating',
