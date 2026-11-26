@@ -36,7 +36,7 @@ serve(async (req) => {
     const chiavePrivataBancaDati = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const clienteBancaDati = createClient(collegamentoBancaDati, chiavePrivataBancaDati)
 
-    const lingueTarget = ["en", "fr", "es", "ar", "ur", "hi", "sw", "tr"]
+    const lingueTarget = ["en", "fr", "es", "ro", "ar", "ur", "hi", "sw", "tr"]
 
     // Completa SOLO le lingue mancanti preservando sempre tutte quelle già presenti
     async function completaTraduzioni(campoEsistente: Record<string, string> | null | undefined) {

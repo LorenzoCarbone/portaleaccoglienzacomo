@@ -19,6 +19,11 @@
     "flag": "🇪🇸",
     "rtl": false
   },
+  "ro": {
+    "name": "Română",
+    "flag": "🇷🇴",
+    "rtl": false
+  },
   "ar": {
     "name": "العربية (Arabo)",
     "flag": "🇸🇦",

@@ -335,7 +335,8 @@ export function usePushNotifications() {
           ur: 'نوٹیفکیشن سسٹم ٹیسٹ',
           hi: 'सूचना प्रणाली परीक्षण',
           sw: 'Jaribio la mfumo wa arifa',
-          tr: 'Bildirim Sistemi Testi'
+          tr: 'Bildirim Sistemi Testi',
+          ro: 'Test sistem de notificări'
         },
         content: {
           it: 'Questo è un messaggio di TEST del sistema di notifica di Vicini di Strada Como. Non è richiesta alcuna azione.',
@@ -346,7 +347,8 @@ export function usePushNotifications() {
           ur: 'یہ Vicini di Strada Como نوٹیفکیشن سسٹم کا ٹیسٹ پیغام ہے۔ کسی کارروائی کی ضرورت نہیں ہے۔',
           hi: 'यह Vicini di Strada Como सूचना प्रणाली का एक परीक्षण संदेश है। किसी कार्रवाई की आवश्यकता नहीं है।',
           sw: 'Huu ni ujumbe wa MAJARIBIO kutoka kwa mfumo wa arifa wa Vicini di Strada Como. Hakuna hatua inayohitajika.',
-          tr: 'Bu, Vicini di Strada Como bildirim sisteminin bir TEST mesajıdır. Herhangi bir işlem gerekmemektedir.'
+          tr: 'Bu, Vicini di Strada Como bildirim sisteminin bir TEST mesajıdır. Herhangi bir işlem gerekmemektedir.',
+          ro: 'Acesta este un mesaj de TEST al sistemului de notificări Vicini di Strada Como. Nu este necesară nicio acțiune.'
         },
         url: 'https://lorenzocarbone.github.io/portaleaccoglienzacomo/?tab=news'
       })

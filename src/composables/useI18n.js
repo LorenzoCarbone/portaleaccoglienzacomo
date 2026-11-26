@@ -11,8 +11,9 @@ import ur from '../locales/ur.json'
 import hi from '../locales/hi.json'
 import sw from '../locales/sw.json'
 import tr from '../locales/tr.json'
+import ro from '../locales/ro.json'
 
-const locales = { it, en, fr, es, ar, ur, hi, sw, tr }
+const locales = { it, en, fr, es, ro, ar, ur, hi, sw, tr }
 
 const currentLangCode = ref(localStorage.getItem('vicini_lang') || 'it')
 
