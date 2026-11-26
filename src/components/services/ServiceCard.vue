@@ -1,5 +1,9 @@
 <template>
-  <div class="bg-white rounded-3xl border border-slate-200/90 overflow-hidden card-shadow hover:shadow-xl transition-all duration-300 flex flex-col justify-between">
+  <div
+    :id="'service-' + service.id"
+    class="bg-white rounded-3xl border border-slate-200/90 overflow-hidden card-shadow hover:shadow-xl transition-all duration-300 flex flex-col justify-between"
+    :class="isHighlighted ? 'ring-2 ring-brand-500 ring-offset-2 shadow-xl' : ''"
+  >
     <div>
       <div class="relative h-48 w-full bg-slate-100 overflow-hidden">
         <img
@@ -69,9 +73,21 @@
             <i :class="accessDisplay.icon"></i>
           </div>
           <div class="min-w-0 flex-1">
-            <span class="text-[10px] uppercase tracking-wider font-bold block leading-none mb-1 opacity-75">
-              {{ t('access_label') }}
-            </span>
+            <div class="flex items-center justify-between gap-2 mb-1">
+              <span class="text-[10px] uppercase tracking-wider font-bold leading-none opacity-75">
+                {{ t('access_label') }}
+              </span>
+              <button
+                v-if="accessDisplay.showPortaApertaLink"
+                type="button"
+                @click="$emit('go-to-porta-aperta')"
+                class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-white/90 hover:bg-white border shadow-2xs transition active:scale-95 cursor-pointer shrink-0"
+                :class="accessDisplay.linkClass"
+              >
+                <span>{{ t('go_to_porta_aperta') }}</span>
+                <i class="fa-solid fa-arrow-right text-[9px]" :class="{'rtl-flip': isRTL}"></i>
+              </button>
+            </div>
             <span class="text-xs sm:text-[13px] font-bold block leading-snug">
               {{ accessDisplay.title }}
             </span>
@@ -285,6 +301,7 @@ import { parseServiceHoursData, getStructuredScheduleRows } from '../../composab
 const props = defineProps({
   service: Object,
   isHoursExpanded: Boolean,
+  isHighlighted: Boolean,
   currentLangCode: String,
   isRTL: Boolean,
   t: Function,
@@ -296,7 +313,7 @@ const props = defineProps({
   getNavigationUrl: Function
 })
 
-defineEmits(['toggle-hours', 'open-contact', 'open-share'])
+defineEmits(['toggle-hours', 'open-contact', 'open-share', 'go-to-porta-aperta'])
 
 const parsedHours = computed(() => parseServiceHoursData(props.service?.hours))
 
@@ -326,39 +343,47 @@ const ACCESS_STYLES = {
     key: 'access_free',
     icon: 'fa-solid fa-door-open',
     boxClass: 'bg-emerald-50/80 border-emerald-200/80 text-emerald-950',
-    iconClass: 'bg-emerald-100 text-emerald-700'
+    iconClass: 'bg-emerald-100 text-emerald-700',
+    linkClass: 'text-emerald-700 border-emerald-200 hover:border-emerald-300'
   },
   porta_aperta: {
     key: 'access_porta_aperta',
     icon: 'fa-solid fa-key',
     boxClass: 'bg-sky-50/80 border-sky-200/80 text-sky-950',
-    iconClass: 'bg-sky-100 text-sky-700'
+    iconClass: 'bg-sky-100 text-sky-700',
+    linkClass: 'text-sky-700 border-sky-200 hover:border-sky-300'
   },
   servizi_sociali: {
     key: 'access_servizi_sociali',
     icon: 'fa-solid fa-clipboard-check',
     boxClass: 'bg-indigo-50/80 border-indigo-200/80 text-indigo-950',
-    iconClass: 'bg-indigo-100 text-indigo-700'
+    iconClass: 'bg-indigo-100 text-indigo-700',
+    linkClass: 'text-indigo-700 border-indigo-200 hover:border-indigo-300'
   },
   tessera: {
     key: 'access_tessera',
     icon: 'fa-solid fa-id-card',
     boxClass: 'bg-teal-50/80 border-teal-200/80 text-teal-950',
-    iconClass: 'bg-teal-100 text-teal-700'
+    iconClass: 'bg-teal-100 text-teal-700',
+    linkClass: 'text-teal-700 border-teal-200 hover:border-teal-300'
   },
   appointment: {
     key: 'access_appointment',
     icon: 'fa-solid fa-calendar-check',
     boxClass: 'bg-amber-50/80 border-amber-200/80 text-amber-950',
-    iconClass: 'bg-amber-100 text-amber-700'
+    iconClass: 'bg-amber-100 text-amber-700',
+    linkClass: 'text-amber-800 border-amber-200 hover:border-amber-300'
   },
   custom: {
     key: 'access_custom',
     icon: 'fa-solid fa-circle-info',
     boxClass: 'bg-slate-50 border-slate-200 text-slate-800',
-    iconClass: 'bg-slate-200/70 text-slate-700'
+    iconClass: 'bg-slate-200/70 text-slate-700',
+    linkClass: 'text-brand-700 border-slate-200 hover:border-brand-300'
   }
 }
+
+const PORTA_APERTA_ID = 'c163e7c5-3527-48be-8fa1-744c9bba903e'
 
 const accessDisplay = computed(() => {
   const acc = parsedHours.value.access
@@ -377,12 +402,20 @@ const accessDisplay = computed(() => {
 
   if (!acc.type && !note) return null
 
+  const rawNotes = acc.note && typeof acc.note === 'object'
+    ? Object.values(acc.note).join(' ')
+    : String(acc.note || '')
+  const showPortaApertaLink = props.service?.id !== PORTA_APERTA_ID &&
+    (acc.type === 'porta_aperta' || rawNotes.toLowerCase().includes('porta aperta'))
+
   return {
     title: acc.type ? props.t(style.key) : props.t('access_label'),
     note,
     icon: style.icon,
     boxClass: style.boxClass,
-    iconClass: style.iconClass
+    iconClass: style.iconClass,
+    linkClass: style.linkClass,
+    showPortaApertaLink
   }
 })
 </script>

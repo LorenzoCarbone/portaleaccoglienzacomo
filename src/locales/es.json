@@ -164,5 +164,6 @@
   "push_ios_home_title": "Activar notificaciones en iPhone",
   "push_ios_home_sub": "En iPhone, Apple requiere añadir primero la app a la pantalla de inicio:",
   "push_ios_home_step1": "Toca Compartir abajo en Safari → Añadir a pantalla de inicio.",
-  "push_ios_home_step2": "Abre la app desde el nuevo icono y pulsa Activar Notificaciones."
+  "push_ios_home_step2": "Abre la app desde el nuevo icono y pulsa Activar Notificaciones.",
+  "go_to_porta_aperta": "Ir a Porta Aperta"
 }

@@ -1,8 +1,10 @@
-import { ref, computed } from 'vue'
+import { ref, computed, nextTick } from 'vue'
 import { supabase, IMAGE_BUCKET } from '../lib/supabase'
 import organizations from '../config/organizations.json'
 import languages from '../config/languages.json'
 import { parseServiceHoursData } from './useI18n'
+
+const PORTA_APERTA_ID = 'c163e7c5-3527-48be-8fa1-744c9bba903e'
 
 const dbServices = ref([])
 const isLoading = ref(true)
@@ -12,6 +14,7 @@ const searchQuery = ref('')
 
 const expandedServiceIds = ref(new Set())
 const expandedHoursIds = ref(new Set())
+const highlightedServiceId = ref(null)
 
 const activeModalService = ref(null)
 const activeShareService = ref(null)
@@ -79,10 +82,10 @@ export function useServices(i18nHelpers = {}) {
   })
 
   const filteredServices = computed(() => {
-    return services.value.filter(s => {
+    const q = searchQuery.value.toLowerCase().trim()
+    const list = services.value.filter(s => {
       const matchesCategory = selectedCategory.value === 'all' || s.category === selectedCategory.value
-      if (!searchQuery.value.trim()) return matchesCategory
-      const q = searchQuery.value.toLowerCase().trim()
+      if (!q) return matchesCategory
 
       const nameStr = Object.values(s.name || {}).join(' ').toLowerCase()
       const descStr = Object.values(s.description || {}).join(' ').toLowerCase()
@@ -91,6 +94,18 @@ export function useServices(i18nHelpers = {}) {
 
       return matchesCategory && (nameStr.includes(q) || descStr.includes(q) || orgStr.includes(q) || addrStr.includes(q))
     })
+
+    if (selectedCategory.value === 'all' && !q) {
+      const idx = list.findIndex(s => s.id === PORTA_APERTA_ID)
+      if (idx > 0) {
+        const reordered = [...list]
+        const [portaAperta] = reordered.splice(idx, 1)
+        reordered.unshift(portaAperta)
+        return reordered
+      }
+    }
+
+    return list
   })
 
   const getServiceCount = (catId) => services.value.filter(s => s.category === catId).length
@@ -144,6 +159,35 @@ export function useServices(i18nHelpers = {}) {
       activeTab.value = 'services'
       setTimeout(() => openContactModal(s), 200)
     }
+  }
+
+  const focusServiceCard = (serviceId = PORTA_APERTA_ID) => {
+    activeTab.value = 'services'
+    selectedCategory.value = 'all'
+    searchQuery.value = ''
+    highlightedServiceId.value = serviceId
+
+    nextTick(() => {
+      setTimeout(() => {
+        const el = document.getElementById(`service-${serviceId}`)
+        if (el) {
+          const header = document.querySelector('header')
+          const headerHeight = header ? header.offsetHeight : 64
+          const rect = el.getBoundingClientRect()
+          const scrollTop = window.pageYOffset || document.documentElement.scrollTop
+          window.scrollTo({
+            top: Math.max(0, rect.top + scrollTop - headerHeight - 16),
+            behavior: 'smooth'
+          })
+        }
+      }, 80)
+    })
+
+    setTimeout(() => {
+      if (highlightedServiceId.value === serviceId) {
+        highlightedServiceId.value = null
+      }
+    }, 2600)
   }
 
   const openShareModal = (service, currentLangCode = 'it') => {
@@ -518,8 +562,10 @@ export function useServices(i18nHelpers = {}) {
     activeShareService,
     shareLang,
     isCopied,
+    highlightedServiceId,
     openContactModal,
     goToService,
+    focusServiceCard,
     openShareModal,
     executeShare,
     selectedServices,

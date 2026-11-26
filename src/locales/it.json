@@ -164,5 +164,6 @@
   "push_ios_home_title": "Attiva le notifiche su iPhone",
   "push_ios_home_sub": "Su iPhone Apple richiede di aggiungere prima l'app alla schermata Home:",
   "push_ios_home_step1": "Tocca Condividi in basso su Safari → Aggiungi alla schermata Home.",
-  "push_ios_home_step2": "Apri l'app dalla nuova icona e premi Attiva Notifiche."
+  "push_ios_home_step2": "Apri l'app dalla nuova icona e premi Attiva Notifiche.",
+  "go_to_porta_aperta": "Vai a Porta Aperta"
 }

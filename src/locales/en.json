@@ -164,5 +164,6 @@
   "push_ios_home_title": "Enable notifications on iPhone",
   "push_ios_home_sub": "On iPhone, Apple requires adding the app to your Home Screen first:",
   "push_ios_home_step1": "Tap Share at the bottom in Safari → Add to Home Screen.",
-  "push_ios_home_step2": "Open the app from the new icon and tap Enable Notifications."
+  "push_ios_home_step2": "Open the app from the new icon and tap Enable Notifications.",
+  "go_to_porta_aperta": "Go to Porta Aperta"
 }

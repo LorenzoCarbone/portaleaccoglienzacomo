@@ -73,6 +73,7 @@
             :key="service.id"
             :service="service"
             :is-hours-expanded="isHoursExpanded(service.id)"
+            :is-highlighted="highlightedServiceId === service.id"
             :current-lang-code="currentLangCode"
             :is-r-t-l="isRTL"
             :t="t"
@@ -85,6 +86,7 @@
             @toggle-hours="toggleHoursExpanded"
             @open-contact="openContactModal"
             @open-share="openShareModal(service, currentLangCode)"
+            @go-to-porta-aperta="focusServiceCard()"
           />
         </div>
       </div>
@@ -333,8 +335,10 @@ const {
   activeShareService,
   shareLang,
   isCopied,
+  highlightedServiceId,
   openContactModal,
   goToService,
+  focusServiceCard,
   openShareModal,
   executeShare,
   selectedServices,
