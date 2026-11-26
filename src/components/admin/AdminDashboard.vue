@@ -103,6 +103,8 @@
       @delete-multiple="$emit('news-delete-multiple', $event)"
       @add-lang="$emit('news-add-lang', $event)"
       @delete-lang="$emit('news-delete-lang', $event)"
+      @preview-snippet="(code, done) => $emit('news-preview-snippet', code, done)"
+      @execute-snippet="(code, done) => $emit('news-execute-snippet', code, done)"
     />
 
     <!-- Section: Tags -->
@@ -210,6 +212,8 @@ defineEmits([
   'news-delete-multiple',
   'news-add-lang',
   'news-delete-lang',
+  'news-preview-snippet',
+  'news-execute-snippet',
   'tag-start-creating',
   'tag-start-editing',
   'tag-cancel',

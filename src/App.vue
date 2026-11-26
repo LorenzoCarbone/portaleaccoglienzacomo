@@ -173,6 +173,8 @@
       @news-delete-multiple="deleteMultipleNews"
       @news-add-lang="addLangToNews"
       @news-delete-lang="deleteLangFromNews"
+      @news-preview-snippet="handleNewsPreviewSnippet"
+      @news-execute-snippet="handleNewsExecuteSnippet"
       @tag-start-creating="startCreatingTag"
       @tag-start-editing="startEditingTag"
       @tag-cancel="cancelEditingTag"
@@ -285,7 +287,7 @@ import AdminDashboard from './components/admin/AdminDashboard.vue'
 import InstallAppModal from './components/layout/InstallAppModal.vue'
 import PwaInstallBanner from './components/layout/PwaInstallBanner.vue'
 import PushNotificationPromptModal from './components/layout/PushNotificationPromptModal.vue'
-import { usePushNotifications } from './composables/usePushNotifications'
+import { usePushNotifications, sendOneSignalPush } from './composables/usePushNotifications'
 
 // 1. i18n
 const {
@@ -411,6 +413,9 @@ const {
   startCreatingNews,
   cancelEditingNews,
   saveNewsChanges,
+  publishNewsAlert,
+  loadNewsSnippetToEditor,
+  executeNewsSnippet,
   deleteNewsItem,
   deleteMultipleNews
 } = useNews(buildMultilangObjFromTemplate, services)
@@ -544,14 +549,28 @@ const handleCategorySelect = (catId) => {
 // Import code state
 const importCode = ref('')
 
+const handleNewsPreviewSnippet = async (code, onDone) => {
+  try {
+    await loadNewsSnippetToEditor(code)
+    if (onDone) onDone()
+  } catch (e) {
+    alert("Errore lettura snippet:\n" + e.message)
+  }
+}
+
+const handleNewsExecuteSnippet = async (code, onDone) => {
+  const ok = await executeNewsSnippet(code)
+  if (ok && onDone) onDone()
+}
+
 const executeImportCode = async () => {
   if (!importCode.value.trim()) return
   const confirmed = confirm('Vuoi eseguire questo snippet nel database?')
   if (!confirmed) return
   try {
     const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor
-    const executor = new AsyncFunction('supabase', 'dbServices', 'fixedOrganizations', 'fetchServices', 'dbTags', 'fetchTags', importCode.value)
-    await executor(supabase, dbServices.value, organizations, fetchServices, dbTags.value, fetchTags)
+    const executor = new AsyncFunction('supabase', 'dbServices', 'fixedOrganizations', 'fetchServices', 'dbTags', 'fetchTags', 'publishNews', 'sendOneSignalPush', 'globalNews', 'fetchNews', importCode.value)
+    await executor(supabase, dbServices.value, organizations, fetchServices, dbTags.value, fetchTags, publishNewsAlert, sendOneSignalPush, globalNews.value, fetchNews)
     alert('Codice eseguito con successo e dati aggiornati!')
     importCode.value = ''
   } catch (e) {

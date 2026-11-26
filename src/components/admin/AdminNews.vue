@@ -18,11 +18,72 @@
             <span>Test Notifica</span>
           </button>
           <button
+            @click="showSnippetPanel = !showSnippetPanel"
+            type="button"
+            class="font-bold px-3.5 py-2.5 rounded-xl text-xs sm:text-sm border flex items-center gap-2 transition active:scale-95 cursor-pointer"
+            :class="showSnippetPanel ? 'bg-slate-900 text-emerald-400 border-slate-800 shadow-md' : 'bg-white/20 hover:bg-white/30 text-white border-white/30'"
+          >
+            <i class="fa-solid fa-code"></i>
+            <span>Snippet AI</span>
+          </button>
+          <button
             @click="$emit('start-creating')"
             class="bg-white text-amber-700 hover:bg-amber-50 font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm shadow flex items-center gap-2 transition active:scale-95"
           >
             <i class="fa-solid fa-plus"></i>
             <span>Nuova Notizia</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Pannello Inserimento Rapido Avviso tramite Snippet AI -->
+      <div v-if="showSnippetPanel" class="bg-white rounded-3xl border-2 border-amber-300/80 p-5 sm:p-6 card-shadow space-y-4 animate-fadeIn">
+        <div class="flex items-start justify-between gap-3">
+          <div class="flex items-start gap-3">
+            <div class="w-10 h-10 rounded-xl bg-slate-900 text-emerald-400 flex items-center justify-center text-base shrink-0 shadow-sm">
+              <i class="fa-solid fa-code"></i>
+            </div>
+            <div>
+              <h3 class="font-bold text-slate-800 text-base">Invia Avviso tramite Snippet AI</h3>
+              <p class="text-xs text-slate-500 mt-0.5 leading-relaxed">
+                Incolla qui il codice dell'avviso multilingua preparato dall'AI: puoi aprirlo in anteprima nell'editor oppure pubblicarlo e inviare subito la notifica push.
+              </p>
+            </div>
+          </div>
+          <button
+            @click="showSnippetPanel = false"
+            type="button"
+            class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center text-xs shrink-0 transition cursor-pointer"
+          >
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <textarea
+          v-model="snippetText"
+          rows="9"
+          placeholder="// Incolla qui lo snippet dell'avviso in tutte le lingue preparato dall'AI..."
+          class="w-full bg-slate-900 text-emerald-400 font-mono text-xs sm:text-sm p-4 rounded-2xl focus:ring-2 focus:ring-amber-500 outline-none shadow-inner"
+        ></textarea>
+
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-2.5 pt-1">
+          <button
+            @click="handlePreviewSnippet"
+            :disabled="!snippetText.trim() || savingNewsId"
+            type="button"
+            class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 disabled:opacity-50 text-slate-800 font-bold text-xs sm:text-sm transition flex items-center justify-center gap-2 border border-slate-200 cursor-pointer"
+          >
+            <i class="fa-solid fa-eye text-amber-600"></i>
+            <span>Anteprima nell'Editor</span>
+          </button>
+          <button
+            @click="handlePublishSnippet"
+            :disabled="!snippetText.trim() || savingNewsId"
+            type="button"
+            class="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 active:scale-95 disabled:opacity-50 text-white font-bold text-xs sm:text-sm shadow-md shadow-amber-500/20 transition flex items-center justify-center gap-2 cursor-pointer"
+          >
+            <i :class="savingNewsId ? 'fa-solid fa-circle-notch fa-spin' : 'fa-solid fa-paper-plane'"></i>
+            <span>{{ savingNewsId ? 'Pubblicazione...' : 'Pubblica e Invia Subito' }}</span>
           </button>
         </div>
       </div>
@@ -216,7 +277,7 @@
 
         <div class="flex bg-slate-100 p-1.5 rounded-2xl mb-5 w-full">
           <button
-            @click="newsForm.useCustomText = false"
+            @click="newsForm.useCustomText = false; showInlineSnippet = false"
             type="button"
             class="flex-1 py-2.5 px-2 rounded-xl text-xs sm:text-sm font-bold transition flex items-center justify-center gap-2"
             :class="!newsForm.useCustomText ? 'bg-white text-brand-700 shadow-sm border border-slate-200' : 'text-slate-500 hover:text-slate-700'"
@@ -226,15 +287,46 @@
             <span class="sm:hidden">Modello</span>
           </button>
           <button
-            @click="newsForm.useCustomText = true"
+            @click="newsForm.useCustomText = true; showInlineSnippet = false"
             type="button"
             class="flex-1 py-2.5 px-2 rounded-xl text-xs sm:text-sm font-bold transition flex items-center justify-center gap-2"
-            :class="newsForm.useCustomText ? 'bg-white text-brand-700 shadow-sm border border-slate-200' : 'text-slate-500 hover:text-slate-700'"
+            :class="newsForm.useCustomText && !showInlineSnippet ? 'bg-white text-brand-700 shadow-sm border border-slate-200' : 'text-slate-500 hover:text-slate-700'"
           >
             <i class="fa-solid fa-pen"></i>
             <span class="hidden sm:inline">Scrivi Testo Libero</span>
             <span class="sm:hidden">Libero</span>
           </button>
+          <button
+            @click="showInlineSnippet = !showInlineSnippet"
+            type="button"
+            class="flex-1 py-2.5 px-2 rounded-xl text-xs sm:text-sm font-bold transition flex items-center justify-center gap-2"
+            :class="showInlineSnippet ? 'bg-slate-900 text-emerald-400 shadow-sm' : 'text-slate-500 hover:text-slate-700'"
+          >
+            <i class="fa-solid fa-code"></i>
+            <span class="hidden sm:inline">Da Snippet AI</span>
+            <span class="sm:hidden">Snippet</span>
+          </button>
+        </div>
+
+        <div v-if="showInlineSnippet" class="mb-5 p-4 rounded-2xl bg-slate-900 space-y-3 animate-fadeIn">
+          <p class="text-xs text-slate-300">Incolla lo snippet dell'avviso per compilare automaticamente tutte le lingue, l'urgenza e il servizio collegato:</p>
+          <textarea
+            v-model="snippetText"
+            rows="6"
+            placeholder="// Incolla qui lo snippet dell'avviso..."
+            class="w-full bg-slate-950 text-emerald-400 font-mono text-xs p-3 rounded-xl border border-slate-700 focus:ring-2 focus:ring-amber-500 outline-none"
+          ></textarea>
+          <div class="flex justify-end gap-2">
+            <button
+              @click="handlePreviewSnippet"
+              :disabled="!snippetText.trim()"
+              type="button"
+              class="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white font-bold text-xs transition flex items-center gap-1.5 cursor-pointer"
+            >
+              <i class="fa-solid fa-wand-magic-sparkles"></i>
+              <span>Compila Campi dallo Snippet</span>
+            </button>
+          </div>
         </div>
 
         <!-- Modelli Preimpostati -->
@@ -500,10 +592,34 @@ const emit = defineEmits([
   'delete',
   'delete-multiple',
   'add-lang',
-  'delete-lang'
+  'delete-lang',
+  'preview-snippet',
+  'execute-snippet'
 ])
 
 const { sendTestNotification } = usePushNotifications()
+
+const showSnippetPanel = ref(false)
+const showInlineSnippet = ref(false)
+const snippetText = ref("")
+
+const handlePreviewSnippet = async () => {
+  if (!snippetText.value.trim()) return
+  emit("preview-snippet", snippetText.value, () => {
+    showSnippetPanel.value = false
+    showInlineSnippet.value = false
+    snippetText.value = ""
+  })
+}
+
+const handlePublishSnippet = async () => {
+  if (!snippetText.value.trim()) return
+  emit("execute-snippet", snippetText.value, () => {
+    showSnippetPanel.value = false
+    showInlineSnippet.value = false
+    snippetText.value = ""
+  })
+}
 
 const selectedNewsIds = ref([])
 

@@ -298,6 +298,212 @@ export function useNews(buildMultilangObjFromTemplate = null, servicesRef = null
     }
   }
 
+  const stripCodeFences = (raw = "") => {
+    let s = String(raw || "").trim()
+    if (s.startsWith("```")) {
+      s = s.replace(/^```[a-zA-Z]*\s*/, "").replace(/\s*```$/, "").trim()
+    }
+    return s
+  }
+
+  const resolveRelatedServiceId = (rawRef) => {
+    if (!rawRef) return null
+    const list = servicesRef?.value || []
+    const str = String(rawRef).trim()
+    if (!str) return null
+    const byId = list.find(s => s.id === str)
+    if (byId) return byId.id
+    const lower = str.toLowerCase()
+    const byName = list.find(s => {
+      const itName = (typeof s.name === "object" ? s.name?.it : s.name) || ""
+      return itName.toLowerCase().includes(lower)
+    })
+    return byName ? byName.id : null
+  }
+
+  const normalizeAlertInput = (item = {}) => {
+    const type = item.type || "general"
+    const priority = item.priority || (type === "emergency" ? "high" : "normal")
+    const related_service_id = resolveRelatedServiceId(item.related_service_id ?? item.service_id ?? item.service ?? null)
+    const title = typeof item.title === "string" ? { it: item.title } : JSON.parse(JSON.stringify(item.title || { it: "" }))
+    const content = typeof item.content === "string" ? { it: item.content } : JSON.parse(JSON.stringify(item.content || { it: "" }))
+    if (!title.it) title.it = ""
+    if (!content.it) content.it = ""
+    return {
+      id: item.id || null,
+      type,
+      priority,
+      association_id: item.association_id || null,
+      related_service_id,
+      title,
+      content,
+      sendPushNotification: item.sendPushNotification !== false
+    }
+  }
+
+  const publishNewsAlert = async (rawAlert) => {
+    if (!supabase) throw new Error("Connessione Supabase non disponibile.")
+    const alertItem = normalizeAlertInput(rawAlert)
+    if (!alertItem.title.it && !Object.values(alertItem.title).some(Boolean)) {
+      throw new Error("Titolo dell'avviso mancante nello snippet.")
+    }
+    const payload = {
+      type: alertItem.type,
+      priority: alertItem.priority,
+      association_id: alertItem.association_id,
+      related_service_id: alertItem.related_service_id,
+      title: alertItem.title,
+      content: alertItem.content
+    }
+
+    let insertedItem = null
+    if (alertItem.id) {
+      const { data, error } = await supabase.from("news").update(payload).eq("id", alertItem.id).select()
+      if (error) throw error
+      insertedItem = data?.[0]
+    } else {
+      const { data, error } = await supabase.from("news").insert([payload]).select()
+      if (error) throw error
+      insertedItem = data?.[0]
+    }
+
+    let serviceName = ""
+    if (alertItem.related_service_id && servicesRef?.value) {
+      const found = servicesRef.value.find(s => s.id === alertItem.related_service_id)
+      if (found) serviceName = found.name || ""
+    }
+
+    let pushFeedback = ""
+    if (alertItem.sendPushNotification !== false) {
+      try {
+        const pushRes = await sendOneSignalPush({
+          title: payload.title,
+          content: payload.content,
+          type: payload.type,
+          priority: payload.priority,
+          association_id: payload.association_id,
+          serviceName,
+          url: "https://lorenzocarbone.github.io/portaleaccoglienzacomo/?tab=news",
+          newsId: insertedItem?.id || alertItem.id
+        })
+        if (pushRes?.errors && pushRes.errors.length > 0) {
+          if (pushRes.errors.some(e => typeof e === "string" && e.includes("All included players are not subscribed"))) {
+            pushFeedback = " (Attenzione: nessun dispositivo attualmente iscritto alle notifiche)"
+          } else {
+            pushFeedback = ` (Errore invio notifica: ${pushRes.errors.join(", ")})`
+          }
+        } else if (pushRes?.id) {
+          pushFeedback = " (notifica push inviata!)"
+        }
+      } catch (pushErr) {
+        console.warn("[OneSignal] Errore invio push:", pushErr)
+      }
+    }
+
+    try {
+      await alertsChannel.send({
+        type: "broadcast",
+        event: "news_published",
+        payload: { id: insertedItem?.id || alertItem.id || Date.now() }
+      })
+    } catch (e) {}
+
+    await fetchNews()
+    return { insertedItem, pushFeedback }
+  }
+
+  const parseAlertObjectFromSnippet = async (rawCode) => {
+    const cleaned = stripCodeFences(rawCode)
+    if (!cleaned) throw new Error("Incolla prima uno snippet valido.")
+    if (cleaned.startsWith("{") || cleaned.startsWith("[")) {
+      const fn = new Function(`return (${cleaned});`)
+      return fn()
+    }
+    let captured = null
+    const dryPublish = async (obj) => { captured = obj; return obj }
+    const varMatch = cleaned.match(/^(?:const|let|var)\s+([a-zA-Z_$][\w$]*)\s*=/)
+    const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor
+    const body = varMatch && !cleaned.includes("publishNews") ? `${cleaned}\nreturn ${varMatch[1]};` : cleaned
+    const runner = new AsyncFunction("publishNews", "services", body)
+    const ret = await runner(dryPublish, servicesRef?.value || [])
+    return captured || ret
+  }
+
+  const loadNewsSnippetToEditor = async (rawCode) => {
+    const parsed = await parseAlertObjectFromSnippet(rawCode)
+    const target = Array.isArray(parsed) ? parsed[0] : parsed
+    if (!target || typeof target !== "object") {
+      throw new Error("Impossibile estrarre i dati dell'avviso dallo snippet.")
+    }
+    const norm = normalizeAlertInput(target)
+    editingNews.value = { id: norm.id }
+    newsForm.value = {
+      id: norm.id,
+      type: norm.type,
+      priority: norm.priority,
+      association_id: norm.association_id || "",
+      related_service_id: norm.related_service_id,
+      useCustomText: true,
+      template: "posti_esauriti",
+      templateParams: {},
+      customTitle: norm.title,
+      customContent: norm.content,
+      sendPushNotification: norm.sendPushNotification
+    }
+    window.scrollTo({ top: 0, behavior: "smooth" })
+    return norm
+  }
+
+  const executeNewsSnippet = async (rawCode) => {
+    const cleaned = stripCodeFences(rawCode)
+    if (!cleaned) return false
+    const confirmed = confirm("Vuoi pubblicare subito questo avviso e inviare la relativa notifica push?")
+    if (!confirmed) return false
+    savingNewsId.value = true
+    try {
+      let feedbacks = []
+      if (cleaned.startsWith("{") || cleaned.startsWith("[")) {
+        const parsed = new Function(`return (${cleaned});`)()
+        const items = Array.isArray(parsed) ? parsed : [parsed]
+        for (const item of items) {
+          const res = await publishNewsAlert(item)
+          if (res.pushFeedback) feedbacks.push(res.pushFeedback)
+        }
+      } else {
+        let calledPublish = false
+        const wrappedPublish = async (item) => {
+          calledPublish = true
+          const res = await publishNewsAlert(item)
+          if (res.pushFeedback) feedbacks.push(res.pushFeedback)
+          return res
+        }
+        const varMatch = cleaned.match(/^(?:const|let|var)\s+([a-zA-Z_$][\w$]*)\s*=/)
+        const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor
+        const body = varMatch && !cleaned.includes("publishNews") && !cleaned.includes("supabase") ? `${cleaned}\nreturn ${varMatch[1]};` : cleaned
+        const executor = new AsyncFunction("publishNews", "supabase", "sendOneSignalPush", "services", "globalNews", "fetchNews", body)
+        const ret = await executor(wrappedPublish, supabase, sendOneSignalPush, servicesRef?.value || [], globalNews.value, fetchNews)
+        if (!calledPublish && ret && typeof ret === "object") {
+          const items = Array.isArray(ret) ? ret : [ret]
+          for (const item of items) {
+            if (item?.title || item?.content) {
+              const res = await publishNewsAlert(item)
+              if (res.pushFeedback) feedbacks.push(res.pushFeedback)
+            }
+          }
+        }
+      }
+      await fetchNews()
+      alert("Avviso pubblicato con successo!" + (feedbacks[0] || ""))
+      cancelEditingNews()
+      return true
+    } catch (err) {
+      alert("Errore esecuzione snippet avviso:\n" + err.message)
+      return false
+    } finally {
+      savingNewsId.value = false
+    }
+  }
+
   const deleteNewsItem = async (news) => {
     if (!supabase) return
     const confirmed = confirm('Eliminare definitivamente questa notizia?')
@@ -359,6 +565,9 @@ export function useNews(buildMultilangObjFromTemplate = null, servicesRef = null
     startCreatingNews,
     cancelEditingNews,
     saveNewsChanges,
+    publishNewsAlert,
+    loadNewsSnippetToEditor,
+    executeNewsSnippet,
     deleteNewsItem,
     deleteMultipleNews
   }
