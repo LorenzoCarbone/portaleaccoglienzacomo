@@ -24,7 +24,7 @@
             :class="showSnippetPanel ? 'bg-slate-900 text-emerald-400 border-slate-800 shadow-md' : 'bg-white/20 hover:bg-white/30 text-white border-white/30'"
           >
             <i class="fa-solid fa-code"></i>
-            <span>Snippet AI</span>
+            <span>Snippet</span>
           </button>
           <button
             @click="$emit('start-creating')"
@@ -44,9 +44,9 @@
               <i class="fa-solid fa-code"></i>
             </div>
             <div>
-              <h3 class="font-bold text-slate-800 text-base">Invia Avviso tramite Snippet AI</h3>
+              <h3 class="font-bold text-slate-800 text-base">Invia Avviso tramite Snippet</h3>
               <p class="text-xs text-slate-500 mt-0.5 leading-relaxed">
-                Incolla qui il codice dell'avviso multilingua preparato dall'AI: puoi aprirlo in anteprima nell'editor oppure pubblicarlo e inviare subito la notifica push.
+                Incolla qui il codice dell'avviso multilingua: puoi aprirlo in anteprima nell'editor oppure pubblicarlo e inviare subito la notifica push.
               </p>
             </div>
           </div>
@@ -303,7 +303,7 @@
             :class="showInlineSnippet ? 'bg-slate-900 text-emerald-400 shadow-sm' : 'text-slate-500 hover:text-slate-700'"
           >
             <i class="fa-solid fa-code"></i>
-            <span class="hidden sm:inline">Da Snippet AI</span>
+            <span class="hidden sm:inline">Da Snippet</span>
             <span class="sm:hidden">Snippet</span>
           </button>
         </div>
