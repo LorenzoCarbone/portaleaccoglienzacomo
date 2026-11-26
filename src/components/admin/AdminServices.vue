@@ -519,22 +519,29 @@
           <div v-else-if="(editForm.hoursMode || 'schedule') !== 'continuous'">
             <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">Costruttore Orari</label>
             <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3">
-              <div v-for="(slot, index) in editForm.hoursList" :key="index" class="flex flex-wrap sm:flex-nowrap items-center gap-2">
-                <select v-model="slot.day" class="flex-1 sm:w-1/3 bg-white px-3 py-2 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-brand-500 outline-none">
-                  <option v-for="d in daysOfWeek" :key="d.id" :value="d.id">{{ d.label.it }}</option>
-                </select>
-                <div class="flex items-center gap-1 w-full sm:w-auto">
-                  <input v-model="slot.open" type="time" class="w-full sm:w-28 bg-white px-2 py-2 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-brand-500 outline-none">
-                  <span class="text-slate-400 font-bold">-</span>
-                  <input v-model="slot.close" type="time" class="w-full sm:w-28 bg-white px-2 py-2 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-brand-500 outline-none">
+              <div v-for="(slot, index) in editForm.hoursList" :key="index" class="space-y-2 bg-white/70 p-2.5 rounded-xl border border-slate-200/80">
+                <div class="flex flex-wrap sm:flex-nowrap items-center gap-2">
+                  <select v-model="slot.day" class="flex-1 sm:w-1/3 bg-white px-3 py-2 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-brand-500 outline-none">
+                    <option v-for="d in daysOfWeek" :key="d.id" :value="d.id">{{ d.label.it }}</option>
+                  </select>
+                  <div class="flex items-center gap-1 w-full sm:w-auto">
+                    <input v-model="slot.open" type="time" class="w-full sm:w-28 bg-white px-2 py-2 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-brand-500 outline-none">
+                    <span class="text-slate-400 font-bold">-</span>
+                    <input v-model="slot.close" type="time" class="w-full sm:w-28 bg-white px-2 py-2 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-brand-500 outline-none">
+                  </div>
+                  <button
+                    @click="editForm.hoursList.splice(index, 1)"
+                    type="button"
+                    class="w-full sm:w-10 h-10 rounded-lg bg-white border border-slate-300 text-red-500 hover:bg-red-50 flex items-center justify-center transition shrink-0"
+                  >
+                    <i class="fa-solid fa-trash"></i>
+                  </button>
                 </div>
-                <button
-                  @click="editForm.hoursList.splice(index, 1)"
-                  type="button"
-                  class="w-full sm:w-10 h-10 rounded-lg bg-white border border-slate-300 text-red-500 hover:bg-red-50 flex items-center justify-center transition shrink-0"
-                >
-                  <i class="fa-solid fa-trash"></i>
-                </button>
+                <div v-if="slot.label || slot.location || slot.timeText" class="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1 text-xs">
+                  <input v-if="slot.label" v-model="slot.label.it" type="text" placeholder="Nome attività (IT)" class="bg-white px-2.5 py-1.5 rounded-lg border border-slate-200 text-slate-700 outline-none">
+                  <input v-if="slot.timeText" v-model="slot.timeText.it" type="text" placeholder="Testo orario (IT)" class="bg-white px-2.5 py-1.5 rounded-lg border border-slate-200 text-slate-700 outline-none">
+                  <input v-if="slot.location" v-model="slot.location.it" type="text" placeholder="Sede (IT)" class="bg-white px-2.5 py-1.5 rounded-lg border border-slate-200 text-slate-700 outline-none">
+                </div>
               </div>
               <button
                 @click="editForm.hoursList.push({ day: 1, open: '09:00', close: '12:00' })"

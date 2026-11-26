@@ -20,12 +20,25 @@ const currentLangCode = ref(localStorage.getItem('vicini_lang') || 'it')
  * Normalizza il campo JSONB `hours` di un servizio, supportando sia il formato legacy (array di fasce orarie)
  * sia il formato esteso { mode: 'schedule' | 'continuous' | 'appointment', schedule: [...], access: { type, note } }.
  */
+function resolveLocalizedSlotText(val, langCode = 'it') {
+  if (!val) return ''
+  if (typeof val === 'string') return val.trim()
+  if (typeof val === 'object') {
+    return String(val[langCode] || val.en || val.it || Object.values(val)[0] || '').trim()
+  }
+  return ''
+}
+
+function isValidScheduleSlot(h) {
+  return Boolean(h && typeof h.day === 'number' && ((h.open && h.close) || h.timeText || h.label))
+}
+
 export function parseServiceHoursData(hours) {
   if (!hours) {
     return { mode: 'schedule', schedule: [], access: null, customText: null }
   }
   if (Array.isArray(hours)) {
-    const valid = hours.filter(h => h && typeof h.day === 'number' && h.open && h.close)
+    const valid = hours.filter(isValidScheduleSlot)
     const isAllDay24 = valid.length === 7 && valid.every(h => h.open === '00:00' && (h.close === '24:00' || h.close === '23:59'))
     return {
       mode: isAllDay24 ? 'continuous' : 'schedule',
@@ -37,7 +50,7 @@ export function parseServiceHoursData(hours) {
   if (typeof hours === 'object') {
     if ('schedule' in hours || 'access' in hours || 'mode' in hours || 'customText' in hours) {
       const rawSchedule = Array.isArray(hours.schedule)
-        ? hours.schedule.filter(h => h && typeof h.day === 'number' && h.open && h.close)
+        ? hours.schedule.filter(isValidScheduleSlot)
         : []
       const isAllDay24 = rawSchedule.length === 7 && rawSchedule.every(h => h.open === '00:00' && (h.close === '24:00' || h.close === '23:59'))
       const customText = hours.customText || null
@@ -61,7 +74,10 @@ export function getStructuredScheduleRows(hours, langCode = 'it') {
   const dayMap = new Map()
   parsed.schedule.forEach(h => {
     if (!dayMap.has(h.day)) dayMap.set(h.day, [])
-    dayMap.get(h.day).push(`${h.open} – ${h.close}`)
+    const time = resolveLocalizedSlotText(h.timeText, langCode) || (h.open && h.close ? `${h.open} – ${h.close}` : '')
+    const label = resolveLocalizedSlotText(h.label, langCode)
+    const location = resolveLocalizedSlotText(h.location, langCode)
+    dayMap.get(h.day).push({ time, label, location })
   })
 
   const orderedDays = [1, 2, 3, 4, 5, 6, 0]
@@ -70,10 +86,13 @@ export function getStructuredScheduleRows(hours, langCode = 'it') {
     if (dayMap.has(dayId)) {
       const dayObj = daysOfWeek.find(d => d.id === dayId)
       const dayName = dayObj ? (dayObj.label[langCode] || dayObj.label.en || dayObj.label.it || '') : ''
+      const details = dayMap.get(dayId)
       rows.push({
         dayId,
         dayName,
-        slots: dayMap.get(dayId),
+        slots: details.map(d => d.time).filter(Boolean),
+        details,
+        hasDetails: details.some(d => d.label || d.location),
         isToday: dayId === today
       })
     }
@@ -148,7 +167,16 @@ export function useI18n() {
     }
     const rows = getStructuredScheduleRows(hours, code)
     if (rows.length > 0) {
-      return rows.map(r => `${r.dayName}: ${r.slots.join(' | ')}`).join('\n')
+      return rows.map(r => {
+        if (r.hasDetails) {
+          const items = r.details.map(d => {
+            const parts = [d.label, d.time].filter(Boolean).join(' ')
+            return d.location ? `${parts} (${d.location})` : parts
+          })
+          return `${r.dayName}: ${items.join(' | ')}`
+        }
+        return `${r.dayName}: ${r.slots.join(' | ')}`
+      }).join('\n')
     }
     // Fallback se hours fosse un oggetto multilingua testuale puro
     if (typeof hours === 'object' && !Array.isArray(hours) && !('schedule' in hours) && !('access' in hours)) {

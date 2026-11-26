@@ -125,32 +125,77 @@
             <div
               v-for="row in scheduleRows"
               :key="row.dayId"
-              class="px-3.5 py-2 flex items-center justify-between gap-2"
+              class="px-3.5 py-2.5"
               :class="row.isToday ? 'bg-brand-50/70' : ''"
             >
-              <div class="flex items-center gap-1.5 min-w-0">
-                <span
-                  class="text-xs truncate"
-                  :class="row.isToday ? 'font-bold text-brand-900' : 'font-medium text-slate-600'"
-                >
-                  {{ row.dayName }}
-                </span>
-                <span
-                  v-if="row.isToday"
-                  class="px-1.5 py-0.5 rounded-full bg-brand-600 text-white text-[9px] font-bold uppercase tracking-wider shrink-0"
-                >
-                  {{ t('hours_today') }}
-                </span>
+              <!-- Caso con laboratori/attività dettagliati (nome, orario, sede) -->
+              <div v-if="row.hasDetails" class="space-y-2">
+                <div class="flex items-center gap-1.5">
+                  <span
+                    class="text-xs font-bold"
+                    :class="row.isToday ? 'text-brand-900' : 'text-slate-700'"
+                  >
+                    {{ row.dayName }}
+                  </span>
+                  <span
+                    v-if="row.isToday"
+                    class="px-1.5 py-0.5 rounded-full bg-brand-600 text-white text-[9px] font-bold uppercase tracking-wider shrink-0"
+                  >
+                    {{ t('hours_today') }}
+                  </span>
+                </div>
+                <div class="space-y-1.5 pl-2 border-l-2 border-brand-200">
+                  <div
+                    v-for="(item, idx) in row.details"
+                    :key="idx"
+                    class="flex flex-col gap-0.5"
+                  >
+                    <div class="flex items-center justify-between gap-2">
+                      <span class="text-xs font-semibold text-slate-800 leading-snug">
+                        {{ item.label }}
+                      </span>
+                      <span
+                        v-if="item.time"
+                        class="px-2 py-0.5 rounded-md text-[11px] font-semibold tabular-nums shrink-0"
+                        :class="row.isToday ? 'bg-brand-100 text-brand-900' : 'bg-slate-100 text-slate-700'"
+                      >
+                        {{ item.time }}
+                      </span>
+                    </div>
+                    <span v-if="item.location" class="text-[11px] text-slate-500 flex items-center gap-1">
+                      <i class="fa-solid fa-location-dot text-[10px] text-brand-500 shrink-0"></i>
+                      <span>{{ item.location }}</span>
+                    </span>
+                  </div>
+                </div>
               </div>
-              <div class="flex flex-wrap justify-end gap-1 shrink-0">
-                <span
-                  v-for="(slot, idx) in row.slots"
-                  :key="idx"
-                  class="px-2 py-0.5 rounded-md text-[11px] font-semibold tabular-nums"
-                  :class="row.isToday ? 'bg-brand-100 text-brand-900' : 'bg-slate-100 text-slate-700'"
-                >
-                  {{ slot }}
-                </span>
+
+              <!-- Caso standard a 2 colonne -->
+              <div v-else class="flex items-center justify-between gap-2">
+                <div class="flex items-center gap-1.5 min-w-0">
+                  <span
+                    class="text-xs truncate"
+                    :class="row.isToday ? 'font-bold text-brand-900' : 'font-medium text-slate-600'"
+                  >
+                    {{ row.dayName }}
+                  </span>
+                  <span
+                    v-if="row.isToday"
+                    class="px-1.5 py-0.5 rounded-full bg-brand-600 text-white text-[9px] font-bold uppercase tracking-wider shrink-0"
+                  >
+                    {{ t('hours_today') }}
+                  </span>
+                </div>
+                <div class="flex flex-wrap justify-end gap-1 shrink-0">
+                  <span
+                    v-for="(slot, idx) in row.slots"
+                    :key="idx"
+                    class="px-2 py-0.5 rounded-md text-[11px] font-semibold tabular-nums"
+                    :class="row.isToday ? 'bg-brand-100 text-brand-900' : 'bg-slate-100 text-slate-700'"
+                  >
+                    {{ slot }}
+                  </span>
+                </div>
               </div>
             </div>
           </div>

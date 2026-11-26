@@ -433,7 +433,7 @@ export function useServices(i18nHelpers = {}) {
     if (!supabase || !editingService.value) return
     savingServiceId.value = true
     try {
-      const validHours = (editForm.value.hoursList || []).filter(h => h.open && h.close)
+      const validHours = (editForm.value.hoursList || []).filter(h => (h.open && h.close) || h.timeText || h.label)
       const hoursMode = editForm.value.hoursMode || 'schedule'
       const accessType = editForm.value.accessType || ''
       const accessNote = JSON.parse(JSON.stringify(editForm.value.accessNote || { it: '' }))
